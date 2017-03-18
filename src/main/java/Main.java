@@ -155,8 +155,8 @@ public class Main {
         final Traza test = new Traza();
         test.anadirTarea(A);
         test.anadirTarea(B);
-        //test.anadirTarea(C);
-        //test.anadirTarea(D);
+        test.anadirTarea(C);
+        test.anadirTarea(D);
         test.anadirTarea(E);
 
         final State initialState = new State(modelo);
@@ -271,7 +271,7 @@ public class Main {
                 } else if (node.action().equals(SKIP)) {
                     System.out.println("    >>         "+ s.getTarea());
                 } else {
-                    System.out.println("    " + test.leerTarea(s.getPos() - 1) + "            >>");
+                    System.out.println("    " + test.leerTarea(s.getPos() - 1) + "          >>");
                 }
         }
         System.out.println();
@@ -356,7 +356,8 @@ public class Main {
                 successor.avanzarTarea();
                 successor.setMov(INSERT);
                 System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT().getId());
-                successor.setTarea(ejec.getTareaINSERT().getId());
+                successor.avanzarMarcado(ejec.getTareaINSERT());
+                successor.setTarea(state.getTarea());
                 break;
         }
         return successor;
