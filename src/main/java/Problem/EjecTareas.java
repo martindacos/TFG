@@ -57,7 +57,7 @@ public class EjecTareas {
     
     public Task leerTareaExecute() {
         skip = new Task(execute.get(0));
-        System.out.println("leerTareaExecute " + skip.getId() +" "+ skip.getMatrixID());
+        //System.out.println("leerTareaExecute " + skip.getId() +" "+ skip.getMatrixID());
         execute.remove(0);
         return skip;
     }

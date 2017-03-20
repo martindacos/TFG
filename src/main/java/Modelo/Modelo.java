@@ -23,6 +23,13 @@ public class Modelo {
         return miModelo;
     }
     
+    public static Modelo getModelo(CMIndividual ind) {
+        if (miModelo == null) {
+            miModelo = new Modelo(ind);
+        }
+        return miModelo;
+    }
+        
     private Modelo() {
         ind = new CMIndividual(5);
         

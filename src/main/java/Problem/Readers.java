@@ -33,18 +33,18 @@ public class Readers {
     public Readers(String logPath, String indPath) throws EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
         // Read the log.
         LogReaderInterface reader = new LogReaderXES();
-        ArrayList<LogEntryInterface> entries = reader.read(null, null, new File("C:/Users/marti/Documents/ETM.xes"));
-        log = new Log("test","C:/Users/marti/Documents/log.txt",entries);
+        ArrayList<LogEntryInterface> entries = reader.read(null, null, new File(logPath));
+        log = new Log("test","log.txt",entries);
 
         // Obtain the individual from the file.
         IndividualReaderInterface readerInd = new IndividualReaderHN();
 
         try {
             log.simplifyAndAddDummies(true, false);
-            ind = readerInd.read("C:/Users/marti/Documents/ETM.hn", log);
+            ind = readerInd.read(indPath, log);
         } catch (NullPointerException ex) {
             log.simplifyAndAddDummies(true, true);
-            ind = readerInd.read("C:/Users/marti/Documents/ETM.hn", log);
+            ind = readerInd.read(indPath, log);
         }
     }
 

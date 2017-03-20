@@ -4,6 +4,7 @@ import Problem.EjecTareas;
 import Problem.NState.State;
 import Problem.NState.StateMove;
 import static Problem.NState.StateMove.*;
+import Problem.Readers;
 import Problem.Traza;
 import domainLogic.exceptions.EmptyLogException;
 import domainLogic.exceptions.InvalidFileExtensionException;
@@ -35,7 +36,12 @@ public class Main {
     public static void main(String[] args) throws IOException, EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {        
         //Creamos el modelo
         Modelo miModelo = Modelo.getModelo();
-                
+        
+        //Creamos el modelo desde archivo
+//        Readers r = new Readers("ETM.xes", "ETM.hn");
+//        Modelo miModelo = Modelo.getModelo(r.getInd());
+//        miModelo.getInd().print();
+        
         final Traza test = new Traza();
         // Tarea A
         test.anadirTarea(miModelo.getInd().getTask(0).getTask());
@@ -48,6 +54,13 @@ public class Main {
         // Tarea E
         test.anadirTarea(miModelo.getInd().getTask(4).getTask());
 
+//        ArrayList<Task> tasks = new ArrayList();
+//        for (int i=0; i < miModelo.getInd().getNumOfTasks(); i++) {
+//            tasks.add(miModelo.getInd().getTask(i).getTask());
+//        } 
+//
+//        test.setTrace(tasks);
+        
         final State initialState = new State(miModelo.getInd());
         initialState.getMarcado().restartMarking();
         EjecTareas ejec = new EjecTareas();
@@ -205,13 +218,15 @@ public class Main {
                 }
             }
         }
-        System.out.println(movements);
+        //System.out.println(movements);
         return movements;
     }
 
     //Realizamos la acción correspondiente en función del movimiento
     private static State applyActionToState(StateMove action, State state, EjecTareas ejec, CMIndividual m) {
         State successor = new State(state);
+        
+        //Esta parte se puede mejorar
         CMMarking marcado = new CMMarking(m, new Random(666));
         
         marcado.setEndPlace(state.getMarcado().getEndPlace());
@@ -236,7 +251,7 @@ public class Main {
                 //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
                 Task t = ejec.leerTareaExecute();
                 successor.setTarea(t.getId());
-                System.out.println("TAREA A HACER EL SKIP ----------------> " + t.getId());
+                //System.out.println("TAREA A HACER EL SKIP ----------------> " + t.getId());
                 successor.avanzarMarcado(t);
                 successor.setMov(SKIP);
                 break;
@@ -244,7 +259,7 @@ public class Main {
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(INSERT);
-                System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT().getId());
+                //System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT().getId());
                 successor.avanzarMarcado(ejec.getTareaINSERT());
                 successor.setTarea(state.getTarea());
                 break;

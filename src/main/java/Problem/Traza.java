@@ -12,7 +12,7 @@ import java.util.ArrayList;
  *
  * @author marti
  */
-public class Traza {
+public class Traza implements InterfazTraza{
     //Tareas pertenecientes a la traza
     private ArrayList<Task> trace;
 
@@ -24,14 +24,20 @@ public class Traza {
         return trace;
     }
 
+    public void setTrace(ArrayList<Task> trace) {
+        this.trace = trace;
+    }
+
     public int tamTrace() {
         return trace.size();
     }
 
+    @Override
     public void anadirTarea(Task a) {
         trace.add(a);
     }
 
+    @Override
     public Task leerTarea(int p) {
         if (p < trace.size()){
             return trace.get(p);
@@ -40,6 +46,7 @@ public class Traza {
         }
     }
     
+    @Override
     public Double getHeuristica(int pos) {
         //Sumamos 1 porque la posición va de 0..X y el size de 1..X
         double r;
@@ -53,11 +60,12 @@ public class Traza {
     }
 
     //Estoy en la última tarea de la traza 
-    public boolean finalTraza(int pos) {
-        return pos == (trace.size() - 1);
-    }
+//    public boolean finalTraza(int pos) {
+//        return pos == (trace.size() - 1);
+//    }
 
     //Ya acabé la traza. La última posicion quedaría fuera. 
+    @Override
     public boolean procesadoTraza(int pos) {
         return pos >= trace.size();
     }
