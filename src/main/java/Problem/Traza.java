@@ -13,14 +13,13 @@ import java.util.ArrayList;
  * @author marti
  */
 public class Traza {
-
     //Tareas pertenecientes a la traza
     private ArrayList<Task> trace;
 
     public Traza() {
         this.trace = new ArrayList<>();
     }
-
+        
     public ArrayList<Task> getTrace() {
         return trace;
     }

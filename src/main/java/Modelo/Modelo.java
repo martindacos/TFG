@@ -1,6 +1,11 @@
 package Modelo;
 
-import CMTask.CMTask;
+import domainLogic.workflow.Task.Task;
+import domainLogic.workflow.algorithms.geneticMining.CMTask.CMSet;
+import domainLogic.workflow.algorithms.geneticMining.CMTask.CMTask;
+import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.set.hash.TIntHashSet;
 import java.util.HashMap;
 
 /**
@@ -8,35 +13,105 @@ import java.util.HashMap;
  * @author Martin
  */
 public class Modelo {
-    //Posición provisional de las tareas del modelo
-    //La ponemos en la traza
-    //int posM;
-    //Almacenamos las tareas y el id de la matriz de la tarea principal
-    HashMap<Integer, CMTask> tareas;
+    private CMIndividual ind;
+    private static Modelo miModelo;
 
-    public Modelo() {
-        tareas = new HashMap<>();
-        //posM = 0;
-    }
-
-//    public int getPosM() {
-//        return posM;
-//    }
-
-    public void put(int id, CMTask a) {
-        tareas.put(id, a);
+    public static Modelo getModelo() {
+        if (miModelo == null) {
+            miModelo = new Modelo();
+        }
+        return miModelo;
     }
     
-//    public void aPosM(){
-//        posM++;
-//    }
-    
-    public CMTask getCM(int posM){
-        return tareas.get(posM);
+    private Modelo() {
+        ind = new CMIndividual(5);
+        
+        Task A = new Task("A");
+        A.setType(0);
+        CMTask cmA = new CMTask(A);
+
+        Task D = new Task("D");
+        CMTask cmD = new CMTask(D);
+
+        Task B = new Task("B");
+        CMTask cmB = new CMTask(B);
+        Task C = new Task("C");
+        CMTask cmC = new CMTask(C);
+
+        Task E = new Task("E");
+        E.setType(1);
+        CMTask cmE = new CMTask(E);
+
+        //Creamos el set de outputs
+        CMSet set = new CMSet();
+        //Creamos y añadimos el primer subset
+        TIntHashSet subset = new TIntHashSet();
+        subset.add(D.getMatrixID());
+        subset.add(B.getMatrixID());
+        set.add(subset);
+        //Creamos y añadimos el segundo subset
+        subset = new TIntHashSet();
+        subset.add(D.getMatrixID());
+        subset.add(C.getMatrixID());
+        set.add(subset);
+
+        //Asignamos outputs
+        cmA.setOutputs(set);
+
+        //Creamos el set de outputs
+        CMSet set2 = new CMSet();
+        //Creamos y añadimos el primer subset
+        TIntHashSet subset2 = new TIntHashSet();
+        subset2.add(E.getMatrixID());
+        set2.add(subset2);
+
+        //Asignamos outputs
+        cmD.setOutputs(set2);
+        cmB.setOutputs(set2);
+        cmC.setOutputs(set2);
+
+        //Creamos el set de inputs
+        CMSet set3 = new CMSet();
+        //Creamos y añadimos el primer subset
+        TIntHashSet subset3 = new TIntHashSet();
+        subset3.add(A.getMatrixID());
+        set3.add(subset3);
+
+        cmD.setInputs(set3);
+        cmB.setInputs(set3);
+        cmC.setInputs(set3);
+
+        //Creamos el set de inputs
+        CMSet set4 = new CMSet();
+        //Creamos y añadimos el primer subset
+        TIntHashSet subset4 = new TIntHashSet();
+        subset4.add(D.getMatrixID());
+        subset4.add(B.getMatrixID());
+        set4.add(subset4);
+        //Creamos y añadimos el segundo subset
+        subset4 = new TIntHashSet();
+        subset4.add(D.getMatrixID());
+        subset4.add(C.getMatrixID());
+        set4.add(subset4);
+
+        //Asignamos inputs
+        cmE.setInputs(set4);
+
+        TIntObjectHashMap<CMTask> tasks = new TIntObjectHashMap<CMTask>();
+        tasks.put(0, cmA);
+        tasks.put(1, cmD);
+        tasks.put(2, cmB);
+        tasks.put(3, cmC);
+        tasks.put(4, cmE);
+
+        ind.setTasks(tasks);
     }
     
-    public CMTask getCMAnterior(int posM) {
-        //System.out.println("posM " +posM);
-        return tareas.get(0);
+    private Modelo(CMIndividual ind) {
+        this.ind = ind;
+    }
+
+    public CMIndividual getInd() {
+        return ind;
     }
 }

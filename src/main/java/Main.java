@@ -1,4 +1,5 @@
 
+import Modelo.Modelo;
 import Problem.EjecTareas;
 import Problem.NState.State;
 import Problem.NState.StateMove;
@@ -9,19 +10,10 @@ import domainLogic.exceptions.InvalidFileExtensionException;
 import domainLogic.exceptions.MalformedFileException;
 import domainLogic.exceptions.NonFinishedWorkflowException;
 import domainLogic.exceptions.WrongLogEntryException;
-import domainLogic.workflow.Log;
-import domainLogic.workflow.LogEntryInterface;
 import domainLogic.workflow.Task.Task;
-import domainLogic.workflow.algorithms.geneticMining.CMTask.CMSet;
-import domainLogic.workflow.algorithms.geneticMining.CMTask.CMTask;
 import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
-import domainLogic.workflow.algorithms.geneticMining.individual.reader.IndividualReaderHN;
-import domainLogic.workflow.algorithms.geneticMining.individual.reader.IndividualReaderInterface;
-import domainLogic.workflow.logReader.*;
 import es.usc.citius.hipster.algorithm.Hipster;
-import es.usc.citius.hipster.graph.*;
-import es.usc.citius.hipster.model.Node;
 import es.usc.citius.hipster.model.Transition;
 import es.usc.citius.hipster.model.function.ActionFunction;
 import es.usc.citius.hipster.model.function.ActionStateTransitionFunction;
@@ -30,136 +22,33 @@ import es.usc.citius.hipster.model.function.HeuristicFunction;
 import es.usc.citius.hipster.model.impl.WeightedNode;
 import es.usc.citius.hipster.model.problem.*;
 import gnu.trove.iterator.TIntIterator;
-import gnu.trove.list.TIntList;
-import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Random;
 
 public class Main {
     
-    public static void main(String[] args) throws IOException, EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
-        // Read the log.
-//        LogReaderInterface reader = new LogReaderXES();
-//        ArrayList<LogEntryInterface> entries = reader.read(null, null, new File("C:/Users/marti/Documents/ETM.xes"));
-//        Log log = new Log("test","C:/Users/marti/Documents/log.txt",entries);
-//
-//        // Obtain the individual from the file.
-//        IndividualReaderInterface readerInd = new IndividualReaderHN();
-//
-//        try {
-//            log.simplifyAndAddDummies(true, false);
-//            modelo = readerInd.read("C:/Users/marti/Documents/ETM.hn", log);
-//        } catch (NullPointerException ex) {
-//            log.simplifyAndAddDummies(true, true);
-//            modelo = readerInd.read("C:/Users/marti/Documents/ETM.hn", log);
-//        }
-//
-//        HashMap<String,Task> tasks = log.getTasks();
-//        
-//        for (Map.Entry<String, Task> entry : tasks.entrySet()) {
-//            Task t = entry.getValue();
-//            System.out.println("clave=" + entry.getKey() + ", valor=" + t.getMatrixID());
-//        }
-        
+    public static void main(String[] args) throws IOException, EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {        
         //Creamos el modelo
-        CMIndividual modelo = new CMIndividual(5);
-        
-        Task A = new Task("A");
-        A.setType(0);
-        CMTask cmA = new CMTask(A);
-
-        Task D = new Task("D");
-        CMTask cmD = new CMTask(D);
-
-        Task B = new Task("B");
-        CMTask cmB = new CMTask(B);
-        Task C = new Task("C");
-        CMTask cmC = new CMTask(C);
-
-        Task E = new Task("E");
-        E.setType(1);
-        CMTask cmE = new CMTask(E);
-
-        //Creamos el set de outputs
-        CMSet set = new CMSet();
-        //Creamos y añadimos el primer subset
-        TIntHashSet subset = new TIntHashSet();
-        subset.add(D.getMatrixID());
-        subset.add(B.getMatrixID());
-        set.add(subset);
-        //Creamos y añadimos el segundo subset
-        subset = new TIntHashSet();
-        subset.add(D.getMatrixID());
-        subset.add(C.getMatrixID());
-        set.add(subset);
-
-        //Asignamos outputs
-        cmA.setOutputs(set);
-
-        //Creamos el set de outputs
-        CMSet set2 = new CMSet();
-        //Creamos y añadimos el primer subset
-        TIntHashSet subset2 = new TIntHashSet();
-        subset2.add(E.getMatrixID());
-        set2.add(subset2);
-
-        //Asignamos outputs
-        cmD.setOutputs(set2);
-        cmB.setOutputs(set2);
-        cmC.setOutputs(set2);
-
-        //Creamos el set de inputs
-        CMSet set3 = new CMSet();
-        //Creamos y añadimos el primer subset
-        TIntHashSet subset3 = new TIntHashSet();
-        subset3.add(A.getMatrixID());
-        set3.add(subset3);
-
-        cmD.setInputs(set3);
-        cmB.setInputs(set3);
-        cmC.setInputs(set3);
-
-        //Creamos el set de inputs
-        CMSet set4 = new CMSet();
-        //Creamos y añadimos el primer subset
-        TIntHashSet subset4 = new TIntHashSet();
-        subset4.add(D.getMatrixID());
-        subset4.add(B.getMatrixID());
-        set4.add(subset4);
-        //Creamos y añadimos el segundo subset
-        subset4 = new TIntHashSet();
-        subset4.add(D.getMatrixID());
-        subset4.add(C.getMatrixID());
-        set4.add(subset4);
-
-        //Asignamos inputs
-        cmE.setInputs(set4);
-
-        TIntObjectHashMap<CMTask> tasks = new TIntObjectHashMap<CMTask>();
-        tasks.put(0, cmA);
-        tasks.put(1, cmD);
-        tasks.put(2, cmB);
-        tasks.put(3, cmC);
-        tasks.put(4, cmE);
-
-        modelo.setTasks(tasks);
-
+        Modelo miModelo = Modelo.getModelo();
+                
         final Traza test = new Traza();
-        test.anadirTarea(A);
-        test.anadirTarea(B);
-        test.anadirTarea(C);
-        test.anadirTarea(D);
-        test.anadirTarea(E);
+        // Tarea A
+        test.anadirTarea(miModelo.getInd().getTask(0).getTask());
+        // Tarea B
+        test.anadirTarea(miModelo.getInd().getTask(1).getTask());
+        // Tarea C
+        test.anadirTarea(miModelo.getInd().getTask(2).getTask());
+        // Tarea D
+        test.anadirTarea(miModelo.getInd().getTask(3).getTask());
+        // Tarea E
+        test.anadirTarea(miModelo.getInd().getTask(4).getTask());
 
-        final State initialState = new State(modelo);
+        final State initialState = new State(miModelo.getInd());
         initialState.getMarcado().restartMarking();
         EjecTareas ejec = new EjecTareas();
         
@@ -167,7 +56,7 @@ public class Main {
         ActionFunction<StateMove, State> af = new ActionFunction<StateMove, State>() {
             @Override
             public Iterable<StateMove> actionsFor(State state) {
-                return validMovementsFor(state, modelo, test, ejec);
+                return validMovementsFor(state, miModelo.getInd(), test, ejec);
             }
         };
 
@@ -175,7 +64,7 @@ public class Main {
         atf = new ActionStateTransitionFunction<StateMove, State>() {
             @Override
             public State apply(StateMove action, State state) {
-                return applyActionToState(action, state, ejec, modelo);
+                return applyActionToState(action, state, ejec, miModelo.getInd());
             }
         };
 
