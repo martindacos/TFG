@@ -36,7 +36,6 @@ public final class NState {
 
         public State(State a) {
             pos = a.getPos();
-            //marcado = a.getMarcado();
         }
         
         public int getPos() {
@@ -123,7 +122,7 @@ public final class NState {
 //            }
 //            return true;
 //        }
-        
+
         
     }
 }

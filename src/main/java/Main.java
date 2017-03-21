@@ -40,7 +40,7 @@ public class Main {
         //Creamos el modelo desde archivo
 //        Readers r = new Readers("ETM.xes", "ETM.hn");
 //        Modelo miModelo = Modelo.getModelo(r.getInd());
-//        miModelo.getInd().print();
+        miModelo.getInd().print();
         
         final Traza test = new Traza();
         // Tarea A
@@ -63,6 +63,7 @@ public class Main {
         
         final State initialState = new State(miModelo.getInd());
         initialState.getMarcado().restartMarking();
+        
         EjecTareas ejec = new EjecTareas();
         
         /*Funciones para el algoritmo A* */
@@ -156,6 +157,7 @@ public class Main {
             if (s.getPos() < test.getTrace().size()) {
                 System.out.println("    Tarea de la Traza " + test.leerTarea(s.getPos()).getMatrixID());
             }
+            System.out.println(s.getMarcado().toString());
             System.out.println("------------------------------------");
             System.out.println();
         }
@@ -218,7 +220,18 @@ public class Main {
                 }
             }
         }
-        //System.out.println(movements);
+        
+        //Realizamos la copia del marcado
+        ArrayList<HashMap<TIntHashSet, Integer>> tokensA = state.getMarcado().cloneTokens();
+        ejec.setTokens(tokensA);
+        ejec.setEndPlace(state.getMarcado().getEndPlace());
+        ejec.setNumOfTokens(state.getMarcado().getNumberTokens());
+        ejec.setStartPlace(state.getMarcado().getStartPlace());
+        TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
+        possibleEnabledTasksClone.addAll(state.getMarcado().getEnabledElements());
+        ejec.setPossibleEnabledTasks(possibleEnabledTasksClone);
+        
+        System.out.println(movements);
         return movements;
     }
 
@@ -226,22 +239,30 @@ public class Main {
     private static State applyActionToState(StateMove action, State state, EjecTareas ejec, CMIndividual m) {
         State successor = new State(state);
         
-        //Esta parte se puede mejorar
-        CMMarking marcado = new CMMarking(m, new Random(666));
+        //Recuperamos los datos copiados para el marcado
+        CMMarking marking = new CMMarking(m, new Random(666));      
+        marking.restartMarking();
+        marking.setEndPlace(ejec.getEndPlace());
+        marking.setNumOfTokens(ejec.getNumOfTokens());
+        marking.setStartPlace(ejec.getStartPlace());
+        ArrayList<HashMap<TIntHashSet, Integer>> tokensN = (ArrayList<HashMap<TIntHashSet, Integer>>) ejec.cloneTokens();
+        marking.setTokens(tokensN);
+        TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
+        possibleEnabledTasksClone.addAll(ejec.getPossibleEnabledTasks());
+        marking.setPossibleEnabledTasks(possibleEnabledTasksClone);
         
-        marcado.setEndPlace(state.getMarcado().getEndPlace());
-        marcado.setNumOfTokens(state.getMarcado().getNumberTokens());
-        marcado.setStartPlace(state.getMarcado().getStartPlace());
-        ArrayList<HashMap<TIntHashSet, Integer>> tokensA = state.getMarcado().getTokens();
-        ArrayList<HashMap<TIntHashSet, Integer>> tokensN = (ArrayList<HashMap<TIntHashSet, Integer>>) tokensA.clone();
-        marcado.setTokens(tokensN);
+        successor.setMarcado(marking);
         
-        successor.setMarcado(marcado);
+                
+        System.out.println("MARCADO ANTES");
+        System.out.println(successor.getMarcado().toString());
+        System.out.println("Tareas que se pueden ejecutar: " + possibleEnabledTasksClone);
         
         switch (action) {
             case OK:
                 //Avanzamos el modelo con la tarea que podemos ejecutar
                 successor.avanzarMarcado(ejec.getTareaOK());
+                System.out.println("TAREA A HACER EL OK ----------------> " + ejec.getTareaOK());
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(OK);
@@ -251,7 +272,7 @@ public class Main {
                 //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
                 Task t = ejec.leerTareaExecute();
                 successor.setTarea(t.getId());
-                //System.out.println("TAREA A HACER EL SKIP ----------------> " + t.getId());
+                System.out.println("TAREA A HACER EL SKIP ----------------> " + t.getId());
                 successor.avanzarMarcado(t);
                 successor.setMov(SKIP);
                 break;
@@ -259,11 +280,15 @@ public class Main {
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(INSERT);
-                //System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT().getId());
-                successor.avanzarMarcado(ejec.getTareaINSERT());
+                System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT().getId());
+                //successor.avanzarMarcado(ejec.getTareaINSERT());
                 successor.setTarea(state.getTarea());
                 break;
         }
+        
+        System.out.println("MARCADO DESPUES");
+        System.out.println(successor.getMarcado().toString());
+        
         return successor;
     }
 
@@ -273,13 +298,13 @@ public class Main {
         Double cost = null;
         switch (action) {
             case SKIP:
-                cost = 4d;
+                cost = 3d;
                 break;
             case INSERT:
-                cost = 2d;
+                cost = 1d;
                 break;
             case OK:
-                cost = 1d;
+                cost = 0.0001d;
                 break;
         }
         return cost;

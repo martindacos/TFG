@@ -28,10 +28,9 @@
             <version>0.25</version>
         </dependency>
         <dependency>
-            <groupId>readers.id</groupId>
-            <artifactId>readers.artifact</artifactId>
+            <groupId>Prodigen</groupId>
+            <artifactId>Prodigen</artifactId>
             <version>1.0</version>
-            <type>jar</type>
         </dependency>
     </dependencies>
     <properties>
