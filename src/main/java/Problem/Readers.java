@@ -63,8 +63,9 @@ public class Readers {
             Traza traza = new Traza();
             for (int i=0; i < tasks.size(); i++) {
                 System.out.print(tasks.get(i) + " ");
-                
+                traza.anadirTarea(tasks.get(i));
             }
+            this.traces.add(traza);
             System.out.println("]");
         }
     }
@@ -75,5 +76,9 @@ public class Readers {
 
     public CMIndividual getInd() {
         return ind;
+    }
+
+    public ArrayList<Traza> getTraces() {
+        return traces;
     }
 }

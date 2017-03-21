@@ -256,7 +256,7 @@ public class Main {
                 
         System.out.println("MARCADO ANTES");
         System.out.println(successor.getMarcado().toString());
-        System.out.println("Tareas que se pueden ejecutar: " + possibleEnabledTasksClone);
+        System.out.println("Tareas que se pueden ejecutar: " + successor.getMarcado().getEnabledElements());
         
         switch (action) {
             case OK:

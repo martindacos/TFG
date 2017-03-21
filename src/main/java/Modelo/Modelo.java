@@ -31,6 +31,7 @@ public class Modelo {
     }
         
     private Modelo() {
+        //Modelo fijo de prueba
         ind = new CMIndividual(5);
         
         Task A = new Task("A");
@@ -54,11 +55,11 @@ public class Modelo {
         //Creamos y añadimos el primer subset
         TIntHashSet subset = new TIntHashSet();
         subset.add(D.getMatrixID());
-        subset.add(B.getMatrixID());
+        //subset.add(B.getMatrixID());
         set.add(subset);
         //Creamos y añadimos el segundo subset
         subset = new TIntHashSet();
-        subset.add(D.getMatrixID());
+        subset.add(B.getMatrixID());
         subset.add(C.getMatrixID());
         set.add(subset);
 
@@ -93,11 +94,11 @@ public class Modelo {
         //Creamos y añadimos el primer subset
         TIntHashSet subset4 = new TIntHashSet();
         subset4.add(D.getMatrixID());
-        subset4.add(B.getMatrixID());
+        //subset4.add(B.getMatrixID());
         set4.add(subset4);
         //Creamos y añadimos el segundo subset
         subset4 = new TIntHashSet();
-        subset4.add(D.getMatrixID());
+        subset4.add(B.getMatrixID());
         subset4.add(C.getMatrixID());
         set4.add(subset4);
 
