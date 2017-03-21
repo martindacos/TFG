@@ -27,7 +27,7 @@ public final class NState {
         //MOvimiento ejecutado en este estado
         private StateMove mov;
         //Para identificar a tareas dumming nos skips
-        private String tarea;
+        private Integer tarea;
         
         public State(CMIndividual ind) {
             pos = 0;
@@ -46,11 +46,11 @@ public final class NState {
             return marcado;
         }
 
-        public String getTarea() {
+        public Integer getTarea() {
             return tarea;
         }
 
-        public void setTarea(String tarea) {
+        public void setTarea(Integer tarea) {
             this.tarea = tarea;
         }
 
@@ -70,8 +70,8 @@ public final class NState {
             return marcado.getEnabledElements();
         }
                 
-        public void avanzarMarcado(Task e) {
-            marcado.execute(e.getMatrixID());
+        public void avanzarMarcado(Integer e) {
+            marcado.execute(e);
         }
 
         public boolean finalModelo() {

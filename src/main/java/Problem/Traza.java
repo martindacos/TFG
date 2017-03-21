@@ -13,18 +13,17 @@ import java.util.ArrayList;
  * @author marti
  */
 public class Traza implements InterfazTraza{
-    //Tareas pertenecientes a la traza
-    private ArrayList<Task> trace;
+    private ArrayList<Integer> trace;
 
     public Traza() {
         this.trace = new ArrayList<>();
     }
         
-    public ArrayList<Task> getTrace() {
+    public ArrayList<Integer> getTrace() {
         return trace;
     }
 
-    public void setTrace(ArrayList<Task> trace) {
+    public void setTrace(ArrayList<Integer> trace) {
         this.trace = trace;
     }
 
@@ -33,12 +32,12 @@ public class Traza implements InterfazTraza{
     }
 
     @Override
-    public void anadirTarea(Task a) {
-        trace.add(a);
+    public void anadirTarea(int t) {
+        trace.add(t);
     }
 
     @Override
-    public Task leerTarea(int p) {
+    public Integer leerTarea(int p) {
         if (p < trace.size()){
             return trace.get(p);
         }else{

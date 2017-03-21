@@ -12,11 +12,11 @@ import java.util.HashMap;
  */
 public class EjecTareas {
 
-    private Task tareaOK;
-    private Task tareaINSERT;
+    private Integer tareaOK;
+    private Integer tareaINSERT;
     //Posibles tareas a ejecutar en esta instancia de la traza
-    private ArrayList<Task> execute;
-    private Task skip;
+    private ArrayList<Integer> execute;
+    private Integer skip;
     //Colección de elementos que vamos a guardar del marcado
     ArrayList<HashMap<TIntHashSet, Integer>> tokens;
     private int startPlace;
@@ -27,45 +27,42 @@ public class EjecTareas {
     public EjecTareas() {
     }
 
-    public ArrayList<Task> getExecute() {
+    public ArrayList<Integer> getExecute() {
         return execute;
     }
 
-    public Task getSkip() {
+    public Integer getSkip() {
         return skip;
     }
 
-    public Task getTareaINSERT() {
+    public Integer getTareaINSERT() {
         return tareaINSERT;
     }
 
-    public Task getTareaOK() {
+    public Integer getTareaOK() {
         return tareaOK;
     }
 
     public void clear() {
         this.tareaOK = null;
-        execute = new ArrayList<Task>();
+        execute = new ArrayList<Integer>();
         this.skip = null;
     }
 
-    public void anadirOk(Task a) {
-        Task nueva = new Task(a);
-        tareaOK = nueva;
+    public void anadirOk(Integer a) {
+        tareaOK = a;
     }
 
-    public void anadirINSERT(Task a) {
-        Task nueva = new Task(a);
-        tareaINSERT = nueva;
+    public void anadirINSERT(Integer a) {
+        tareaINSERT = a;
     }
         
-    public void anadirExecute(Task a) {
-        Task nueva = new Task(a);
-        execute.add(nueva);
+    public void anadirExecute(Integer a) {
+        execute.add(a);
     }
     
-    public Task leerTareaExecute() {
-        skip = new Task(execute.get(0));
+    public Integer leerTareaExecute() {
+        Integer skip = execute.get(0);
         //System.out.println("leerTareaExecute " + skip.getId() +" "+ skip.getMatrixID());
         execute.remove(0);
         return skip;

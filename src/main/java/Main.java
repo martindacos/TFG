@@ -38,21 +38,21 @@ public class Main {
         Modelo miModelo = Modelo.getModelo();
         
         //Creamos el modelo desde archivo
-//        Readers r = new Readers("ETM.xes", "ETM.hn");
-//        Modelo miModelo = Modelo.getModelo(r.getInd());
+        //Readers r = new Readers("ETM.xes", "ETM.hn");
+        //Modelo miModelo = Modelo.getModelo(r.getInd());
         miModelo.getInd().print();
         
         final Traza test = new Traza();
         // Tarea A
-        test.anadirTarea(miModelo.getInd().getTask(0).getTask());
+        test.anadirTarea(miModelo.getInd().getTask(0).getTask().getMatrixID());
         // Tarea B
-        test.anadirTarea(miModelo.getInd().getTask(1).getTask());
+        test.anadirTarea(miModelo.getInd().getTask(1).getTask().getMatrixID());
         // Tarea C
-        test.anadirTarea(miModelo.getInd().getTask(2).getTask());
+        test.anadirTarea(miModelo.getInd().getTask(2).getTask().getMatrixID());
         // Tarea D
-        test.anadirTarea(miModelo.getInd().getTask(3).getTask());
+        test.anadirTarea(miModelo.getInd().getTask(3).getTask().getMatrixID());
         // Tarea E
-        test.anadirTarea(miModelo.getInd().getTask(4).getTask());
+        test.anadirTarea(miModelo.getInd().getTask(4).getTask().getMatrixID());
 
 //        ArrayList<Task> tasks = new ArrayList();
 //        for (int i=0; i < miModelo.getInd().getNumOfTasks(); i++) {
@@ -155,7 +155,7 @@ public class Main {
             State s = (State) node.state();
             System.out.println("    Posición de la traza " + s.getPos());
             if (s.getPos() < test.getTrace().size()) {
-                System.out.println("    Tarea de la Traza " + test.leerTarea(s.getPos()).getMatrixID());
+                System.out.println("    Tarea de la Traza " + test.leerTarea(s.getPos()));
             }
             System.out.println(s.getMarcado().toString());
             System.out.println("------------------------------------");
@@ -187,7 +187,7 @@ public class Main {
         LinkedList<StateMove> movements = new LinkedList<StateMove>();
         ejec.clear();
         
-        Task e = trace.leerTarea(state.getPos());
+        Integer e = trace.leerTarea(state.getPos());
 
         if (!trace.procesadoTraza(state.getPos())) {
             movements.add(INSERT);
@@ -198,7 +198,7 @@ public class Main {
             TIntIterator tasks = posiblesTareas.iterator();
             while (tasks.hasNext()) {
                 int id = tasks.next();
-                if (e.getMatrixID() == id) {
+                if (e == id) {
                     movements.add(OK);
                     ejec.anadirOk(e);
                     break;
@@ -213,10 +213,10 @@ public class Main {
                 int id = tasks.next();
                 if (e == null) {
                     movements.add(SKIP);
-                    ejec.anadirExecute(modelo.getTask(id).getTask());
-                }else if (e.getMatrixID() != id) {
+                    ejec.anadirExecute(modelo.getTask(id).getTask().getMatrixID());
+                }else if (e != id) {
                     movements.add(SKIP);
-                    ejec.anadirExecute(modelo.getTask(id).getTask());
+                    ejec.anadirExecute(modelo.getTask(id).getTask().getMatrixID());
                 }
             }
         }
@@ -266,13 +266,13 @@ public class Main {
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(OK);
-                successor.setTarea(ejec.getTareaOK().getId());
+                successor.setTarea(ejec.getTareaOK());
                 break;
             case SKIP:
                 //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
-                Task t = ejec.leerTareaExecute();
-                successor.setTarea(t.getId());
-                System.out.println("TAREA A HACER EL SKIP ----------------> " + t.getId());
+                Integer t = ejec.leerTareaExecute();
+                successor.setTarea(t);
+                System.out.println("TAREA A HACER EL SKIP ----------------> " + t);
                 successor.avanzarMarcado(t);
                 successor.setMov(SKIP);
                 break;
@@ -280,7 +280,7 @@ public class Main {
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(INSERT);
-                System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT().getId());
+                System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT());
                 //successor.avanzarMarcado(ejec.getTareaINSERT());
                 successor.setTarea(state.getTarea());
                 break;
@@ -288,6 +288,7 @@ public class Main {
         
         System.out.println("MARCADO DESPUES");
         System.out.println(successor.getMarcado().toString());
+        System.out.println("EnabledTasks " + successor.getMarcado().getEnabledElements());
         
         return successor;
     }
