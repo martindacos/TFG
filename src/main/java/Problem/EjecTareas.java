@@ -63,13 +63,11 @@ public class EjecTareas {
     
     public Integer leerTareaExecute() {
         Integer skip = execute.get(0);
-        //System.out.println("leerTareaExecute " + skip.getId() +" "+ skip.getMatrixID());
         execute.remove(0);
         return skip;
     }
 
     public ArrayList<HashMap<TIntHashSet, Integer>> getTokens() {
-        System.out.println("GET: " + tokens);
         return tokens;
     }
 
@@ -90,9 +88,7 @@ public class EjecTareas {
     }
     
     public void setTokens(ArrayList<HashMap<TIntHashSet, Integer>> tokens) {
-        //this.tokens = (ArrayList<HashMap<TIntHashSet, Integer>>) tokens.clone();
         this.tokens = tokens;
-        System.out.println("SET: " + this.tokens);
     }
 
     public int getStartPlace() {

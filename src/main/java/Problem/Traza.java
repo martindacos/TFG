@@ -14,6 +14,7 @@ import java.util.ArrayList;
  */
 public class Traza implements InterfazTraza{
     private ArrayList<Integer> trace;
+    private double score;
 
     public Traza() {
         this.trace = new ArrayList<>();
@@ -25,6 +26,14 @@ public class Traza implements InterfazTraza{
 
     public void setTrace(ArrayList<Integer> trace) {
         this.trace = trace;
+    }
+
+    public void setScore(double score) {
+        this.score = score;
+    }
+
+    public double getScore() {
+        return score;
     }
 
     public int tamTrace() {

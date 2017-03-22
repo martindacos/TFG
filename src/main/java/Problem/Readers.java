@@ -33,6 +33,8 @@ public class Readers {
 
     private Log log;
     private CMIndividual ind;
+    
+    private int pos = 0;
     private ArrayList<Traza> traces;
     
     public Readers(String logPath, String indPath) throws EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
@@ -80,5 +82,21 @@ public class Readers {
 
     public ArrayList<Traza> getTraces() {
         return traces;
+    }
+
+    public void setTraces(ArrayList<Traza> traces) {
+        this.traces = traces;
+    }
+    
+    public Traza getTrazaActual() {
+        return traces.get(pos);
+    }
+    
+    public Traza getTrazaPos(int p) {
+        return traces.get(p);
+    }
+        
+    public void avanzarPos() {
+        pos++;
     }
 }
