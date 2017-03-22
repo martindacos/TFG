@@ -1,12 +1,9 @@
-1ª Versión del Proyecto de TFG.
+Sistema de análisis de conformidad en modelos de procesos
 
-Sospechas de fallos:
-	*Cuando se tienen que realizar INSERTS. El funcionamiento es correcto para trazas de menor e igual tamaño que el habitual del modelo. Para el resto de trazas no se obtiene su alineamiento óptimo.
-	*La copia del marcado del modelo en el "successor" puede ser conflictiva.
-	*La función heurística no parece ser la idónea para el algoritmo.
+	1.Implementación mediante Algoritmo A*
 
-No Implementado:
-	*Lectura de ficheros para obtener el modelo y las trazas.
-	
+		Lectura de ficheros .xes y .hn para modelos y Logs. No transforma de Heuristic Net a Causal Net.
+		Procesado de todas las trazas para calcular su alineamiento.
+		Utilización de la librería Hipster4j para el cálculo del alineamiento óptimo.
 
 Martín Dacosta Salgado

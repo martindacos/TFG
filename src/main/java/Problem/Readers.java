@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package Problem;
 
 import domainLogic.exceptions.EmptyLogException;
@@ -48,10 +43,10 @@ public class Readers {
         IndividualReaderInterface readerInd = new IndividualReaderHN();
 
         try {
-            log.simplifyAndAddDummies(false, false);
+            log.simplifyAndAddDummies(true, false);
             ind = readerInd.read(indPath, log);
         } catch (NullPointerException ex) {
-            log.simplifyAndAddDummies(false, true);
+            log.simplifyAndAddDummies(true, true);
             ind = readerInd.read(indPath, log);
         }
         
@@ -70,6 +65,9 @@ public class Readers {
             this.traces.add(traza);
             System.out.println("]");
         }
+    }
+
+    public Readers() {
     }
 
     public Log getLog() {

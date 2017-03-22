@@ -34,31 +34,37 @@ import java.util.Random;
 public class Main {
 
     public static void main(String[] args) throws IOException, EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
-        //Creamos el modelo
-        Modelo miModelo = Modelo.getModelo();
+        Modelo miModelo;
+        Readers r;
 
-        //Creamos el modelo desde archivo
-        Readers r = new Readers("ETM.xes", "ETM.hn");
-        //Modelo miModelo = Modelo.getModelo(r.getInd());
-        miModelo.getInd().print();
+        switch (args.length) {
+            case 2:
+                //Creamos el modelo desde archivo: "Logs/ETM2/ETM.xes", "Logs/ETM2/ETM.hn"
+                r = new Readers(args[0], args[1]);
+                miModelo = Modelo.getModelo(r.getInd());
+                miModelo.getInd().print();
+                break;
+            default:
+                r = new Readers();
+                miModelo = Modelo.getModelo();
+                ArrayList<Traza> prueba = new ArrayList<>();
+                Traza test = new Traza();
+                test.anadirTarea(0);
+                test.anadirTarea(1);
+                test.anadirTarea(2);
+                test.anadirTarea(3);
+                test.anadirTarea(4);
 
-//        ArrayList<Traza> prueba = new ArrayList<>();
-//        Traza test = new Traza();
-//        test.anadirTarea(0);
-//        test.anadirTarea(1);
-//        test.anadirTarea(2);
-//        test.anadirTarea(3);
-//        test.anadirTarea(4);
-//        
-//        Traza test2 = new Traza();
-//        test2.anadirTarea(0);
-//        test2.anadirTarea(1);
-//        test2.anadirTarea(2);
-//        test2.anadirTarea(4);
-//        
-//        prueba.add(test);
-//        prueba.add(test2);
-//        r.setTraces(prueba);
+                Traza test2 = new Traza();
+                test2.anadirTarea(0);
+                test2.anadirTarea(1);
+                test2.anadirTarea(2);
+                test2.anadirTarea(4);
+
+                prueba.add(test);
+                prueba.add(test2);
+                r.setTraces(prueba);
+        }
 
         final State initialState = new State(miModelo.getInd());
         initialState.getMarcado().restartMarking();
