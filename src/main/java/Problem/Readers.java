@@ -5,6 +5,7 @@ import domainLogic.exceptions.InvalidFileExtensionException;
 import domainLogic.exceptions.MalformedFileException;
 import domainLogic.exceptions.NonFinishedWorkflowException;
 import domainLogic.exceptions.WrongLogEntryException;
+import domainLogic.utils.ModelFormatConversor;
 import domainLogic.workflow.CaseInstance;
 import domainLogic.workflow.Log;
 import domainLogic.workflow.LogEntryInterface;
@@ -45,9 +46,11 @@ public class Readers {
         try {
             log.simplifyAndAddDummies(true, false);
             ind = readerInd.read(indPath, log);
+            ind = ModelFormatConversor.HNtoCN(ind);
         } catch (NullPointerException ex) {
             log.simplifyAndAddDummies(true, true);
             ind = readerInd.read(indPath, log);
+            ind = ModelFormatConversor.HNtoCN(ind);
         }
         
         System.out.println("Log '" + log.getName() + "':");

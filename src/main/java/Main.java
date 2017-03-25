@@ -256,7 +256,8 @@ public class Main {
         }
 
         //Realizamos la copia del marcado
-        ArrayList<HashMap<TIntHashSet, Integer>> tokensA = state.getMarcado().cloneTokens();
+        //ArrayList<HashMap<TIntHashSet, Integer>> tokensA = state.getMarcado().cloneTokens();
+        ArrayList<HashMap<TIntHashSet, Integer>> tokensA = state.getMarcado().getTokens();
         ejec.setTokens(tokensA);
         ejec.setEndPlace(state.getMarcado().getEndPlace());
         ejec.setNumOfTokens(state.getMarcado().getNumberTokens());
