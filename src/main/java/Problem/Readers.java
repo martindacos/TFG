@@ -9,7 +9,6 @@ import domainLogic.utils.ModelFormatConversor;
 import domainLogic.workflow.CaseInstance;
 import domainLogic.workflow.Log;
 import domainLogic.workflow.LogEntryInterface;
-import domainLogic.workflow.Task.Task;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import domainLogic.workflow.algorithms.geneticMining.individual.reader.IndividualReaderHN;
 import domainLogic.workflow.algorithms.geneticMining.individual.reader.IndividualReaderInterface;
@@ -18,7 +17,6 @@ import domainLogic.workflow.logReader.LogReaderXES;
 import gnu.trove.list.array.TIntArrayList;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -44,11 +42,11 @@ public class Readers {
         IndividualReaderInterface readerInd = new IndividualReaderHN();
 
         try {
-            log.simplifyAndAddDummies(true, false);
+            log.simplifyAndAddDummies(false, false);
             ind = readerInd.read(indPath, log);
             ind = ModelFormatConversor.HNtoCN(ind);
         } catch (NullPointerException ex) {
-            log.simplifyAndAddDummies(true, true);
+            log.simplifyAndAddDummies(false, true);
             ind = readerInd.read(indPath, log);
             ind = ModelFormatConversor.HNtoCN(ind);
         }

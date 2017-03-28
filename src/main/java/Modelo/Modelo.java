@@ -6,7 +6,6 @@ import domainLogic.workflow.algorithms.geneticMining.CMTask.CMTask;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
-import java.util.HashMap;
 
 /**
  *

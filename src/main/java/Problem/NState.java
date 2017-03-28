@@ -1,12 +1,8 @@
 package Problem;
 
-import domainLogic.workflow.Task.Task;
 import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
-import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
-import java.util.ArrayList;
-import java.util.Objects;
 import java.util.Random;
 
 public final class NState {
@@ -74,10 +70,11 @@ public final class NState {
             marcado.execute(e);
         }
 
+        //La tarea final se ha ejecutado y no quedan tareas activas
         public boolean finalModelo() {
-            return marcado.isEndPlaceEnabled();
+            return (marcado.isEndPlaceEnabled() && marcado.getEnabledElements().size() == 0);
         }
-
+     
 //        @Override
 //        public int hashCode() {
 //            int hash = 5;

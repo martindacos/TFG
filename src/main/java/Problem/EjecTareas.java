@@ -1,7 +1,5 @@
 package Problem;
 
-import domainLogic.workflow.Task.Task;
-import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
 import gnu.trove.set.hash.TIntHashSet;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,10 +13,10 @@ public class EjecTareas {
     private Integer tareaOK;
     private Integer tareaINSERT;
     //Posibles tareas a ejecutar en esta instancia de la traza
-    private ArrayList<Integer> execute;
-    private Integer skip;
+    private ArrayList<Integer> tareasSkip;
     //Colección de elementos que vamos a guardar del marcado
     ArrayList<HashMap<TIntHashSet, Integer>> tokens;
+    //Elementos para la copia del marcado
     private int startPlace;
     private int numOfTokens;
     private int endPlace;
@@ -27,12 +25,8 @@ public class EjecTareas {
     public EjecTareas() {
     }
 
-    public ArrayList<Integer> getExecute() {
-        return execute;
-    }
-
-    public Integer getSkip() {
-        return skip;
+    public ArrayList<Integer> getTareasSkip() {
+        return tareasSkip;
     }
 
     public Integer getTareaINSERT() {
@@ -45,25 +39,24 @@ public class EjecTareas {
 
     public void clear() {
         this.tareaOK = null;
-        execute = new ArrayList<Integer>();
-        this.skip = null;
+        tareasSkip = new ArrayList<Integer>();
     }
 
     public void anadirOk(Integer a) {
         tareaOK = a;
     }
 
-    public void anadirINSERT(Integer a) {
+    public void anadirInsert(Integer a) {
         tareaINSERT = a;
     }
         
-    public void anadirExecute(Integer a) {
-        execute.add(a);
+    public void anadirSkip(Integer a) {
+        tareasSkip.add(a);
     }
     
-    public Integer leerTareaExecute() {
-        Integer skip = execute.get(0);
-        execute.remove(0);
+    public Integer leerTareaSkip() {
+        Integer skip = tareasSkip.get(0);
+        tareasSkip.remove(0);
         return skip;
     }
 

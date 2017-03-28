@@ -1,6 +1,7 @@
 
 import Modelo.Modelo;
 import Problem.EjecTareas;
+import Problem.Estadisticas;
 import Problem.NState.State;
 import Problem.NState.StateMove;
 import static Problem.NState.StateMove.*;
@@ -11,7 +12,6 @@ import domainLogic.exceptions.InvalidFileExtensionException;
 import domainLogic.exceptions.MalformedFileException;
 import domainLogic.exceptions.NonFinishedWorkflowException;
 import domainLogic.exceptions.WrongLogEntryException;
-import domainLogic.workflow.Task.Task;
 import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import es.usc.citius.hipster.algorithm.Hipster;
@@ -39,14 +39,37 @@ public class Main {
 
         switch (args.length) {
             case 2:
-                //Creamos el modelo desde archivo: "Logs/ETM2/ETM.xes", "Logs/ETM2/ETM.hn"
+                //Creamos el modelo desde archivo: Logs/g3/grpd_g3pi300.xes Logs/g3/g3.hn
                 r = new Readers(args[0], args[1]);
                 miModelo = Modelo.getModelo(r.getInd());
                 miModelo.getInd().print();
+                
+                ArrayList<Traza> p = new ArrayList<>();
+                Traza t = new Traza();
+                t.anadirTarea(0);
+                t.anadirTarea(1);
+                t.anadirTarea(2);
+                t.anadirTarea(3);
+                t.anadirTarea(4);
+                t.anadirTarea(5);
+                t.anadirTarea(6);
+                t.anadirTarea(7);
+                t.anadirTarea(8);
+                t.anadirTarea(9);
+                t.anadirTarea(10);
+                t.anadirTarea(11);
+                t.anadirTarea(28);
+                t.anadirTarea(17);
+                t.anadirTarea(18);
+                t.anadirTarea(19);
+
+                p.add(t);
+                r.setTraces(p);
                 break;
             default:
                 r = new Readers();
                 miModelo = Modelo.getModelo();
+                miModelo.getInd().print();
                 ArrayList<Traza> prueba = new ArrayList<>();
                 Traza test = new Traza();
                 test.anadirTarea(0);
@@ -61,8 +84,24 @@ public class Main {
                 test2.anadirTarea(2);
                 test2.anadirTarea(4);
 
+                Traza test3 = new Traza();
+                test3.anadirTarea(0);
+                
+                Traza test4 = new Traza();
+                test4.anadirTarea(4);
+                
+                Traza test5 = new Traza();
+                test5.anadirTarea(0);
+                test5.anadirTarea(1);
+                test5.anadirTarea(3);
+                test5.anadirTarea(0);
+                test5.anadirTarea(4);
+                
                 prueba.add(test);
                 prueba.add(test2);
+                prueba.add(test3);
+                prueba.add(test4);
+                prueba.add(test5);
                 r.setTraces(prueba);
         }
 
@@ -119,13 +158,14 @@ public class Main {
         //Tiempo total del cálculo del algoritmo
         long total_time = 0;
 
+        //System.out.println(initialState.getMarcado().toString());
         for (int i = 0; i < r.getTraces().size(); i++) {
             WeightedNode n = null;
             double mejorScore = 0d;
             boolean parar = false;
             initialState.getMarcado().restartMarking();
             ejec.clear();
-            
+            r.getTrazaActual().print();
             long time_start, time_end;
             //Empezamos a tomar la medida del tiempo
             time_start = System.currentTimeMillis();
@@ -135,13 +175,14 @@ public class Main {
                 //Final del modelo y final de la traza (para hacer skips y inserts al final)
                 if (parar) {
                     //System.out.println("------------------SIGO------------------");
-                    double estimacion = (double) n.getScore();
+                    double estimacion = (double) n1.getScore();
                     //System.out.println("ESTIMACION " + estimacion + " MEJOR SCORE " + mejorScore);
                     if (estimacion > mejorScore) {
                         break;
                     }
                 }
 
+                //Añadimos que non quede ninguna tarea activa en el modelo
                 if (r.getTrazaActual().procesadoTraza(s.getPos()) && s.finalModelo()) {
                     parar = true;
                     if (mejorScore == 0) {
@@ -166,54 +207,15 @@ public class Main {
             //Pasamos a la siguientes traza del procesado
             r.avanzarPos();
         }
-
-        double costeTotal = 0d;
-        for (int i = 0; i < nodosSalida.size(); i++) {
-//            Iterator it = nodosSalida.get(i).path().iterator();
-//            System.out.println("-------------------TRAZA "+i+" ----------------------------");
-//            while (it.hasNext()) {
-//                System.out.println();
-//                System.out.println("------Información del nodo-------");
-//                WeightedNode node = (WeightedNode) it.next();
-//                System.out.println("    Acción realizada " + node.action());
-//                System.out.println("    Coste Actual g() " + node.getCost());
-//                System.out.println("    Heurística h() " + node.getEstimation());
-//                System.out.println("------Información del estado-------");
-//                State s = (State) node.state();
-//                System.out.println("    Posición de la traza " + s.getPos());
-//                if (s.getPos() < r.getTrazaPos(i).getTrace().size()) {
-//                    System.out.println("    Tarea de la Traza " + r.getTrazaPos(i).leerTarea(s.getPos()));
-//                }
-//                System.out.println(s.getMarcado().toString());
-//                System.out.println("------------------------------------");
-//                System.out.println();
-//            }
-
-            Iterator it2 = nodosSalida.get(i).path().iterator();
-            //La primera iteración corresponde con el Estado Inicial
-            it2.next();
-            System.out.println();
-            System.out.println("------SALIDA VISUAL-------");
-            System.out.println("    TRAZA     MODELO");
-            while (it2.hasNext()) {
-                WeightedNode node = (WeightedNode) it2.next();
-                State s = (State) node.state();
-                if (node.action().equals(OK)) {
-                    System.out.println("    " + r.getTrazaPos(i).leerTarea(s.getPos() - 1) + "          " + s.getTarea());
-                } else if (node.action().equals(SKIP)) {
-                    System.out.println("    >>         " + s.getTarea());
-                } else {
-                    System.out.println("    " + r.getTrazaPos(i).leerTarea(s.getPos() - 1) + "          >>");
-                }
-            }
-            System.out.println();
-            System.out.println("Coste del Alineamiento " + r.getTrazaPos(i).getScore());
-            costeTotal = costeTotal + r.getTrazaPos(i).getScore();
-        }
+        
+        Estadisticas e = new Estadisticas();
+        //Impresion del alineamiento de una manera más visual
+        salidaVisual(nodosSalida,r);
         System.out.println();
         System.out.println("****************************************************************");
         System.out.println("Tiempo total de cálculo = " + total_time + " ms");
-        System.out.println("Coste total = " + costeTotal);
+        //Imprimimos el coste del individuo
+        System.out.println("Coste del individuo: " + e.costeIndividuo(r.getTraces()));
     }
 
     //Devolvemos todos los movimientos posibles en función de la traza y el modelo actual
@@ -224,8 +226,9 @@ public class Main {
         Integer e = trace.leerTarea(state.getPos());
 
         if (!trace.procesadoTraza(state.getPos())) {
+            //Insetar la tarea actual de la traza
             movements.add(INSERT);
-            ejec.anadirINSERT(e);
+            ejec.anadirInsert(e);
 
             //Posibles tareas a ejecutar en el modelo
             TIntHashSet posiblesTareas = state.getTareas();
@@ -233,6 +236,7 @@ public class Main {
             while (tasks.hasNext()) {
                 int id = tasks.next();
                 if (e == id) {
+                    //OK si la tarea de la traza se encuentra enabled
                     movements.add(OK);
                     ejec.anadirOk(e);
                     break;
@@ -240,18 +244,13 @@ public class Main {
             }
         }
         if (!state.finalModelo()) {
-            //Posibles tareas a ejecutar en el modelo
+            //Todas as tareas activas, incluso la de la traza
             TIntHashSet posiblesTareas = state.getTareas();
             TIntIterator tasks = posiblesTareas.iterator();
             while (tasks.hasNext()) {
                 int id = tasks.next();
-                if (e == null) {
-                    movements.add(SKIP);
-                    ejec.anadirExecute(modelo.getTask(id).getTask().getMatrixID());
-                } else if (e != id) {
-                    movements.add(SKIP);
-                    ejec.anadirExecute(modelo.getTask(id).getTask().getMatrixID());
-                }
+                movements.add(SKIP);
+                ejec.anadirSkip(id);
             }
         }
 
@@ -306,22 +305,23 @@ public class Main {
                 break;
             case SKIP:
                 //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
-                Integer t = ejec.leerTareaExecute();
+                Integer t = ejec.leerTareaSkip();
                 successor.setTarea(t);
                 //System.out.println("TAREA A HACER EL SKIP ----------------> " + t);
                 successor.avanzarMarcado(t);
                 successor.setMov(SKIP);
                 break;
             case INSERT:
+                //Teño que ejecutar a tarea do modelo
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(INSERT);
                 //System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT());
-                //successor.avanzarMarcado(ejec.getTareaINSERT());
-                successor.setTarea(state.getTarea());
+                successor.avanzarMarcado(ejec.getTareaINSERT());
+                successor.setTarea(ejec.getTareaINSERT());
                 break;
         }
-
+//        System.out.println("Pos traza " + successor.getPos());
 //        System.out.println("MARCADO DESPUES");
 //        System.out.println(successor.getMarcado().toString());
 //        System.out.println("EnabledTasks " + successor.getMarcado().getEnabledElements());
@@ -345,5 +345,29 @@ public class Main {
                 break;
         }
         return cost;
+    }
+    
+    public static void salidaVisual(ArrayList<WeightedNode> nodosSalida, Readers r) {
+        for (int i = 0; i < nodosSalida.size(); i++) {
+            Iterator it2 = nodosSalida.get(i).path().iterator();
+            //La primera iteración corresponde con el Estado Inicial
+            it2.next();
+            System.out.println();
+            System.out.println("------SALIDA VISUAL-------");
+            System.out.println("    TRAZA     MODELO");
+            while (it2.hasNext()) {
+                WeightedNode node = (WeightedNode) it2.next();
+                State s = (State) node.state();
+                if (node.action().equals(OK)) {
+                    System.out.println("    " + r.getTrazaPos(i).leerTarea(s.getPos() - 1) + "          " + s.getTarea());
+                } else if (node.action().equals(SKIP)) {
+                    System.out.println("    >>         " + s.getTarea());
+                } else {
+                    System.out.println("    " + r.getTrazaPos(i).leerTarea(s.getPos() - 1) + "          >>");
+                }
+            }
+            System.out.println();
+            System.out.println("Coste del Alineamiento " + r.getTrazaPos(i).getScore());
+        }
     }
 }
