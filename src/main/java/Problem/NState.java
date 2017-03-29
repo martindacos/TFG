@@ -2,7 +2,10 @@ package Problem;
 
 import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 public final class NState {
@@ -12,7 +15,7 @@ public final class NState {
 
     //Posibles movimientos del alineamiento
     public enum StateMove {
-        OK, SKIP, INSERT
+        OK, SKIP, INSERT, TOTALSKIP
     }
 
     public static final class State {
@@ -69,12 +72,33 @@ public final class NState {
         public void avanzarMarcado(Integer e) {
             marcado.execute(e);
         }
-
+          
         //La tarea final se ha ejecutado y no quedan tareas activas
         public boolean finalModelo() {
-            return (marcado.isEndPlaceEnabled() && marcado.getEnabledElements().size() == 0);
+            return marcado.isEndPlaceEnabled();
+        }
+        
+        public boolean noEnabled() {
+            return marcado.getEnabledElements().size() == 0;
         }
      
+        public ArrayList<Integer> getTaskWithTokens() {
+            ArrayList<Integer> tareas = new ArrayList<Integer>();
+            ArrayList<HashMap<TIntHashSet, Integer>> tokens = marcado.getTokens();
+            for (HashMap<TIntHashSet, Integer> token : tokens) {              
+                for (TIntHashSet tokenKey : token.keySet()) {
+                    if (token.get(tokenKey) > 0) {
+                        //System.out.println("Tareas con algún token");
+                        TIntIterator it = tokenKey.iterator();
+                        while (it.hasNext()) {
+                            //System.out.println(it.next());
+                            tareas.add(it.next());
+                        }
+                    }
+                }
+            }
+            return tareas;
+        }
 //        @Override
 //        public int hashCode() {
 //            int hash = 5;

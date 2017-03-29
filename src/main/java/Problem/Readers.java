@@ -51,23 +51,23 @@ public class Readers {
             ind = ModelFormatConversor.HNtoCN(ind);
         }
         
-        System.out.println("Log '" + log.getName() + "':");
+        //System.out.println("Log '" + log.getName() + "':");
         ConcurrentHashMap<String, CaseInstance> traces = log.getCaseInstances();
         for (String traceKey : traces.keySet()) {
             CaseInstance trace = traces.get(traceKey);
-            Integer numRepetitions = trace.getNumInstances();
-            System.out.print("\tTrace '" + trace.getId() + "' (" + numRepetitions + " repetitions): [ ");
+            //Integer numRepetitions = trace.getNumInstances();
+            //System.out.print("\tTrace '" + trace.getId() + "' (" + numRepetitions + " repetitions): [ ");
             TIntArrayList tasks = trace.getTaskSequence();
             Traza traza = new Traza();
             for (int i=0; i < tasks.size(); i++) {
-                System.out.print(tasks.get(i) + " ");
+                //System.out.print(tasks.get(i) + " ");
                 traza.anadirTarea(tasks.get(i));
             }
             this.traces.add(traza);
-            System.out.println("]");
+            //System.out.println("]");
         }
     }
-
+    
     public Readers() {
     }
 
@@ -97,5 +97,40 @@ public class Readers {
         
     public void avanzarPos() {
         pos++;
+    }
+    
+    public void setTraces1() {
+        traces = new ArrayList<>();
+        Traza test = new Traza();
+        test.anadirTarea(0);
+        test.anadirTarea(1);
+        test.anadirTarea(2);
+        test.anadirTarea(3);
+        test.anadirTarea(4);
+
+        Traza test2 = new Traza();
+        test2.anadirTarea(0);
+        test2.anadirTarea(1);
+        test2.anadirTarea(2);
+        test2.anadirTarea(4);
+
+        Traza test3 = new Traza();
+        test3.anadirTarea(0);
+
+        Traza test4 = new Traza();
+        test4.anadirTarea(4);
+
+        Traza test5 = new Traza();
+        test5.anadirTarea(0);
+        test5.anadirTarea(1);
+        test5.anadirTarea(3);
+        test5.anadirTarea(0);
+        test5.anadirTarea(4);
+
+        traces.add(test);
+        traces.add(test2);
+        traces.add(test3);
+        traces.add(test4);
+        traces.add(test5);
     }
 }

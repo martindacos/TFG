@@ -14,6 +14,8 @@ public class EjecTareas {
     private Integer tareaINSERT;
     //Posibles tareas a ejecutar en esta instancia de la traza
     private ArrayList<Integer> tareasSkip;
+    //Posibles tareas a ejecutar en esta instancia de la traza
+    private ArrayList<Integer> tareasTotalSkip;
     //Colección de elementos que vamos a guardar del marcado
     ArrayList<HashMap<TIntHashSet, Integer>> tokens;
     //Elementos para la copia del marcado
@@ -40,6 +42,7 @@ public class EjecTareas {
     public void clear() {
         this.tareaOK = null;
         tareasSkip = new ArrayList<Integer>();
+        tareasTotalSkip = new ArrayList<Integer>();
     }
 
     public void anadirOk(Integer a) {
@@ -60,6 +63,16 @@ public class EjecTareas {
         return skip;
     }
 
+    public void anadirTotalSkip(Integer a) {
+        tareasTotalSkip.add(a);
+    }
+
+    public Integer leerTareaTotalSkip() {
+        Integer skip = tareasTotalSkip.get(0);
+        tareasTotalSkip.remove(0);
+        return skip;
+    }
+    
     public ArrayList<HashMap<TIntHashSet, Integer>> getTokens() {
         return tokens;
     }

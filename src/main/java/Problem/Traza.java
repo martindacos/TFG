@@ -7,19 +7,19 @@ import java.util.ArrayList;
  * @author marti
  */
 public class Traza implements InterfazTraza{
-    private ArrayList<Integer> trace;
+    private ArrayList<Integer> tareas;
     private double score;
 
     public Traza() {
-        this.trace = new ArrayList<>();
+        this.tareas = new ArrayList<>();
     }
         
-    public ArrayList<Integer> getTrace() {
-        return trace;
+    public ArrayList<Integer> getTareas() {
+        return tareas;
     }
 
-    public void setTrace(ArrayList<Integer> trace) {
-        this.trace = trace;
+    public void setTareas(ArrayList<Integer> tareas) {
+        this.tareas = tareas;
     }
 
     public void setScore(double score) {
@@ -31,18 +31,18 @@ public class Traza implements InterfazTraza{
     }
 
     public int tamTrace() {
-        return trace.size();
+        return tareas.size();
     }
 
     @Override
     public void anadirTarea(int t) {
-        trace.add(t);
+        tareas.add(t);
     }
 
     @Override
     public Integer leerTarea(int p) {
-        if (p < trace.size()){
-            return trace.get(p);
+        if (p < tareas.size()){
+            return tareas.get(p);
         }else{
             return null;
         }
@@ -51,10 +51,10 @@ public class Traza implements InterfazTraza{
     @Override
     public Double getHeuristica(int pos) {
         double r;
-        if (pos >= trace.size()) {
+        if (pos >= tareas.size()) {
             r = 0;
         } else {
-            r = trace.size() - pos;
+            r = tareas.size() - pos;
         }
         return r;
     }
@@ -62,13 +62,13 @@ public class Traza implements InterfazTraza{
     //Ya acabé la traza. La última posicion quedaría fuera. 
     @Override
     public boolean procesadoTraza(int pos) {
-        return pos >= trace.size();
+        return pos >= tareas.size();
     }
     
     public void print() {
         System.out.println();
-        for (int i = 0; i < trace.size(); i++) {
-            System.out.print(trace.get(i) + " ");
+        for (int i = 0; i < tareas.size(); i++) {
+            System.out.print(tareas.get(i) + " ");
         }
         System.out.println();
     }
