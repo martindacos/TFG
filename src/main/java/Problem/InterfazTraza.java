@@ -1,7 +1,5 @@
 package Problem;
 
-import domainLogic.workflow.Task.Task;
-
 /**
  *
  * @author marti
@@ -16,4 +14,7 @@ public interface InterfazTraza {
     public Double getHeuristica(int pos);
     //Función que dada una posición indica si la traza fue procesada
     public boolean procesadoTraza(int pos);
+    public double getScore();
+    public void setScore(double mejorScore);
+    public void print();
 }

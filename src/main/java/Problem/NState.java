@@ -21,9 +21,9 @@ public final class NState {
     public static final class State {
         //Posición actual de análisis de la traza
         private int pos;
-        //Marcada del modelo para esta traza
+        //Marcada del modelo para este estado
         private CMMarking marcado;
-        //MOvimiento ejecutado en este estado
+        //Movimiento ejecutado en este estado
         private StateMove mov;
         //Para identificar a tareas dumming nos skips
         private Integer tarea;
@@ -78,6 +78,7 @@ public final class NState {
             return marcado.isEndPlaceEnabled();
         }
         
+        //Ninguna tarea activa en el modelo
         public boolean noEnabled() {
             return marcado.getEnabledElements().size() == 0;
         }

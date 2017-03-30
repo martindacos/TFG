@@ -1,7 +1,8 @@
 
-import Modelo.Modelo;
 import Problem.EjecTareas;
 import Problem.Estadisticas;
+import Problem.InterfazEstadisticas;
+import Problem.InterfazTraza;
 import Problem.NState.State;
 import Problem.NState.StateMove;
 import static Problem.NState.StateMove.*;
@@ -34,18 +35,17 @@ import java.util.Random;
 public class Main {
 
     public static void main(String[] args) throws IOException, EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
-        Modelo miModelo;
-        Readers r;
+        Readers miReader;
 
         switch (args.length) {
             case 2:
                 //Cargamos el Modelo y el Log
-                r = new Readers(args[0], args[1]);
-                miModelo = Modelo.getModelo(r.getInd());
-                miModelo.getInd().print();
-                
-                ArrayList<Traza> p2 = new ArrayList<>();
-                Traza t2 = new Traza();
+                miReader = Readers.getReader(args[0], args[1]);
+                //miModelo = Modelo.getModelo(r.getInd());
+                miReader.getInd().print();
+
+                ArrayList<InterfazTraza> p2 = new ArrayList<>();
+                InterfazTraza t2 = new Traza();
                 t2.anadirTarea(0);
                 t2.anadirTarea(1);
                 t2.anadirTarea(2);
@@ -57,50 +57,49 @@ public class Main {
 //                t2.anadirTarea(5);
 //                t2.anadirTarea(7);
                 p2.add(t2);
-                r.setTraces(p2);             
+                //miReader.setTraces(p2);
                 //r.setTraces1();
                 break;
             default:
                 //Cargamos un 
-                r = new Readers();
-                miModelo = Modelo.getModelo();
-                miModelo.getInd().print();
-                ArrayList<Traza> prueba = new ArrayList<>();
-                Traza test = new Traza();
+                miReader = Readers.getReader();
+                miReader.getInd().print();
+                ArrayList<InterfazTraza> prueba = new ArrayList<>();
+                InterfazTraza test = new Traza();
                 test.anadirTarea(0);
                 test.anadirTarea(1);
                 test.anadirTarea(2);
                 test.anadirTarea(3);
                 test.anadirTarea(4);
 
-                Traza test2 = new Traza();
+                InterfazTraza test2 = new Traza();
                 test2.anadirTarea(0);
                 test2.anadirTarea(1);
                 test2.anadirTarea(2);
                 test2.anadirTarea(4);
 
-                Traza test3 = new Traza();
+                InterfazTraza test3 = new Traza();
                 test3.anadirTarea(0);
-                
-                Traza test4 = new Traza();
+
+                InterfazTraza test4 = new Traza();
                 test4.anadirTarea(4);
-                
-                Traza test5 = new Traza();
+
+                InterfazTraza test5 = new Traza();
                 test5.anadirTarea(0);
                 test5.anadirTarea(1);
                 test5.anadirTarea(3);
                 test5.anadirTarea(0);
                 test5.anadirTarea(4);
-                
+
                 prueba.add(test);
                 prueba.add(test2);
                 prueba.add(test3);
                 prueba.add(test4);
                 prueba.add(test5);
-                r.setTraces(prueba);
+                miReader.setTraces(prueba);
         }
 
-        final State initialState = new State(miModelo.getInd());
+        final State initialState = new State(miReader.getInd());
         initialState.getMarcado().restartMarking();
 
         EjecTareas ejec = new EjecTareas();
@@ -109,7 +108,7 @@ public class Main {
         ActionFunction<StateMove, State> af = new ActionFunction<StateMove, State>() {
             @Override
             public Iterable<StateMove> actionsFor(State state) {
-                return validMovementsFor(state, r.getTrazaActual(), ejec);
+                return validMovementsFor(state, miReader.getTrazaActual(), ejec);
             }
         };
 
@@ -117,7 +116,7 @@ public class Main {
         atf = new ActionStateTransitionFunction<StateMove, State>() {
             @Override
             public State apply(StateMove action, State state) {
-                return applyActionToState(action, state, ejec, miModelo.getInd());
+                return applyActionToState(action, state, ejec, miReader.getInd());
             }
         };
 
@@ -135,10 +134,11 @@ public class Main {
             public Double estimate(State state) {
                 //Sólo Poñemos a Heurística. Da g() xa se encarga Hipster.
                 //Heurística. Número de elementos que faltan por procesar da traza
-                return r.getTrazaActual().getHeuristica(state.getPos());
+                return miReader.getTrazaActual().getHeuristica(state.getPos());
             }
         };
 
+        //Definimos el problema de búsqueda
         SearchProblem<StateMove, State, WeightedNode<StateMove, State, Double>> p
                 = ProblemBuilder.create()
                         .initialState(initialState)
@@ -154,13 +154,13 @@ public class Main {
         long total_time = 0;
 
         //System.out.println(initialState.getMarcado().toString());
-        for (int i = 0; i < r.getTraces().size(); i++) {
+        //Iteramos sobre el problema de búsqueda
+        for (int i = 0; i < miReader.getTraces().size(); i++) {
             WeightedNode n = null;
             double mejorScore = 0d;
             boolean parar = false;
             initialState.getMarcado().restartMarking();
-            ejec.clear();
-            r.getTrazaActual().print();
+            miReader.getTrazaActual().print();
             long time_start, time_end;
             //Empezamos a tomar la medida del tiempo
             time_start = System.currentTimeMillis();
@@ -178,7 +178,7 @@ public class Main {
                 }
 
                 //Añadimos que non quede ninguna tarea activa en el modelo
-                if (r.getTrazaActual().procesadoTraza(s.getPos()) && s.finalModelo() && s.noEnabled()) {
+                if (miReader.getTrazaActual().procesadoTraza(s.getPos()) && s.finalModelo() && s.noEnabled()) {
                     parar = true;
                     if (mejorScore == 0) {
                         mejorScore = (double) n1.getScore();
@@ -193,71 +193,81 @@ public class Main {
                 }
             }
             time_end = System.currentTimeMillis();
-            System.out.println("Tiempo de cálculo del alineamiento "+i+" = "+ (time_end - time_start) +" ms");
+            System.out.println("Tiempo de cálculo del alineamiento " + i + " = " + (time_end - time_start) + " ms");
             total_time = total_time + (time_end - time_start);
             //Guardamos el nodo con los estados soluciones de la traza
             nodosSalida.add(n);
             //Guardamos el coste obtenido en el alineamiento
-            r.getTrazaActual().setScore(mejorScore);
+            miReader.getTrazaActual().setScore(mejorScore);
             //Pasamos a la siguientes traza del procesado
-            r.avanzarPos();
+            miReader.avanzarPos();
         }
-        
-        Estadisticas e = new Estadisticas();
+
+        InterfazEstadisticas e = new Estadisticas();
         //Impresion del alineamiento de una manera más visual
-        salidaVisual(nodosSalida,r);
+        salidaVisual(nodosSalida, miReader);
         System.out.println();
         System.out.println("****************************************************************");
         System.out.println("Tiempo total de cálculo = " + total_time + " ms");
         //Imprimimos el coste del individuo
-        System.out.println("Coste del individuo: " + e.costeIndividuo(r.getTraces()));
+        System.out.println("Coste del individuo: " + e.costeIndividuo(miReader.getTraces()));
     }
 
     //Devolvemos todos los movimientos posibles en función de la traza y el modelo actual
-    private static Iterable<StateMove> validMovementsFor(State state, Traza trace, EjecTareas ejec) {
+    private static Iterable<StateMove> validMovementsFor(State state, InterfazTraza trace, EjecTareas ejec) {
+        //Creamos una lista con los movimientos posibles
         LinkedList<StateMove> movements = new LinkedList<StateMove>();
+        //Limpiamos la variables de la clase auxiliar
         ejec.clear();
-
+        //Leemos la tarea actual de la traza
         Integer e = trace.leerTarea(state.getPos());
-
+        //Si NO acabamos de procesar la traza
         if (!trace.procesadoTraza(state.getPos())) {
-            //Insetar la tarea actual de la traza
+            //Anadimos el movimiento posible
             movements.add(INSERT);
+            //Anadimos la tarea a la clase auxiliar
             ejec.anadirInsert(e);
 
-            //Posibles tareas a ejecutar en el modelo
+            //Tareas activas del modelo
             TIntHashSet posiblesTareas = state.getTareas();
             TIntIterator tasks = posiblesTareas.iterator();
             while (tasks.hasNext()) {
+                //Obtenemos el identificador de la tarea
                 int id = tasks.next();
+                //Si la tarea de la traza coincide con la activa
                 if (e == id) {
-                    //OK si la tarea de la traza se encuentra enabled
+                    //Anadimos el movimiento y la tarea
                     movements.add(OK);
                     ejec.anadirOk(e);
                     break;
                 }
             }
         }
-        //En realidad podría sacar o if. Teño que facelo siempre.
+        //Si NO estamos en el final del modelo
         if (!state.noEnabled()) {
-            //Todas as tareas activas, incluso la de la traza
+            //Tareas activas del modelo
             TIntHashSet posiblesTareas = state.getTareas();
             TIntIterator tasks = posiblesTareas.iterator();
+            //Anadimos un movimiento por cada tarea
             while (tasks.hasNext()) {
                 int id = tasks.next();
                 movements.add(SKIP);
+                //Anadimos la tarea a la coleccion para ejecutarla
                 ejec.anadirSkip(id);
             }
-        }else {
-            //Forzamos el avanzado buscando tareas con algún token
+        } else {
+            //Si estamos en el final del modelo
+            //Obtenemos las tareas con algun token
             ArrayList<Integer> tasks = state.getTaskWithTokens();
-            for (int i=0; i<tasks.size(); i++) {
+            //Anadimos un movimiento por cada tarea
+            for (int i = 0; i < tasks.size(); i++) {
                 movements.add(TOTALSKIP);
+                //Anadimos la tarea a la coleccion para ejecutarla
                 ejec.anadirTotalSkip(tasks.get(i));
             }
         }
 
-        //Realizamos la copia del marcado
+        //Almacenamos el marcado en una clase auxiliar para su posterior copia
         ArrayList<HashMap<TIntHashSet, Integer>> tokensA = state.getMarcado().getTokens();
         ejec.setTokens(tokensA);
         ejec.setEndPlace(state.getMarcado().getEndPlace());
@@ -268,6 +278,7 @@ public class Main {
         ejec.setPossibleEnabledTasks(possibleEnabledTasksClone);
 
         //System.out.println(movements);
+        //Devolvemos una coleccion con los posibles movimientos
         return movements;
     }
 
@@ -292,12 +303,11 @@ public class Main {
 //        System.out.println("MARCADO ANTES");
 //        System.out.println(successor.getMarcado().toString());
 //        System.out.println("Tareas que se pueden ejecutar: " + successor.getMarcado().getEnabledElements());
-
         switch (action) {
             case OK:
                 //Avanzamos el modelo con la tarea que podemos ejecutar
                 successor.avanzarMarcado(ejec.getTareaOK());
-                System.out.println("TAREA A HACER EL OK ----------------> " + ejec.getTareaOK());
+                //System.out.println("TAREA A HACER EL OK ----------------> " + ejec.getTareaOK());
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(OK);
@@ -307,7 +317,7 @@ public class Main {
                 //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
                 Integer t = ejec.leerTareaSkip();
                 successor.setTarea(t);
-                System.out.println("TAREA A HACER EL SKIP ----------------> " + t);
+                //System.out.println("TAREA A HACER EL SKIP ----------------> " + t);
                 successor.avanzarMarcado(t);
                 successor.setMov(SKIP);
                 break;
@@ -316,24 +326,26 @@ public class Main {
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(INSERT);
-                System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT());
+                //System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT());
                 //Si la tarea existe en el modelo la ejecutamos
-                if (Modelo.getModelo().getInd().getTask(ejec.getTareaINSERT()) != null) successor.avanzarMarcado(ejec.getTareaINSERT());
+                if (m.getTask(ejec.getTareaINSERT()) != null) {
+                    successor.avanzarMarcado(ejec.getTareaINSERT());
+                }
                 successor.setTarea(ejec.getTareaINSERT());
                 break;
             case TOTALSKIP:
                 //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
                 Integer ta = ejec.leerTareaTotalSkip();
                 successor.setTarea(ta);
-                System.out.println("TAREA A HACER EL TOTALSKIP ----------------> " + ta);
+                //System.out.println("TAREA A HACER EL TOTALSKIP ----------------> " + ta);
                 successor.avanzarMarcado(ta);
                 successor.setMov(TOTALSKIP);
                 break;
         }
-        System.out.println("Pos traza " + successor.getPos());
-        System.out.println("MARCADO DESPUES");
-        System.out.println(successor.getMarcado().toString());
-        System.out.println("EnabledTasks " + successor.getMarcado().getEnabledElements());
+//        System.out.println("Pos traza " + successor.getPos());
+//        System.out.println("MARCADO DESPUES");
+//        System.out.println(successor.getMarcado().toString());
+//        System.out.println("EnabledTasks " + successor.getMarcado().getEnabledElements());
 
         return successor;
     }
@@ -358,7 +370,7 @@ public class Main {
         }
         return cost;
     }
-    
+
     public static void salidaVisual(ArrayList<WeightedNode> nodosSalida, Readers r) {
         for (int i = 0; i < nodosSalida.size(); i++) {
             Iterator it2 = nodosSalida.get(i).path().iterator();

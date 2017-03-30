@@ -26,6 +26,7 @@ public class Traza implements InterfazTraza{
         this.score = score;
     }
 
+    @Override
     public double getScore() {
         return score;
     }
