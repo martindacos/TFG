@@ -43,22 +43,8 @@ public class Main {
                 miReader = Readers.getReader(args[0], args[1]);
                 //miModelo = Modelo.getModelo(r.getInd());
                 miReader.getInd().print();
-
-                ArrayList<InterfazTraza> p2 = new ArrayList<>();
-                InterfazTraza t2 = new Traza();
-                t2.anadirTarea(0);
-                t2.anadirTarea(1);
-                t2.anadirTarea(2);
-//                t2.anadirTarea(8);
-//                t2.anadirTarea(0);
-//                t2.anadirTarea(3);
-//                t2.anadirTarea(6);
-//                t2.anadirTarea(4);
-//                t2.anadirTarea(5);
-//                t2.anadirTarea(7);
-                p2.add(t2);
-                //miReader.setTraces(p2);
-                //r.setTraces1();
+                //miReader.setTracesETM();
+                //miReader.setTracesG3();
                 break;
             default:
                 //Cargamos un 
@@ -177,8 +163,7 @@ public class Main {
                     }
                 }
 
-                //Añadimos que non quede ninguna tarea activa en el modelo
-                if (miReader.getTrazaActual().procesadoTraza(s.getPos()) && s.finalModelo() && s.noEnabled()) {
+                if (miReader.getTrazaActual().procesadoTraza(s.getPos()) && s.finalModelo()) {
                     parar = true;
                     if (mejorScore == 0) {
                         mejorScore = (double) n1.getScore();
@@ -243,8 +228,8 @@ public class Main {
                 }
             }
         }
-        //Si NO estamos en el final del modelo
-        if (!state.noEnabled()) {
+        //Si existen tareas activas en el modelo
+        if (state.Enabled()) {
             //Tareas activas del modelo
             TIntHashSet posiblesTareas = state.getTareas();
             TIntIterator tasks = posiblesTareas.iterator();
@@ -254,16 +239,6 @@ public class Main {
                 movements.add(SKIP);
                 //Anadimos la tarea a la coleccion para ejecutarla
                 ejec.anadirSkip(id);
-            }
-        } else {
-            //Si estamos en el final del modelo
-            //Obtenemos las tareas con algun token
-            ArrayList<Integer> tasks = state.getTaskWithTokens();
-            //Anadimos un movimiento por cada tarea
-            for (int i = 0; i < tasks.size(); i++) {
-                movements.add(TOTALSKIP);
-                //Anadimos la tarea a la coleccion para ejecutarla
-                ejec.anadirTotalSkip(tasks.get(i));
             }
         }
 
@@ -307,7 +282,7 @@ public class Main {
             case OK:
                 //Avanzamos el modelo con la tarea que podemos ejecutar
                 successor.avanzarMarcado(ejec.getTareaOK());
-                //System.out.println("TAREA A HACER EL OK ----------------> " + ejec.getTareaOK());
+                System.out.println("TAREA A HACER EL OK ----------------> " + ejec.getTareaOK());
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(OK);
@@ -327,19 +302,7 @@ public class Main {
                 successor.avanzarTarea();
                 successor.setMov(INSERT);
                 //System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT());
-                //Si la tarea existe en el modelo la ejecutamos
-                if (m.getTask(ejec.getTareaINSERT()) != null) {
-                    successor.avanzarMarcado(ejec.getTareaINSERT());
-                }
                 successor.setTarea(ejec.getTareaINSERT());
-                break;
-            case TOTALSKIP:
-                //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
-                Integer ta = ejec.leerTareaTotalSkip();
-                successor.setTarea(ta);
-                //System.out.println("TAREA A HACER EL TOTALSKIP ----------------> " + ta);
-                successor.avanzarMarcado(ta);
-                successor.setMov(TOTALSKIP);
                 break;
         }
 //        System.out.println("Pos traza " + successor.getPos());
@@ -355,9 +318,6 @@ public class Main {
         StateMove action = transition.getAction();
         Double cost = null;
         switch (action) {
-            case TOTALSKIP:
-                cost = 3d;
-                break;
             case SKIP:
                 cost = 3d;
                 break;
@@ -387,9 +347,7 @@ public class Main {
                     System.out.println("    " + r.getTrazaPos(i).leerTarea(s.getPos() - 1) + "          " + s.getTarea());
                 } else if (node.action().equals(SKIP)) {
                     System.out.println("    >>         " + s.getTarea());
-                } else if (node.action().equals(TOTALSKIP)) {
-                    System.out.println("    >>          >>");
-                } else {
+                }else {
                     System.out.println("    " + r.getTrazaPos(i).leerTarea(s.getPos() - 1) + "          >>");
                 }
             }

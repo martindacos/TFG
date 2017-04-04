@@ -8,6 +8,6 @@ import java.util.ArrayList;
  */
 public interface InterfazEstadisticas {
     
-    public Double costeIndividuo(ArrayList<InterfazTraza> t);
-    public Double costeTraza(ArrayList<Traza> t, int pos);
+    Double costeIndividuo(ArrayList<InterfazTraza> t);
+    Double costeTraza(ArrayList<Traza> t, int pos);
 }

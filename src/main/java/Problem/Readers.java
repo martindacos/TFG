@@ -51,7 +51,7 @@ public class Readers {
         return miReader;
     }
     
-    protected Readers(String logPath, String indPath) throws EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
+    private Readers(String logPath, String indPath) throws EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
         traces = new ArrayList<>();
         // Read the log.
         LogReaderInterface reader = new LogReaderXES();
@@ -62,11 +62,11 @@ public class Readers {
         IndividualReaderInterface readerInd = new IndividualReaderHN();
 
         try {
-            log.simplifyAndAddDummies(false, false);
+            log.simplifyAndAddDummies(true, false);
             ind = readerInd.read(indPath, log);
             ind = ModelFormatConversor.HNtoCN(ind);
         } catch (NullPointerException ex) {
-            log.simplifyAndAddDummies(false, true);
+            log.simplifyAndAddDummies(true, true);
             ind = readerInd.read(indPath, log);
             ind = ModelFormatConversor.HNtoCN(ind);
         }
@@ -75,20 +75,20 @@ public class Readers {
         ConcurrentHashMap<String, CaseInstance> traces = log.getCaseInstances();
         for (String traceKey : traces.keySet()) {
             CaseInstance trace = traces.get(traceKey);
-            //Integer numRepetitions = trace.getNumInstances();
-            //System.out.print("\tTrace '" + trace.getId() + "' (" + numRepetitions + " repetitions): [ ");
+            Integer numRepetitions = trace.getNumInstances();
+            System.out.print("\tTrace '" + trace.getId() + "' (" + numRepetitions + " repetitions): [ ");
             TIntArrayList tasks = trace.getTaskSequence();
             Traza traza = new Traza();
             for (int i=0; i < tasks.size(); i++) {
-                //System.out.print(tasks.get(i) + " ");
+                System.out.print(tasks.get(i) + " ");
                 traza.anadirTarea(tasks.get(i));
             }
             this.traces.add(traza);
-            //System.out.println("]");
+            System.out.println("]");
         }
     }
     
-    protected Readers() {
+    private Readers() {
         //Modelo fijo de prueba
         ind = new CMIndividual(5);
 
@@ -197,38 +197,109 @@ public class Readers {
         pos++;
     }
     
-    public void setTraces1() {
+    public void setTracesETM() {
         traces = new ArrayList<>();
+        //Alineamiento de coste 0
+        Traza test = new Traza();
+        test.anadirTarea(8);
+        test.anadirTarea(0);
+        test.anadirTarea(3);
+        test.anadirTarea(6);
+        test.anadirTarea(4);
+        test.anadirTarea(5);
+        test.anadirTarea(7);
+
+        Traza test2 = new Traza();
+        test2.anadirTarea(7);
+        
+        //Alineamiento 1
+        Traza test3 = new Traza();
+        test3.anadirTarea(8);
+        test3.anadirTarea(0);
+        test3.anadirTarea(1);
+        test3.anadirTarea(2);
+        test3.anadirTarea(3);
+        //test3.anadirTarea(6);
+        //test3.anadirTarea(5);
+        //test3.anadirTarea(7);
+
+        //Alineamiento 2
+        Traza test4 = new Traza();
+        test4.anadirTarea(8);
+        test4.anadirTarea(0);
+        test4.anadirTarea(2);
+        test4.anadirTarea(1);
+        //test4.anadirTarea(2);
+        //test4.anadirTarea(2);
+        //test4.anadirTarea(2);
+        //test4.anadirTarea(2);
+
+        //Alineamiento 3
+        Traza test5 = new Traza();
+        test5.anadirTarea(8);
+        test5.anadirTarea(0);
+        test5.anadirTarea(3);
+        test5.anadirTarea(1);
+        test5.anadirTarea(4);
+        test5.anadirTarea(5);
+        test5.anadirTarea(7);
+
+        traces.add(test);
+        traces.add(test2);
+        traces.add(test3);
+        //traces.add(test4);
+        //traces.add(test5);
+    }
+    
+    public void setTracesG3() {
+        traces = new ArrayList<>();
+        //Alineamiento de coste 0
         Traza test = new Traza();
         test.anadirTarea(0);
         test.anadirTarea(1);
         test.anadirTarea(2);
         test.anadirTarea(3);
-        test.anadirTarea(4);
+        
 
-        Traza test2 = new Traza();
-        test2.anadirTarea(0);
-        test2.anadirTarea(1);
-        test2.anadirTarea(2);
-        test2.anadirTarea(4);
+//        Traza test2 = new Traza();
+//        test2.anadirTarea(19);
+//
+//        //Alineamiento 1
+//        Traza test3 = new Traza();
+//        test3.anadirTarea(8);
+//        test3.anadirTarea(0);
+//        test3.anadirTarea(1);
+//        test3.anadirTarea(2);
+//        test3.anadirTarea(3);
+//        //test3.anadirTarea(6);
+//        //test3.anadirTarea(5);
+//        //test3.anadirTarea(7);
+//
+//        //Alineamiento 2
+//        Traza test4 = new Traza();
+//        test4.anadirTarea(8);
+//        test4.anadirTarea(0);
+//        test4.anadirTarea(2);
+//        test4.anadirTarea(1);
+        //test4.anadirTarea(2);
+        //test4.anadirTarea(2);
+        //test4.anadirTarea(2);
+        //test4.anadirTarea(2);
 
-        Traza test3 = new Traza();
-        test3.anadirTarea(0);
-
-        Traza test4 = new Traza();
-        test4.anadirTarea(4);
-
+        //Alineamiento 3
         Traza test5 = new Traza();
+        test5.anadirTarea(8);
         test5.anadirTarea(0);
-        test5.anadirTarea(1);
         test5.anadirTarea(3);
-        test5.anadirTarea(0);
+        test5.anadirTarea(1);
         test5.anadirTarea(4);
+        test5.anadirTarea(5);
+        test5.anadirTarea(7);
 
         traces.add(test);
-        traces.add(test2);
-        traces.add(test3);
-        traces.add(test4);
-        traces.add(test5);
+        //traces.add(test2);
+        //traces.add(test3);
+        //traces.add(test4);
+        //traces.add(test5);
     }
 }
