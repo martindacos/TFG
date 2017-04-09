@@ -17,6 +17,7 @@ import domainLogic.workflow.algorithms.geneticMining.individual.reader.Individua
 import domainLogic.workflow.algorithms.geneticMining.individual.reader.IndividualReaderInterface;
 import domainLogic.workflow.logReader.LogReaderInterface;
 import domainLogic.workflow.logReader.LogReaderXES;
+import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
@@ -64,27 +65,47 @@ public class Readers {
         try {
             log.simplifyAndAddDummies(true, false);
             ind = readerInd.read(indPath, log);
-            ind = ModelFormatConversor.HNtoCN(ind);
+            //ind = ModelFormatConversor.HNtoCN(ind);
         } catch (NullPointerException ex) {
             log.simplifyAndAddDummies(true, true);
             ind = readerInd.read(indPath, log);
-            ind = ModelFormatConversor.HNtoCN(ind);
+            //ind = ModelFormatConversor.HNtoCN(ind);
         }
         
-        //System.out.println("Log '" + log.getName() + "':");
+        System.out.println("Log '" + log.getName() + "':");
         ConcurrentHashMap<String, CaseInstance> traces = log.getCaseInstances();
+        /*Añadimos una traza inicial artificial para calcular el coste mínimo del modelo.
+        Es necesario para el cálculo del fitness. Esta traza sólo contendra la inicial
+        del modelo.
+        */
+//        TIntHashSet inicial = ind.getStartTasks();
+//        TIntIterator inicialTask = inicial.iterator();
+//        if (inicialTask.hasNext()) {
+//            //Obtenemos el identificador de la tarea
+//            int id = inicialTask.next();
+//            /*Anadimos la traza estableciendo el número de repeticiones a 0
+//            para que no influya en el cálculo del coste del individuo
+//            */
+//            Traza traza = new Traza();
+//            traza.anadirTarea(id);
+//            traza.setNumRepeticiones(0);
+//            this.traces.add(traza);
+//        }
+        int j = 1;
         for (String traceKey : traces.keySet()) {
             CaseInstance trace = traces.get(traceKey);
             Integer numRepetitions = trace.getNumInstances();
-            System.out.print("\tTrace '" + trace.getId() + "' (" + numRepetitions + " repetitions): [ ");
+            System.out.print("\t" + j + " Trace '" + trace.getId() + "' (" + numRepetitions + " repetitions): [ ");
             TIntArrayList tasks = trace.getTaskSequence();
             Traza traza = new Traza();
             for (int i=0; i < tasks.size(); i++) {
                 System.out.print(tasks.get(i) + " ");
                 traza.anadirTarea(tasks.get(i));
             }
+            traza.setNumRepeticiones(numRepetitions);
             this.traces.add(traza);
             System.out.println("]");
+            j++;
         }
     }
     

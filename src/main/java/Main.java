@@ -37,6 +37,7 @@ public class Main {
     public static void main(String[] args) throws IOException, EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
         Readers miReader;
 
+        //Logs/g3/grpd_g3pi300.xes Logs/g3/g3.hn
         switch (args.length) {
             case 2:
                 //Cargamos el Modelo y el Log
@@ -57,26 +58,31 @@ public class Main {
                 test.anadirTarea(2);
                 test.anadirTarea(3);
                 test.anadirTarea(4);
-
+                test.setNumRepeticiones(1);
+                
                 InterfazTraza test2 = new Traza();
                 test2.anadirTarea(0);
                 test2.anadirTarea(1);
                 test2.anadirTarea(2);
                 test2.anadirTarea(4);
-
+                test2.setNumRepeticiones(1);
+                
                 InterfazTraza test3 = new Traza();
                 test3.anadirTarea(0);
-
+                test3.setNumRepeticiones(1);
+                
                 InterfazTraza test4 = new Traza();
                 test4.anadirTarea(4);
-
+                test4.setNumRepeticiones(1);
+                
                 InterfazTraza test5 = new Traza();
                 test5.anadirTarea(0);
                 test5.anadirTarea(1);
                 test5.anadirTarea(3);
                 test5.anadirTarea(0);
                 test5.anadirTarea(4);
-
+                test5.setNumRepeticiones(1);
+                
                 prueba.add(test);
                 prueba.add(test2);
                 prueba.add(test3);
@@ -124,6 +130,60 @@ public class Main {
             }
         };
 
+        /********************************************************************************************/
+        
+        /*
+        Funciones para el algoritmo A* en modo "mínimo"
+        */
+        
+        ActionFunction<StateMove, State> maf = new ActionFunction<StateMove, State>() {
+            @Override
+            public Iterable<StateMove> actionsFor(State state) {
+                return minimumMovementsFor(state, ejec);
+            }
+        };
+
+        ActionStateTransitionFunction<StateMove, State> matf;
+        matf = new ActionStateTransitionFunction<StateMove, State>() {
+            @Override
+            public State apply(StateMove action, State state) {
+                return minimumActionToState(action, state, ejec, miReader.getInd());
+            }
+        };
+
+        //Definición de la función de coste con un coste fijo de 3 (el de skip)
+        CostFunction<StateMove, State, Double> mcf = new CostFunction<StateMove, State, Double>() {
+            @Override
+            public Double evaluate(Transition<StateMove, State> transition) {
+                return 3d;
+            }
+        };
+
+        /*
+        Definición de la función heurística con un coste fijo de 0, ya que no
+        hay tareas en la traza
+        */
+        HeuristicFunction<State, Double> mhf = new HeuristicFunction<State, Double>() {
+            @Override
+            public Double estimate(State state) {
+                return 0d;
+            }
+        };
+        
+        final State minimumInitialState = new State(miReader.getInd());
+        minimumInitialState.getMarcado().restartMarking();
+        
+        //Definimos el problema de búsqueda para camino mínimo
+        SearchProblem<StateMove, State, WeightedNode<StateMove, State, Double>> mp
+                = ProblemBuilder.create()
+                        .initialState(minimumInitialState)
+                        .defineProblemWithExplicitActions()
+                        .useActionFunction(maf)
+                        .useTransitionFunction(matf)
+                        .useCostFunction(mcf)
+                        .useHeuristicFunction(mhf)
+                        .build();
+        
         //Definimos el problema de búsqueda
         SearchProblem<StateMove, State, WeightedNode<StateMove, State, Double>> p
                 = ProblemBuilder.create()
@@ -134,7 +194,41 @@ public class Main {
                         .useCostFunction(cf)
                         .useHeuristicFunction(hf)
                         .build();
+ 
+        //Nodo final
+        WeightedNode mN = null;
+        double bestScore = 0d;
+        boolean stop = false;
 
+        for (WeightedNode n1 : Hipster.createAStar(mp)) {
+            State s = (State) n1.state();
+            if (stop) {
+                double estimacion = (double) n1.getScore();
+                if (estimacion > bestScore) {
+                    break;
+                }
+            }
+
+            if (s.finalModelo()) {
+                stop = true;
+                if (bestScore == 0) {
+                    bestScore = (double) n1.getScore();
+                    mN = n1;
+                } else {
+                    double aux = (double) n1.getScore();
+                    if (aux < bestScore) {
+                        bestScore = aux;
+                        mN = n1;
+                    }
+                }
+            }
+        }
+
+        //Guardamos el coste mínimo del camino del individuo
+        InterfazEstadisticas e = new Estadisticas(bestScore);
+        minimumSalidaVisual(mN);
+        System.out.println("Coste mínimo del camino: " + bestScore);
+        
         ArrayList<WeightedNode> nodosSalida = new ArrayList<>();
         //Tiempo total del cálculo del algoritmo
         long total_time = 0;
@@ -188,14 +282,13 @@ public class Main {
             miReader.avanzarPos();
         }
 
-        InterfazEstadisticas e = new Estadisticas();
         //Impresion del alineamiento de una manera más visual
         salidaVisual(nodosSalida, miReader);
         System.out.println();
         System.out.println("****************************************************************");
         System.out.println("Tiempo total de cálculo = " + total_time + " ms");
-        //Imprimimos el coste del individuo
-        System.out.println("Coste del individuo: " + e.costeIndividuo(miReader.getTraces()));
+        //Calculamos el fitness de las trazas y el coste del indiviudo
+        e.fitness(miReader.getTraces());
     }
 
     //Devolvemos todos los movimientos posibles en función de la traza y el modelo actual
@@ -282,14 +375,14 @@ public class Main {
             case OK:
                 //Avanzamos el modelo con la tarea que podemos ejecutar
                 successor.avanzarMarcado(ejec.getTareaOK());
-                System.out.println("TAREA A HACER EL OK ----------------> " + ejec.getTareaOK());
+//                System.out.println("TAREA A HACER EL OK ----------------> " + ejec.getTareaOK());
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(OK);
                 successor.setTarea(ejec.getTareaOK());
                 break;
             case SKIP:
-                //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
+                //Avanzamos el modelo con una tarea que no tenemos en la traza en la posición actual
                 Integer t = ejec.leerTareaSkip();
                 successor.setTarea(t);
                 //System.out.println("TAREA A HACER EL SKIP ----------------> " + t);
@@ -336,6 +429,7 @@ public class Main {
             Iterator it2 = nodosSalida.get(i).path().iterator();
             //La primera iteración corresponde con el Estado Inicial
             it2.next();
+            System.out.println("***************************");
             System.out.println(nodosSalida.get(i).path());
             System.out.println();
             System.out.println("------SALIDA VISUAL-------");
@@ -354,5 +448,93 @@ public class Main {
             System.out.println();
             System.out.println("Coste del Alineamiento " + r.getTrazaPos(i).getScore());
         }
+    }
+    
+    /*
+    Funciones de búsqueda para obtener el coste mínimo de un camino del modelo
+    */
+    
+    //Devolvemos el movimiento de SKIP para las posibles tareas
+    private static Iterable<StateMove> minimumMovementsFor(State state, EjecTareas ejec) {
+        //Creamos una lista con los movimientos posibles
+        LinkedList<StateMove> movements = new LinkedList<StateMove>();
+        //Limpiamos la variables de la clase auxiliar
+        ejec.clear();
+        //Si existen tareas activas en el modelo
+        if (state.Enabled()) {
+            //Tareas activas del modelo
+            TIntHashSet posiblesTareas = state.getTareas();
+            TIntIterator tasks = posiblesTareas.iterator();
+            //Anadimos un movimiento por cada tarea
+            while (tasks.hasNext()) {
+                int id = tasks.next();
+                movements.add(SKIP);
+                //Anadimos la tarea a la coleccion para ejecutarla
+                ejec.anadirSkip(id);
+            }
+        }
+
+        //Almacenamos el marcado en una clase auxiliar para su posterior copia
+        ArrayList<HashMap<TIntHashSet, Integer>> tokensA = state.getMarcado().getTokens();
+        ejec.setTokens(tokensA);
+        ejec.setEndPlace(state.getMarcado().getEndPlace());
+        ejec.setNumOfTokens(state.getMarcado().getNumberTokens());
+        ejec.setStartPlace(state.getMarcado().getStartPlace());
+        TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
+        possibleEnabledTasksClone.addAll(state.getMarcado().getEnabledElements());
+        ejec.setPossibleEnabledTasks(possibleEnabledTasksClone);
+
+        //Devolvemos una coleccion con los posibles movimientos
+        return movements;
+    }
+
+    //Realizamos la acción correspondiente al movimiento
+    private static State minimumActionToState(StateMove action, State state, EjecTareas ejec, CMIndividual m) {
+        State successor = new State(state);
+
+        //Recuperamos los datos copiados para el marcado
+        CMMarking marking = new CMMarking(m, new Random(666));
+        marking.restartMarking();
+        marking.setEndPlace(ejec.getEndPlace());
+        marking.setNumOfTokens(ejec.getNumOfTokens());
+        marking.setStartPlace(ejec.getStartPlace());
+        ArrayList<HashMap<TIntHashSet, Integer>> tokensN = (ArrayList<HashMap<TIntHashSet, Integer>>) ejec.cloneTokens();
+        marking.setTokens(tokensN);
+        TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
+        possibleEnabledTasksClone.addAll(ejec.getPossibleEnabledTasks());
+        marking.setPossibleEnabledTasks(possibleEnabledTasksClone);
+
+        successor.setMarcado(marking);
+
+        switch (action) {
+            case SKIP:
+                //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
+                Integer t = ejec.leerTareaSkip();
+                successor.setTarea(t);
+                successor.avanzarMarcado(t);
+                successor.setMov(SKIP);
+                break;
+        }
+
+        return successor;
+    }
+
+    public static void minimumSalidaVisual(WeightedNode nodo) {
+        Iterator it2 = nodo.path().iterator();
+        //La primera iteración corresponde con el Estado Inicial
+        it2.next();
+        System.out.println("***************************");
+        System.out.println(nodo.path());
+        System.out.println();
+        System.out.println("------SALIDA VISUAL-------");
+        System.out.println("    TRAZA     MODELO");
+        while (it2.hasNext()) {
+            WeightedNode node = (WeightedNode) it2.next();
+            State s = (State) node.state();
+            if (node.action().equals(SKIP)) {
+                System.out.println("    >>         " + s.getTarea());
+            }
+        }
+        System.out.println();
     }
 }

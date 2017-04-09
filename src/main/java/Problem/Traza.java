@@ -9,6 +9,7 @@ import java.util.ArrayList;
 public class Traza implements InterfazTraza{
     private ArrayList<Integer> tareas;
     private double score;
+    private int numRepeticiones;
 
     public Traza() {
         this.tareas = new ArrayList<>();
@@ -22,8 +23,18 @@ public class Traza implements InterfazTraza{
         this.tareas = tareas;
     }
 
+    @Override
     public void setScore(double score) {
         this.score = score;
+    }
+
+    @Override
+    public int getNumRepeticiones() {
+        return numRepeticiones;
+    }
+
+    public void setNumRepeticiones(int numRepeticiones) {
+        this.numRepeticiones = numRepeticiones;
     }
 
     @Override
@@ -31,6 +42,7 @@ public class Traza implements InterfazTraza{
         return score;
     }
 
+    @Override
     public int tamTrace() {
         return tareas.size();
     }
