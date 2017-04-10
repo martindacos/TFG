@@ -45,7 +45,7 @@ public class Main {
                 //miModelo = Modelo.getModelo(r.getInd());
                 miReader.getInd().print();
                 //miReader.setTracesETM();
-                miReader.setTracesG3();
+                //miReader.setTracesG3();
                 break;
             default:
                 //Cargamos un 

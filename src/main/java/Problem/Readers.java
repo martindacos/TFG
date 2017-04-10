@@ -225,9 +225,6 @@ public class Readers {
         test3.anadirTarea(1);
         test3.anadirTarea(2);
         test3.anadirTarea(3);
-        //test3.anadirTarea(6);
-        //test3.anadirTarea(5);
-        //test3.anadirTarea(7);
         test3.setNumRepeticiones(1);
         
         //Alineamiento 2
@@ -236,10 +233,6 @@ public class Readers {
         test4.anadirTarea(0);
         test4.anadirTarea(2);
         test4.anadirTarea(1);
-        //test4.anadirTarea(2);
-        //test4.anadirTarea(2);
-        //test4.anadirTarea(2);
-        //test4.anadirTarea(2);
         test4.setNumRepeticiones(1);
         
         //Alineamiento 3
@@ -256,8 +249,8 @@ public class Readers {
         traces.add(test);
         traces.add(test2);
         traces.add(test3);
-        //traces.add(test4);
-        //traces.add(test5);
+        traces.add(test4);
+        traces.add(test5);
     }
     
     public void setTracesG3() {
@@ -305,31 +298,51 @@ public class Readers {
 
         //Alineamiento 2
         Traza test4 = new Traza();
-        test4.anadirTarea(8);
         test4.anadirTarea(0);
-        test4.anadirTarea(2);
         test4.anadirTarea(1);
         test4.anadirTarea(2);
-        test4.anadirTarea(2);
-        test4.anadirTarea(2);
-        test4.anadirTarea(2);
+        test4.anadirTarea(3);
+        test4.anadirTarea(4);
+        test4.anadirTarea(5);
+        test4.anadirTarea(6);
+        test4.anadirTarea(9);
+        test4.anadirTarea(8);
+        test4.anadirTarea(9);
+        test4.anadirTarea(10);
+        test4.anadirTarea(11);
+        test4.anadirTarea(28);
+        test4.anadirTarea(17);
+        test4.anadirTarea(18);
+        test4.anadirTarea(19);
+        test4.anadirTarea(0);
         test4.setNumRepeticiones(1);
         
         //Alineamiento 3
         Traza test5 = new Traza();
-        test5.anadirTarea(8);
         test5.anadirTarea(0);
-        test5.anadirTarea(3);
         test5.anadirTarea(1);
+        test5.anadirTarea(2);
+        test5.anadirTarea(3);
         test5.anadirTarea(4);
         test5.anadirTarea(5);
+        test5.anadirTarea(6);
         test5.anadirTarea(7);
+        test5.anadirTarea(7);
+        test5.anadirTarea(8);
+        test5.anadirTarea(9);
+        test5.anadirTarea(10);
+        test5.anadirTarea(11);
+        test5.anadirTarea(28);
+        test5.anadirTarea(17);
+        test5.anadirTarea(17);
+        test5.anadirTarea(18);
+        test5.anadirTarea(19);
         test5.setNumRepeticiones(1);
         
         traces.add(test);
         traces.add(test2);
         traces.add(test3);
-        //traces.add(test4);
-        //traces.add(test5);
+        traces.add(test4);
+        traces.add(test5);
     }
 }
