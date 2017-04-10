@@ -45,7 +45,7 @@ public class Main {
                 //miModelo = Modelo.getModelo(r.getInd());
                 miReader.getInd().print();
                 //miReader.setTracesETM();
-                //miReader.setTracesG3();
+                miReader.setTracesG3();
                 break;
             default:
                 //Cargamos un 
@@ -287,7 +287,7 @@ public class Main {
         System.out.println();
         System.out.println("****************************************************************");
         System.out.println("Tiempo total de cálculo = " + total_time + " ms");
-        //Calculamos el fitness de las trazas y el coste del indiviudo
+        //Calculamos el fitness del modelo y el coste del indiviudo
         e.fitness(miReader.getTraces());
     }
 
@@ -418,7 +418,7 @@ public class Main {
                 cost = 1d;
                 break;
             case OK:
-                cost = 0.0001d;
+                cost = 0.00001d;
                 break;
         }
         return cost;

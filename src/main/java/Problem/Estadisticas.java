@@ -34,9 +34,12 @@ public class Estadisticas implements InterfazEstadisticas{
     public void fitness(ArrayList<InterfazTraza> t) {
         Double costeIndividuo = costeIndividuo(t);
         System.out.println("Coste del individuo: " + costeIndividuo);
+        Double moveL = 0d;
         for (int i=0; i<t.size(); i++) {
-            Double fitness = 1 - (costeIndividuo / (t.get(i).tamTrace() * t.get(i).getNumRepeticiones() + this.minimumIndividualCost * t.size()));
-            System.out.println("Fitness de " + i + " = " + fitness);
+            //Double fitness = 1 - (costeIndividuo / (t.get(i).tamTrace() * t.get(i).getNumRepeticiones() + this.minimumIndividualCost * t.size()));
+            moveL = moveL + (t.get(i).tamTrace() * t.get(i).getNumRepeticiones());
         }
+        Double fitness = 1 - (costeIndividuo / (moveL + this.minimumIndividualCost * t.size()));
+        System.out.println("Fitness del individuo: " + fitness);
     }
 }

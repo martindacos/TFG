@@ -74,23 +74,6 @@ public class Readers {
         
         System.out.println("Log '" + log.getName() + "':");
         ConcurrentHashMap<String, CaseInstance> traces = log.getCaseInstances();
-        /*Añadimos una traza inicial artificial para calcular el coste mínimo del modelo.
-        Es necesario para el cálculo del fitness. Esta traza sólo contendra la inicial
-        del modelo.
-        */
-//        TIntHashSet inicial = ind.getStartTasks();
-//        TIntIterator inicialTask = inicial.iterator();
-//        if (inicialTask.hasNext()) {
-//            //Obtenemos el identificador de la tarea
-//            int id = inicialTask.next();
-//            /*Anadimos la traza estableciendo el número de repeticiones a 0
-//            para que no influya en el cálculo del coste del individuo
-//            */
-//            Traza traza = new Traza();
-//            traza.anadirTarea(id);
-//            traza.setNumRepeticiones(0);
-//            this.traces.add(traza);
-//        }
         int j = 1;
         for (String traceKey : traces.keySet()) {
             CaseInstance trace = traces.get(traceKey);
@@ -219,7 +202,7 @@ public class Readers {
     }
     
     public void setTracesETM() {
-        traces = new ArrayList<>();
+        traces.clear();
         //Alineamiento de coste 0
         Traza test = new Traza();
         test.anadirTarea(8);
@@ -229,9 +212,11 @@ public class Readers {
         test.anadirTarea(4);
         test.anadirTarea(5);
         test.anadirTarea(7);
+        test.setNumRepeticiones(1);
 
         Traza test2 = new Traza();
         test2.anadirTarea(7);
+        test2.setNumRepeticiones(1);
         
         //Alineamiento 1
         Traza test3 = new Traza();
@@ -243,7 +228,8 @@ public class Readers {
         //test3.anadirTarea(6);
         //test3.anadirTarea(5);
         //test3.anadirTarea(7);
-
+        test3.setNumRepeticiones(1);
+        
         //Alineamiento 2
         Traza test4 = new Traza();
         test4.anadirTarea(8);
@@ -254,7 +240,8 @@ public class Readers {
         //test4.anadirTarea(2);
         //test4.anadirTarea(2);
         //test4.anadirTarea(2);
-
+        test4.setNumRepeticiones(1);
+        
         //Alineamiento 3
         Traza test5 = new Traza();
         test5.anadirTarea(8);
@@ -264,7 +251,8 @@ public class Readers {
         test5.anadirTarea(4);
         test5.anadirTarea(5);
         test5.anadirTarea(7);
-
+        test5.setNumRepeticiones(1);
+        
         traces.add(test);
         traces.add(test2);
         traces.add(test3);
@@ -273,40 +261,60 @@ public class Readers {
     }
     
     public void setTracesG3() {
-        traces = new ArrayList<>();
+        traces.clear();
         //Alineamiento de coste 0
         Traza test = new Traza();
         test.anadirTarea(0);
         test.anadirTarea(1);
         test.anadirTarea(2);
         test.anadirTarea(3);
+        test.anadirTarea(4);
+        test.anadirTarea(5);
+        test.anadirTarea(6);
+        test.anadirTarea(7);
+        test.anadirTarea(8);
+        test.anadirTarea(9);
+        test.anadirTarea(10);
+        test.anadirTarea(11);
+        test.anadirTarea(28);
+        test.anadirTarea(17);
+        test.anadirTarea(18);
+        test.anadirTarea(19);
+        test.setNumRepeticiones(1);
+
+        Traza test2 = new Traza();
+        test2.anadirTarea(19);
+        test2.setNumRepeticiones(1);
         
+        //Faltan tres tareas
+        Traza test3 = new Traza();
+        test3.anadirTarea(1);
+        test3.anadirTarea(2);
+        test3.anadirTarea(3);
+        test3.anadirTarea(4);
+        test3.anadirTarea(5);
+        test3.anadirTarea(6);
+        test3.anadirTarea(8);
+        test3.anadirTarea(9);
+        test3.anadirTarea(10);
+        test3.anadirTarea(11);
+        test3.anadirTarea(28);
+        test3.anadirTarea(17);
+        test3.anadirTarea(18);
+        test3.setNumRepeticiones(1);
 
-//        Traza test2 = new Traza();
-//        test2.anadirTarea(19);
-//
-//        //Alineamiento 1
-//        Traza test3 = new Traza();
-//        test3.anadirTarea(8);
-//        test3.anadirTarea(0);
-//        test3.anadirTarea(1);
-//        test3.anadirTarea(2);
-//        test3.anadirTarea(3);
-//        //test3.anadirTarea(6);
-//        //test3.anadirTarea(5);
-//        //test3.anadirTarea(7);
-//
-//        //Alineamiento 2
-//        Traza test4 = new Traza();
-//        test4.anadirTarea(8);
-//        test4.anadirTarea(0);
-//        test4.anadirTarea(2);
-//        test4.anadirTarea(1);
-        //test4.anadirTarea(2);
-        //test4.anadirTarea(2);
-        //test4.anadirTarea(2);
-        //test4.anadirTarea(2);
-
+        //Alineamiento 2
+        Traza test4 = new Traza();
+        test4.anadirTarea(8);
+        test4.anadirTarea(0);
+        test4.anadirTarea(2);
+        test4.anadirTarea(1);
+        test4.anadirTarea(2);
+        test4.anadirTarea(2);
+        test4.anadirTarea(2);
+        test4.anadirTarea(2);
+        test4.setNumRepeticiones(1);
+        
         //Alineamiento 3
         Traza test5 = new Traza();
         test5.anadirTarea(8);
@@ -316,10 +324,11 @@ public class Readers {
         test5.anadirTarea(4);
         test5.anadirTarea(5);
         test5.anadirTarea(7);
-
+        test5.setNumRepeticiones(1);
+        
         traces.add(test);
-        //traces.add(test2);
-        //traces.add(test3);
+        traces.add(test2);
+        traces.add(test3);
         //traces.add(test4);
         //traces.add(test5);
     }
