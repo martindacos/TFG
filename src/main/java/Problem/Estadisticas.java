@@ -31,7 +31,7 @@ public class Estadisticas implements InterfazEstadisticas{
     }
     
     @Override
-    public void fitness(ArrayList<InterfazTraza> t) {
+    public Double fitness(ArrayList<InterfazTraza> t) {
         Double costeIndividuo = costeIndividuo(t);
         System.out.println("Coste del individuo: " + costeIndividuo);
         Double moveL = 0d;
@@ -41,5 +41,6 @@ public class Estadisticas implements InterfazEstadisticas{
         }
         Double fitness = 1 - (costeIndividuo / (moveL + this.minimumIndividualCost * t.size()));
         System.out.println("Fitness del individuo: " + fitness);
+        return fitness;
     }
 }

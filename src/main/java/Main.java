@@ -287,8 +287,10 @@ public class Main {
         System.out.println();
         System.out.println("****************************************************************");
         System.out.println("Tiempo total de cálculo = " + total_time + " ms");
-        //Calculamos el fitness del modelo y el coste del indiviudo
-        e.fitness(miReader.getTraces());
+        
+        //Calculamos el Conformance Checking del modelo
+        double fitness = e.fitness(miReader.getTraces());
+        miReader.getInd().getFitness().setCompleteness(fitness);
     }
 
     //Devolvemos todos los movimientos posibles en función de la traza y el modelo actual

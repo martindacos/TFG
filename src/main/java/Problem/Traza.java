@@ -33,6 +33,7 @@ public class Traza implements InterfazTraza{
         return numRepeticiones;
     }
 
+    @Override
     public void setNumRepeticiones(int numRepeticiones) {
         this.numRepeticiones = numRepeticiones;
     }
@@ -78,6 +79,7 @@ public class Traza implements InterfazTraza{
         return pos >= tareas.size();
     }
     
+    @Override
     public void print() {
         System.out.println();
         for (int i = 0; i < tareas.size(); i++) {
