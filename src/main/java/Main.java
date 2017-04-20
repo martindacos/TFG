@@ -15,6 +15,7 @@ import domainLogic.exceptions.NonFinishedWorkflowException;
 import domainLogic.exceptions.WrongLogEntryException;
 import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
 import es.usc.citius.hipster.algorithm.Hipster;
 import es.usc.citius.hipster.model.Transition;
 import es.usc.citius.hipster.model.function.ActionFunction;
@@ -282,15 +283,23 @@ public class Main {
             miReader.avanzarPos();
         }
 
+        //Para guardar el número de tareas activas en cada estado
+        ArrayList<ArrayList<State>> tareasActivasEstado = new ArrayList<ArrayList<State>>();
         //Impresion del alineamiento de una manera más visual
-        salidaVisual(nodosSalida, miReader);
+        salidaVisual(nodosSalida, miReader, tareasActivasEstado);
         System.out.println();
         System.out.println("****************************************************************");
         System.out.println("Tiempo total de cálculo = " + total_time + " ms");
         
         //Calculamos el Conformance Checking del modelo
         double fitness = e.fitness(miReader.getTraces());
-        miReader.getInd().getFitness().setCompleteness(fitness);
+        double precission = e.precission(miReader.getTraces(), tareasActivasEstado);
+        IndividualFitness individualFitness = new IndividualFitness();
+        individualFitness.setCompleteness(fitness);
+        individualFitness.setPreciseness(precission);
+        miReader.getInd().setFitness(individualFitness);
+        System.out.println("Fitness del individuo: " + fitness);
+        System.out.println("Precission del individuo: " + precission);
     }
 
     //Devolvemos todos los movimientos posibles en función de la traza y el modelo actual
@@ -426,8 +435,9 @@ public class Main {
         return cost;
     }
 
-    public static void salidaVisual(ArrayList<WeightedNode> nodosSalida, Readers r) {
+    public static void salidaVisual(ArrayList<WeightedNode> nodosSalida, Readers r, ArrayList<ArrayList<State>> tareasActivasEstado) {
         for (int i = 0; i < nodosSalida.size(); i++) {
+            ArrayList<State> tareasEstadoTraza = new ArrayList<State>();
             Iterator it2 = nodosSalida.get(i).path().iterator();
             //La primera iteración corresponde con el Estado Inicial
             it2.next();
@@ -439,6 +449,7 @@ public class Main {
             while (it2.hasNext()) {
                 WeightedNode node = (WeightedNode) it2.next();
                 State s = (State) node.state();
+                tareasEstadoTraza.add(s);
                 if (node.action().equals(OK)) {
                     System.out.println("    " + r.getTrazaPos(i).leerTarea(s.getPos() - 1) + "          " + s.getTarea());
                 } else if (node.action().equals(SKIP)) {
@@ -449,6 +460,7 @@ public class Main {
             }
             System.out.println();
             System.out.println("Coste del Alineamiento " + r.getTrazaPos(i).getScore());
+            tareasActivasEstado.add(tareasEstadoTraza);
         }
     }
     
