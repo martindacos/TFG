@@ -2,6 +2,7 @@ package Problem;
 
 import Problem.NState.State;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
  *
@@ -38,38 +39,48 @@ public class Estadisticas implements InterfazEstadisticas{
         Double costeIndividuo = costeIndividuo(t);
         System.out.println("Coste del individuo: " + costeIndividuo);
         for (int i=0; i<t.size(); i++) {
+            //System.out.println("TotalEventosLog: " + totalEventosLog + " + " + t.get(i).tamTrace() + " *" + t.get(i).getNumRepeticiones());
             this.totalEventosLog = this.totalEventosLog + (t.get(i).tamTrace() * t.get(i).getNumRepeticiones());
         }
         Double fitness = 1 - (costeIndividuo / (this.totalEventosLog + this.minimumIndividualCost * t.size()));
         return fitness;
     }
     
-    public Double tareasPrefijo(ArrayList<InterfazTraza> t, ArrayList<Integer> prefijo) {
-        //TO DO : revisar que a implementación é a correcta
-        double tareasPrefijo = 0d;
-        for (int i=0; i < t.size(); i++) {
+    public Integer tareasPrefijo(ArrayList<InterfazTraza> t, ArrayList<Integer> prefijo) {
+        HashSet<Integer> actividades = new HashSet<Integer>();
+
+        for (int i = 0; i < t.size(); i++) {
             boolean iguales = true;
-            for (int j=0; j < t.get(i).tamTrace() && j < prefijo.size(); j++) {
-                if (t.get(i).leerTarea(j) != prefijo.get(j)) iguales = false;
+            int j = 0;
+            while (j < t.get(i).tamTrace() && j < prefijo.size()) {
+                if (t.get(i).leerTarea(j).intValue() != prefijo.get(j).intValue()) {
+                    iguales = false;
+                }
+                j++;
             }
-            if (iguales) tareasPrefijo = tareasPrefijo + prefijo.size();
+            if (iguales && j < t.get(i).tamTrace()) {
+                actividades.add(t.get(i).leerTarea(j));
+            }
         }
-        System.out.println("Tareas prefijo: " + tareasPrefijo);
-        return tareasPrefijo;
+        System.out.println("ActividadesMismoContexto: " +actividades);
+        return actividades.size();
     }
         
     @Override
-    public Double precission(ArrayList<InterfazTraza> t, ArrayList<ArrayList<State>> tareasActivasEstado) {
+    public Double precision(ArrayList<InterfazTraza> t, ArrayList<ArrayList<State>> tareasActivasEstado) {
         Double subPrecission = 0d;
         for (int i=0; i < t.size(); i++) {
             ArrayList<Integer> prefijo = new ArrayList<Integer>();
             for (int j=0; j < t.get(i).tamTrace(); j++) {
-                prefijo.add(t.get(i).leerTarea(j));
+                if (j>0) prefijo.add(t.get(i).leerTarea(j-1));
                 double enL = this.tareasPrefijo(t, prefijo);
-                subPrecission = subPrecission + enL / tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size();   
+                System.out.println("Subprecision = "+ subPrecission + " + " + t.get(i).getNumRepeticiones() +" * ("+ enL + " / " + tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size() +" )");
+                subPrecission = subPrecission + t.get(i).getNumRepeticiones() * (enL / tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size());  
             }
+            System.out.println();
         }
         Double precission = 1 / this.totalEventosLog * subPrecission;
+        System.out.println("Precision = 1 / " + totalEventosLog + " * " + subPrecission);
         return precission;
     }
 }

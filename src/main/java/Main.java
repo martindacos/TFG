@@ -293,7 +293,7 @@ public class Main {
         
         //Calculamos el Conformance Checking del modelo
         double fitness = e.fitness(miReader.getTraces());
-        double precission = e.precission(miReader.getTraces(), tareasActivasEstado);
+        double precission = e.precision(miReader.getTraces(), tareasActivasEstado);
         IndividualFitness individualFitness = new IndividualFitness();
         individualFitness.setCompleteness(fitness);
         individualFitness.setPreciseness(precission);
@@ -439,8 +439,10 @@ public class Main {
         for (int i = 0; i < nodosSalida.size(); i++) {
             ArrayList<State> tareasEstadoTraza = new ArrayList<State>();
             Iterator it2 = nodosSalida.get(i).path().iterator();
-            //La primera iteración corresponde con el Estado Inicial
-            it2.next();
+            //La primera iteración corresponde con el Estado Inicial, que no imprimimos
+            WeightedNode node2 = (WeightedNode) it2.next();
+            State s2 = (State) node2.state();
+            tareasEstadoTraza.add(s2);
             System.out.println("***************************");
             System.out.println(nodosSalida.get(i).path());
             System.out.println();
