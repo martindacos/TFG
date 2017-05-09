@@ -8,12 +8,12 @@ import java.util.HashSet;
  *
  * @author marti
  */
-public class Estadisticas implements InterfazEstadisticas{
+public class EstadisticasImpl implements InterfazEstadisticas{
 
     private double minimumIndividualCost;
     private double totalEventosLog;
     
-    public Estadisticas(double cost) {
+    public EstadisticasImpl(double cost) {
         this.minimumIndividualCost = cost;
         this.totalEventosLog = 0d;
     }
@@ -73,7 +73,6 @@ public class Estadisticas implements InterfazEstadisticas{
             }
         }
         //System.out.println("ActividadesMismoContexto: " +actividades);
-        System.out.println(actividades);
         return actividades.size();
     }
         

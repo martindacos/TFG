@@ -1,12 +1,14 @@
 
 import Problem.EjecTareas;
-import Problem.Estadisticas;
+import Problem.EstadisticasImpl;
 import Problem.InterfazEstadisticas;
+import Problem.InterfazSalida;
 import Problem.InterfazTraza;
 import Problem.NState.State;
 import Problem.NState.StateMove;
 import static Problem.NState.StateMove.*;
 import Problem.Readers;
+import Problem.SalidaTerminalImpl;
 import Problem.Traza;
 import domainLogic.exceptions.EmptyLogException;
 import domainLogic.exceptions.InvalidFileExtensionException;
@@ -29,7 +31,6 @@ import gnu.trove.set.hash.TIntHashSet;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -226,8 +227,9 @@ public class Main {
         }
 
         //Guardamos el coste mínimo del camino del individuo
-        InterfazEstadisticas e = new Estadisticas(bestScore);
-        //minimumSalidaVisual(mN);
+        InterfazEstadisticas e = new EstadisticasImpl(bestScore);
+        InterfazSalida salida = new SalidaTerminalImpl();
+        salida.minimumSalidaVisual(mN);
         System.out.println("Coste mínimo del camino: " + bestScore);
         
         ArrayList<WeightedNode> nodosSalida = new ArrayList<>();
@@ -286,7 +288,7 @@ public class Main {
         //Para guardar el número de tareas activas en cada estado
         ArrayList<ArrayList<State>> tareasActivasEstado = new ArrayList<ArrayList<State>>();
         //Impresion del alineamiento de una manera más visual
-        salidaVisual(nodosSalida, miReader, tareasActivasEstado);
+        salida.salidaVisual(nodosSalida, miReader, tareasActivasEstado);
         System.out.println();
         System.out.println("****************************************************************");
         System.out.println("Tiempo total de cálculo = " + total_time + " ms");
@@ -434,37 +436,6 @@ public class Main {
         }
         return cost;
     }
-
-    public static void salidaVisual(ArrayList<WeightedNode> nodosSalida, Readers r, ArrayList<ArrayList<State>> tareasActivasEstado) {
-        for (int i = 0; i < nodosSalida.size(); i++) {
-            ArrayList<State> tareasEstadoTraza = new ArrayList<State>();
-            Iterator it2 = nodosSalida.get(i).path().iterator();
-            //La primera iteración corresponde con el Estado Inicial, que no imprimimos
-            WeightedNode node2 = (WeightedNode) it2.next();
-            State s2 = (State) node2.state();
-            tareasEstadoTraza.add(s2);
-            System.out.println("***************************");
-//            System.out.println(nodosSalida.get(i).path());
-//            System.out.println();
-            System.out.println("------SALIDA VISUAL-------");
-            System.out.println("    TRAZA     MODELO");
-            while (it2.hasNext()) {
-                WeightedNode node = (WeightedNode) it2.next();
-                State s = (State) node.state();
-                tareasEstadoTraza.add(s);
-                if (node.action().equals(OK)) {
-                    System.out.println("    " + r.getTrazaPos(i).leerTarea(s.getPos() - 1) + "          " + s.getTarea());
-                } else if (node.action().equals(SKIP)) {
-                    System.out.println("    >>         " + s.getTarea());
-                }else {
-                    System.out.println("    " + r.getTrazaPos(i).leerTarea(s.getPos() - 1) + "          >>");
-                }
-            }
-            System.out.println();
-            System.out.println("Coste del Alineamiento " + r.getTrazaPos(i).getScore());
-            tareasActivasEstado.add(tareasEstadoTraza);
-        }
-    }
     
     /*
     Funciones de búsqueda para obtener el coste mínimo de un camino del modelo
@@ -533,24 +504,5 @@ public class Main {
         }
 
         return successor;
-    }
-
-    public static void minimumSalidaVisual(WeightedNode nodo) {
-        Iterator it2 = nodo.path().iterator();
-        //La primera iteración corresponde con el Estado Inicial
-        it2.next();
-        System.out.println("***************************");
-//        System.out.println(nodo.path());
-//        System.out.println();
-        System.out.println("------SALIDA VISUAL-------");
-        System.out.println("    TRAZA     MODELO");
-        while (it2.hasNext()) {
-            WeightedNode node = (WeightedNode) it2.next();
-            State s = (State) node.state();
-            if (node.action().equals(SKIP)) {
-                System.out.println("    >>         " + s.getTarea());
-            }
-        }
-        System.out.println();
     }
 }
