@@ -39,11 +39,11 @@ public class Main {
         Readers miReader;
 
         //Logs/g3/grpd_g3pi300.xes Logs/g3/g3.hn
+        //balancedLogs/noise_0/a7/a7_Modif.xes balancedLogs/desiredNets/a7.hn
         switch (args.length) {
             case 2:
                 //Cargamos el Modelo y el Log
                 miReader = Readers.getReader(args[0], args[1]);
-                //miModelo = Modelo.getModelo(r.getInd());
                 miReader.getInd().print();
                 //miReader.setTracesETM();
                 //miReader.setTracesG3();
@@ -227,7 +227,7 @@ public class Main {
 
         //Guardamos el coste mínimo del camino del individuo
         InterfazEstadisticas e = new Estadisticas(bestScore);
-        minimumSalidaVisual(mN);
+        //minimumSalidaVisual(mN);
         System.out.println("Coste mínimo del camino: " + bestScore);
         
         ArrayList<WeightedNode> nodosSalida = new ArrayList<>();
@@ -379,14 +379,14 @@ public class Main {
 
         successor.setMarcado(marking);
 
-//        System.out.println("MARCADO ANTES");
-//        System.out.println(successor.getMarcado().toString());
-//        System.out.println("Tareas que se pueden ejecutar: " + successor.getMarcado().getEnabledElements());
+        System.out.println("MARCADO ANTES");
+        System.out.println(successor.getMarcado().toString());
+        System.out.println("Tareas que se pueden ejecutar: " + successor.getMarcado().getEnabledElements());
         switch (action) {
             case OK:
                 //Avanzamos el modelo con la tarea que podemos ejecutar
                 successor.avanzarMarcado(ejec.getTareaOK());
-//                System.out.println("TAREA A HACER EL OK ----------------> " + ejec.getTareaOK());
+                System.out.println("TAREA A HACER EL OK ----------------> " + ejec.getTareaOK());
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(OK);
@@ -396,7 +396,7 @@ public class Main {
                 //Avanzamos el modelo con una tarea que no tenemos en la traza en la posición actual
                 Integer t = ejec.leerTareaSkip();
                 successor.setTarea(t);
-                //System.out.println("TAREA A HACER EL SKIP ----------------> " + t);
+                System.out.println("TAREA A HACER EL SKIP ----------------> " + t);
                 successor.avanzarMarcado(t);
                 successor.setMov(SKIP);
                 break;
@@ -405,14 +405,14 @@ public class Main {
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(INSERT);
-                //System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT());
+                System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT());
                 successor.setTarea(ejec.getTareaINSERT());
                 break;
         }
-//        System.out.println("Pos traza " + successor.getPos());
-//        System.out.println("MARCADO DESPUES");
-//        System.out.println(successor.getMarcado().toString());
-//        System.out.println("EnabledTasks " + successor.getMarcado().getEnabledElements());
+        System.out.println("Pos traza " + successor.getPos());
+        System.out.println("MARCADO DESPUES");
+        System.out.println(successor.getMarcado().toString());
+        System.out.println("EnabledTasks " + successor.getMarcado().getEnabledElements());
 
         return successor;
     }
@@ -444,8 +444,8 @@ public class Main {
             State s2 = (State) node2.state();
             tareasEstadoTraza.add(s2);
             System.out.println("***************************");
-            System.out.println(nodosSalida.get(i).path());
-            System.out.println();
+//            System.out.println(nodosSalida.get(i).path());
+//            System.out.println();
             System.out.println("------SALIDA VISUAL-------");
             System.out.println("    TRAZA     MODELO");
             while (it2.hasNext()) {
@@ -540,8 +540,8 @@ public class Main {
         //La primera iteración corresponde con el Estado Inicial
         it2.next();
         System.out.println("***************************");
-        System.out.println(nodo.path());
-        System.out.println();
+//        System.out.println(nodo.path());
+//        System.out.println();
         System.out.println("------SALIDA VISUAL-------");
         System.out.println("    TRAZA     MODELO");
         while (it2.hasNext()) {

@@ -1,5 +1,6 @@
 target/
 Logs/
+balancedLogs/
 /nbproject/
 src/main/java/CMTask/
 src/main/java/Individual/
