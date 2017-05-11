@@ -7,9 +7,11 @@ import java.util.ArrayList;
  * @author marti
  */
 public class Traza implements InterfazTraza{
+    private String id;
     private ArrayList<Integer> tareas;
     private double score;
     private int numRepeticiones;
+    private double tiempoC;
 
     public Traza() {
         this.tareas = new ArrayList<>();
@@ -86,5 +88,24 @@ public class Traza implements InterfazTraza{
             System.out.print(tareas.get(i) + " ");
         }
         System.out.println();
+    }
+
+    @Override
+    public double getTiempoC() {
+        return tiempoC;
+    }
+
+    @Override
+    public void setTiempoC(double tiempoC) {
+        this.tiempoC = tiempoC;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

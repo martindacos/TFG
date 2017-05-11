@@ -1,4 +1,5 @@
 
+import static Configuracion.Parametros.*;
 import Problem.EjecTareas;
 import Problem.EstadisticasImpl;
 import Problem.InterfazEstadisticas;
@@ -7,6 +8,7 @@ import Problem.InterfazTraza;
 import Problem.NState.State;
 import Problem.NState.StateMove;
 import static Problem.NState.StateMove.*;
+import Problem.PantallaSalidaVisual;
 import Problem.Readers;
 import Problem.SalidaTerminalImpl;
 import Problem.Traza;
@@ -199,7 +201,7 @@ public class Main {
  
         //Nodo final
         WeightedNode mN = null;
-        double bestScore = 0d;
+        Double bestScore = 0d;
         boolean stop = false;
 
         for (WeightedNode n1 : Hipster.createAStar(mp)) {
@@ -228,9 +230,13 @@ public class Main {
 
         //Guardamos el coste mínimo del camino del individuo
         InterfazEstadisticas e = new EstadisticasImpl(bestScore);
-        InterfazSalida salida = new SalidaTerminalImpl();
-        salida.minimumSalidaVisual(mN);
-        System.out.println("Coste mínimo del camino: " + bestScore);
+        //Creamos las interfaces de salida por terminal y gráfica
+        InterfazSalida salida = new SalidaTerminalImpl();     
+        PantallaSalidaVisual salidaGrafica = new PantallaSalidaVisual();
+        salidaGrafica.setModelo(miReader.getInd());
+        
+        salida.minimumSalidaVisual(mN, bestScore);
+        salidaGrafica.minimumSalidaVisual(mN, bestScore);
         
         ArrayList<WeightedNode> nodosSalida = new ArrayList<>();
         //Tiempo total del cálculo del algoritmo
@@ -243,7 +249,7 @@ public class Main {
             double mejorScore = 0d;
             boolean parar = false;
             initialState.getMarcado().restartMarking();
-            miReader.getTrazaActual().print();
+            //miReader.getTrazaActual().print();
             long time_start, time_end;
             //Empezamos a tomar la medida del tiempo
             time_start = System.currentTimeMillis();
@@ -275,33 +281,36 @@ public class Main {
                 }
             }
             time_end = System.currentTimeMillis();
-            System.out.println("Tiempo de cálculo del alineamiento " + i + " = " + (time_end - time_start) + " ms");
             total_time = total_time + (time_end - time_start);
             //Guardamos el nodo con los estados soluciones de la traza
             nodosSalida.add(n);
             //Guardamos el coste obtenido en el alineamiento
             miReader.getTrazaActual().setScore(mejorScore);
+            
+            miReader.getTrazaActual().setTiempoC(time_end - time_start);
+            
+            
             //Pasamos a la siguientes traza del procesado
             miReader.avanzarPos();
         }
 
         //Para guardar el número de tareas activas en cada estado
-        ArrayList<ArrayList<State>> tareasActivasEstado = new ArrayList<ArrayList<State>>();
         //Impresion del alineamiento de una manera más visual
-        salida.salidaVisual(nodosSalida, miReader, tareasActivasEstado);
-        System.out.println();
-        System.out.println("****************************************************************");
-        System.out.println("Tiempo total de cálculo = " + total_time + " ms");
+        salida.salidaVisual(nodosSalida, miReader);
+        
+        salidaGrafica.salidaVisual(nodosSalida, miReader);
         
         //Calculamos el Conformance Checking del modelo
         double fitness = e.fitness(miReader.getTraces());
-        double precission = e.precision(miReader.getTraces(), tareasActivasEstado);
+        double precission = e.precision(miReader.getTraces(), nodosSalida);
         IndividualFitness individualFitness = new IndividualFitness();
         individualFitness.setCompleteness(fitness);
         individualFitness.setPreciseness(precission);
         miReader.getInd().setFitness(individualFitness);
-        System.out.println("Fitness del individuo: " + fitness);
-        System.out.println("Precission del individuo: " + precission);
+        
+        
+        salidaGrafica.estadisticasModelo(miReader.getInd(), e.getCoste(), total_time);
+        salida.estadisticasModelo(miReader.getInd(), e.getCoste(), total_time);
     }
 
     //Devolvemos todos los movimientos posibles en función de la traza y el modelo actual
@@ -381,14 +390,14 @@ public class Main {
 
         successor.setMarcado(marking);
 
-        System.out.println("MARCADO ANTES");
-        System.out.println(successor.getMarcado().toString());
-        System.out.println("Tareas que se pueden ejecutar: " + successor.getMarcado().getEnabledElements());
+//        System.out.println("MARCADO ANTES");
+//        System.out.println(successor.getMarcado().toString());
+//        System.out.println("Tareas que se pueden ejecutar: " + successor.getMarcado().getEnabledElements());
         switch (action) {
             case OK:
                 //Avanzamos el modelo con la tarea que podemos ejecutar
                 successor.avanzarMarcado(ejec.getTareaOK());
-                System.out.println("TAREA A HACER EL OK ----------------> " + ejec.getTareaOK());
+                //System.out.println("TAREA A HACER EL OK ----------------> " + ejec.getTareaOK());
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(OK);
@@ -398,7 +407,7 @@ public class Main {
                 //Avanzamos el modelo con una tarea que no tenemos en la traza en la posición actual
                 Integer t = ejec.leerTareaSkip();
                 successor.setTarea(t);
-                System.out.println("TAREA A HACER EL SKIP ----------------> " + t);
+                //System.out.println("TAREA A HACER EL SKIP ----------------> " + t);
                 successor.avanzarMarcado(t);
                 successor.setMov(SKIP);
                 break;
@@ -407,14 +416,14 @@ public class Main {
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(INSERT);
-                System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT());
+                //System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT());
                 successor.setTarea(ejec.getTareaINSERT());
                 break;
         }
-        System.out.println("Pos traza " + successor.getPos());
-        System.out.println("MARCADO DESPUES");
-        System.out.println(successor.getMarcado().toString());
-        System.out.println("EnabledTasks " + successor.getMarcado().getEnabledElements());
+//        System.out.println("Pos traza " + successor.getPos());
+//        System.out.println("MARCADO DESPUES");
+//        System.out.println(successor.getMarcado().toString());
+//        System.out.println("EnabledTasks " + successor.getMarcado().getEnabledElements());
 
         return successor;
     }
@@ -425,13 +434,13 @@ public class Main {
         Double cost = null;
         switch (action) {
             case SKIP:
-                cost = 3d;
+                cost = COSTE_SKIP;
                 break;
             case INSERT:
-                cost = 1d;
+                cost = COSTE_INSERT;
                 break;
             case OK:
-                cost = 0.00001d;
+                cost = COSTE_OK;
                 break;
         }
         return cost;

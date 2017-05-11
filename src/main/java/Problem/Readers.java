@@ -81,6 +81,7 @@ public class Readers {
             System.out.print("\t" + j + " Trace '" + trace.getId() + "' (" + numRepetitions + " repetitions): [ ");
             TIntArrayList tasks = trace.getTaskSequence();
             Traza traza = new Traza();
+            traza.setId(trace.getId());
             for (int i=0; i < tasks.size(); i++) {
                 System.out.print(tasks.get(i) + " ");
                 traza.anadirTarea(tasks.get(i));

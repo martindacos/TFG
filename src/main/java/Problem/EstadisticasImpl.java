@@ -1,8 +1,10 @@
 package Problem;
 
 import Problem.NState.State;
+import es.usc.citius.hipster.model.impl.WeightedNode;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  *
@@ -10,8 +12,9 @@ import java.util.HashSet;
  */
 public class EstadisticasImpl implements InterfazEstadisticas{
 
-    private double minimumIndividualCost;
-    private double totalEventosLog;
+    private final double minimumIndividualCost;
+    private double totalEventosLog;  
+    private Double costeIndividuo;
     
     public EstadisticasImpl(double cost) {
         this.minimumIndividualCost = cost;
@@ -36,8 +39,7 @@ public class EstadisticasImpl implements InterfazEstadisticas{
     @Override
     public Double fitness(ArrayList<InterfazTraza> t) {
         //Obtenemos el coste 
-        Double costeIndividuo = costeIndividuo(t);
-        System.out.println("Coste del individuo: " + costeIndividuo);
+        costeIndividuo = costeIndividuo(t);
         //Realizamos el sumatorio para todas la trazas del log
         for (int i=0; i<t.size(); i++) {
             //System.out.println("TotalEventosLog: " + totalEventosLog + " + " + t.get(i).tamTrace() + " *" + t.get(i).getNumRepeticiones());
@@ -77,7 +79,8 @@ public class EstadisticasImpl implements InterfazEstadisticas{
     }
         
     @Override
-    public Double precision(ArrayList<InterfazTraza> t, ArrayList<ArrayList<State>> tareasActivasEstado) {
+    public Double precision(ArrayList<InterfazTraza> t, ArrayList<WeightedNode> nodosSalida) {
+        ArrayList<ArrayList<State>> tareasActivasEstado = tareasActivasEstado(nodosSalida);
         Double subPrecission = 0d;
         //Para todas las trazas del log
         for (int i=0; i < t.size(); i++) {
@@ -99,5 +102,30 @@ public class EstadisticasImpl implements InterfazEstadisticas{
         Double precission = 1 / this.totalEventosLog * subPrecission;
         //System.out.println("Precision = 1 / " + totalEventosLog + " * " + subPrecission);
         return precission;
+    }
+
+    //Cálculo de las tareas activas en cada estado   
+    public ArrayList<ArrayList<State>> tareasActivasEstado(ArrayList<WeightedNode> nodosSalida) {       
+        ArrayList<ArrayList<State>> tareasActivasEstado = new ArrayList<ArrayList<State>>();
+        for (int i = 0; i < nodosSalida.size(); i++) {
+            ArrayList<NState.State> tareasEstadoTraza = new ArrayList<NState.State>();
+            Iterator it2 = nodosSalida.get(i).path().iterator();
+            //La primera iteración corresponde con el Estado Inicial, que no imprimimos
+            WeightedNode node2 = (WeightedNode) it2.next();
+            NState.State s2 = (NState.State) node2.state();
+            tareasEstadoTraza.add(s2);
+            while (it2.hasNext()) {
+                WeightedNode node = (WeightedNode) it2.next();
+                NState.State s = (NState.State) node.state();
+                tareasEstadoTraza.add(s);
+            }
+            tareasActivasEstado.add(tareasEstadoTraza);
+        }
+        return tareasActivasEstado;
+    }
+
+    @Override
+    public Double getCoste() {
+        return this.costeIndividuo;
     }
 }

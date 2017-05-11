@@ -20,4 +20,7 @@ public interface InterfazTraza {
     void setNumRepeticiones(int numRepeticiones);
     void setScore(double mejorScore);
     void print();
+    void setTiempoC(double t);
+    String getId();
+    double getTiempoC();
 }
