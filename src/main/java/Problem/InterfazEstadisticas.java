@@ -18,4 +18,6 @@ public interface InterfazEstadisticas {
     Double precision(ArrayList<InterfazTraza> t, ArrayList<WeightedNode> nodosSalida);
     //Función que devuelve el coste de un individuo
     Double getCoste();
+    //Establecemos el coste del camino más corto para calcular el fitness
+    void setCosteCorto(double coste);
 }

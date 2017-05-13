@@ -1,14 +1,16 @@
+package Algoritmos;
 
-import static Configuracion.Parametros.*;
+
+import Configuracion.ParametrosImpl;
 import Problem.EjecTareas;
-import Problem.EstadisticasImpl;
-import Problem.InterfazEstadisticas;
 import Problem.InterfazSalida;
 import Problem.InterfazTraza;
 import Problem.NState.State;
 import Problem.NState.StateMove;
 import static Problem.NState.StateMove.*;
-import Problem.PantallaSalidaVisual;
+import Gui.PantallaAlgoritmo;
+import Problem.EstadisticasImpl;
+import Problem.InterfazEstadisticas;
 import Problem.Readers;
 import Problem.SalidaTerminalImpl;
 import Problem.Traza;
@@ -36,11 +38,13 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
 
-public class Main {
+public class AlgoritmoA {
 
-    public static void main(String[] args) throws IOException, EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
+    public static void main(String[] args, PantallaAlgoritmo salidaGrafica) throws IOException, EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
         Readers miReader;
-
+        ParametrosImpl parametrosImpl;
+        
+        parametrosImpl = ParametrosImpl.getParametrosImpl();
         //Logs/g3/grpd_g3pi300.xes Logs/g3/g3.hn
         //balancedLogs/noise_0/a7/a7_Modif.xes balancedLogs/desiredNets/a7.hn
         switch (args.length) {
@@ -120,7 +124,7 @@ public class Main {
         CostFunction<StateMove, State, Double> cf = new CostFunction<StateMove, State, Double>() {
             @Override
             public Double evaluate(Transition<StateMove, State> transition) {
-                return evaluateToState(transition);
+                return evaluateToState(transition, parametrosImpl);
             }
         };
 
@@ -159,7 +163,7 @@ public class Main {
         CostFunction<StateMove, State, Double> mcf = new CostFunction<StateMove, State, Double>() {
             @Override
             public Double evaluate(Transition<StateMove, State> transition) {
-                return 3d;
+                return parametrosImpl.getSKIP();
             }
         };
 
@@ -229,11 +233,11 @@ public class Main {
         }
 
         //Guardamos el coste mínimo del camino del individuo
-        InterfazEstadisticas e = new EstadisticasImpl(bestScore);
-        //Creamos las interfaces de salida por terminal y gráfica
+        InterfazEstadisticas e = new EstadisticasImpl();
+        e.setCosteCorto(bestScore);
+        //Creamos las interfaces de salida por terminal
         InterfazSalida salida = new SalidaTerminalImpl();     
-        PantallaSalidaVisual salidaGrafica = new PantallaSalidaVisual();
-        salidaGrafica.setModelo(miReader.getInd());
+        salidaGrafica.imprimirModelo(miReader.getInd());
         
         salida.minimumSalidaVisual(mN, bestScore);
         salidaGrafica.minimumSalidaVisual(mN, bestScore);
@@ -286,19 +290,18 @@ public class Main {
             nodosSalida.add(n);
             //Guardamos el coste obtenido en el alineamiento
             miReader.getTrazaActual().setScore(mejorScore);
-            
-            miReader.getTrazaActual().setTiempoC(time_end - time_start);
-            
-            
+            //Guardamos el tiempo de cálculo del alineamiento
+            miReader.getTrazaActual().setTiempoC(time_end - time_start);    
+            //           
+            salidaGrafica.ActualizarTrazas(miReader.getTrazaActual(), n);
             //Pasamos a la siguientes traza del procesado
             miReader.avanzarPos();
         }
 
         //Para guardar el número de tareas activas en cada estado
         //Impresion del alineamiento de una manera más visual
-        salida.salidaVisual(nodosSalida, miReader);
-        
-        salidaGrafica.salidaVisual(nodosSalida, miReader);
+        salida.salidaVisual(nodosSalida, miReader);       
+        //salidaGrafica.salidaVisual(nodosSalida, miReader);
         
         //Calculamos el Conformance Checking del modelo
         double fitness = e.fitness(miReader.getTraces());
@@ -307,8 +310,7 @@ public class Main {
         individualFitness.setCompleteness(fitness);
         individualFitness.setPreciseness(precission);
         miReader.getInd().setFitness(individualFitness);
-        
-        
+               
         salidaGrafica.estadisticasModelo(miReader.getInd(), e.getCoste(), total_time);
         salida.estadisticasModelo(miReader.getInd(), e.getCoste(), total_time);
     }
@@ -429,18 +431,18 @@ public class Main {
     }
 
     //La función de coste depende del movimiento ejecutado
-    private static Double evaluateToState(Transition<StateMove, State> transition) {
+    private static Double evaluateToState(Transition<StateMove, State> transition, ParametrosImpl parametrosImpl) {
         StateMove action = transition.getAction();
         Double cost = null;
         switch (action) {
             case SKIP:
-                cost = COSTE_SKIP;
+                cost = parametrosImpl.getSKIP();
                 break;
             case INSERT:
-                cost = COSTE_INSERT;
+                cost = parametrosImpl.getINSERT();
                 break;
             case OK:
-                cost = COSTE_OK;
+                cost = parametrosImpl.getOK();
                 break;
         }
         return cost;

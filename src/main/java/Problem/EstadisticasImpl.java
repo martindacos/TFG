@@ -1,5 +1,6 @@
 package Problem;
 
+import Configuracion.ParametrosImpl;
 import Problem.NState.State;
 import es.usc.citius.hipster.model.impl.WeightedNode;
 import java.util.ArrayList;
@@ -12,13 +13,18 @@ import java.util.Iterator;
  */
 public class EstadisticasImpl implements InterfazEstadisticas{
 
-    private final double minimumIndividualCost;
+    private double minimumIndividualCost;
     private double totalEventosLog;  
     private Double costeIndividuo;
+    private ParametrosImpl parametrosImpl;
     
-    public EstadisticasImpl(double cost) {
-        this.minimumIndividualCost = cost;
+    public EstadisticasImpl() {
         this.totalEventosLog = 0d;
+        parametrosImpl = ParametrosImpl.getParametrosImpl();
+    }
+    
+    public void setCosteCorto(double coste) {
+        this.minimumIndividualCost = coste;
     }
     
     @Override
@@ -46,7 +52,7 @@ public class EstadisticasImpl implements InterfazEstadisticas{
             this.totalEventosLog = this.totalEventosLog + (t.get(i).tamTrace() * t.get(i).getNumRepeticiones());
         }
         //Obtenemos el fitness
-        Double fitness = 1 - (costeIndividuo / (this.totalEventosLog + this.minimumIndividualCost * t.size()));
+        Double fitness = 1 - (costeIndividuo / (this.totalEventosLog * parametrosImpl.getINSERT() + (this.minimumIndividualCost * t.size() * parametrosImpl.getSKIP())));
         return fitness;
     }
     
@@ -93,8 +99,10 @@ public class EstadisticasImpl implements InterfazEstadisticas{
                 //Calculamos el contexto del prefijo
                 double enL = this.tareasPrefijo(t, prefijo);
                 //System.out.println("Subprecision = "+ subPrecission + " + " + t.get(i).getNumRepeticiones() +" * ("+ enL + " / " + tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size() +" )");
-                //Realizamos el sumatorio
-                subPrecission = subPrecission + t.get(i).getNumRepeticiones() * (enL / tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size());  
+                //Realizamos el sumatorio controlando que el número de tareas activas sea mayor que 1
+                if (tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size() > 0) {
+                    subPrecission = subPrecission + t.get(i).getNumRepeticiones() * (enL / tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size());                   
+                }
             }
             //System.out.println();
         }

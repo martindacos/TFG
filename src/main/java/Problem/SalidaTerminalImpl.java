@@ -71,4 +71,20 @@ public class SalidaTerminalImpl implements InterfazSalida {
         System.out.println("Tiempo total de cálculo = " + tiempo + " ms");
     }
 
+    @Override
+    public void setVisible(boolean visible) {
+        //TODO sin esto non se debería imprimir nada (ifs por ejemplo)
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void imprimirModelo(CMIndividual ind) {
+        ind.print();
+    }
+
+    @Override
+    public void ActualizarTrazas(InterfazTraza trace, WeightedNode nodo) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
 }
