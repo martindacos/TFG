@@ -5,7 +5,6 @@ import domainLogic.exceptions.InvalidFileExtensionException;
 import domainLogic.exceptions.MalformedFileException;
 import domainLogic.exceptions.NonFinishedWorkflowException;
 import domainLogic.exceptions.WrongLogEntryException;
-import domainLogic.utils.ModelFormatConversor;
 import domainLogic.workflow.CaseInstance;
 import domainLogic.workflow.Log;
 import domainLogic.workflow.LogEntryInterface;
@@ -17,7 +16,6 @@ import domainLogic.workflow.algorithms.geneticMining.individual.reader.Individua
 import domainLogic.workflow.algorithms.geneticMining.individual.reader.IndividualReaderInterface;
 import domainLogic.workflow.logReader.LogReaderInterface;
 import domainLogic.workflow.logReader.LogReaderXES;
-import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
@@ -214,10 +212,12 @@ public class Readers {
         test.anadirTarea(5);
         test.anadirTarea(7);
         test.setNumRepeticiones(1);
+        test.setId("1");
 
         Traza test2 = new Traza();
         test2.anadirTarea(7);
         test2.setNumRepeticiones(1);
+        test2.setId("2");
         
         //Alineamiento 1
         Traza test3 = new Traza();
@@ -227,6 +227,7 @@ public class Readers {
         test3.anadirTarea(2);
         test3.anadirTarea(3);
         test3.setNumRepeticiones(1);
+        test3.setId("3");
         
         //Alineamiento 2
         Traza test4 = new Traza();
@@ -235,6 +236,7 @@ public class Readers {
         test4.anadirTarea(2);
         test4.anadirTarea(1);
         test4.setNumRepeticiones(1);
+        test4.setId("4");
         
         //Alineamiento 3
         Traza test5 = new Traza();
@@ -246,6 +248,7 @@ public class Readers {
         test5.anadirTarea(5);
         test5.anadirTarea(7);
         test5.setNumRepeticiones(1);
+        test5.setId("5");
         
         traces.add(test);
         traces.add(test2);

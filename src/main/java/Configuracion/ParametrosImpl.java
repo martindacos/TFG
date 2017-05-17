@@ -6,7 +6,8 @@ package Configuracion;
  */
 public class ParametrosImpl implements Parametros {
 
-    private double C_SKIP = COSTE_OK;
+    private double C_ARTIFICIAL = COSTE_ARTIFICIAL;
+    private double C_SKIP = COSTE_SKIP;
     private double C_INSERT = COSTE_INSERT;
     //Este coste no puede ser de 0
     private double C_OK = COSTE_OK;
@@ -31,6 +32,10 @@ public class ParametrosImpl implements Parametros {
         return C_SKIP;
     }
 
+    public double getARTIFICIAL() {
+        return C_ARTIFICIAL;
+    }
+    
     public void setOK(double c) {
         C_OK = c;
     }
@@ -43,4 +48,7 @@ public class ParametrosImpl implements Parametros {
         C_SKIP = c;
     }
 
+    public void setARTIFICIAL(double C_ARTIFICIAL) {
+        this.C_ARTIFICIAL = C_ARTIFICIAL;
+    }
 }

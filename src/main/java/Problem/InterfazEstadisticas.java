@@ -14,6 +14,7 @@ public interface InterfazEstadisticas {
     Double costeTraza(ArrayList<Traza> t, int pos);
     //Cálculo de la completitud del modelo
     Double fitness(ArrayList<InterfazTraza> t);
+    Double fitnessNuevo(ArrayList<InterfazTraza> t, ArrayList<WeightedNode> nodosSalida);
     //Cálculo de la precisión del modelo
     Double precision(ArrayList<InterfazTraza> t, ArrayList<WeightedNode> nodosSalida);
     //Función que devuelve el coste de un individuo

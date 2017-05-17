@@ -108,4 +108,9 @@ public class Traza implements InterfazTraza{
     public void setId(String id) {
         this.id = id;
     }
+
+    @Override
+    public double getScoreRepetido() {
+       return this.score * this.numRepeticiones;
+    }
 }

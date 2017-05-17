@@ -15,6 +15,7 @@ public interface InterfazTraza {
     //Función que dada una posición indica si la traza fue procesada
     boolean procesadoTraza(int pos);
     double getScore();
+    double getScoreRepetido();
     int tamTrace();
     int getNumRepeticiones();
     void setNumRepeticiones(int numRepeticiones);

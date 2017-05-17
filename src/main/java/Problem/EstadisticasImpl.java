@@ -2,6 +2,7 @@ package Problem;
 
 import Configuracion.ParametrosImpl;
 import Problem.NState.State;
+import static Problem.NState.StateMove.*;
 import es.usc.citius.hipster.model.impl.WeightedNode;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -16,13 +17,14 @@ public class EstadisticasImpl implements InterfazEstadisticas{
     private double minimumIndividualCost;
     private double totalEventosLog;  
     private Double costeIndividuo;
-    private ParametrosImpl parametrosImpl;
+    private final ParametrosImpl parametrosImpl;
     
     public EstadisticasImpl() {
         this.totalEventosLog = 0d;
         parametrosImpl = ParametrosImpl.getParametrosImpl();
     }
     
+    @Override
     public void setCosteCorto(double coste) {
         this.minimumIndividualCost = coste;
     }
@@ -53,6 +55,40 @@ public class EstadisticasImpl implements InterfazEstadisticas{
         }
         //Obtenemos el fitness
         Double fitness = 1 - (costeIndividuo / (this.totalEventosLog * parametrosImpl.getINSERT() + (this.minimumIndividualCost * t.size() * parametrosImpl.getSKIP())));
+        return fitness;
+    }
+    
+    public int menorCamino(ArrayList<WeightedNode> nodosSalida) {
+        int menorCamino = 999999999;
+        for (int i = 0; i < nodosSalida.size(); i++) {
+            int aux=0;
+            Iterator it2 = nodosSalida.get(i).path().iterator();
+            //La primera iteración corresponde con el Estado Inicial
+            it2.next();
+            while (it2.hasNext()) {
+                WeightedNode node = (WeightedNode) it2.next();
+                NState.State s = (NState.State) node.state();
+                if (node.action().equals(OK) || node.action().equals(INSERT)) {
+                    aux++;
+                }
+            }
+            if (aux < menorCamino) menorCamino = aux;
+        }
+        return menorCamino;
+    }
+    
+    @Override
+    public Double fitnessNuevo(ArrayList<InterfazTraza> t, ArrayList<WeightedNode> nodosSalida) {
+        //Obtenemos el coste 
+        //costeIndividuo = costeIndividuo(t);
+        int menorCamino = this.menorCamino(nodosSalida);
+        //Realizamos el sumatorio para todas la trazas del log
+        for (int i=0; i<t.size(); i++) {
+            //System.out.println("TotalEventosLog: " + totalEventosLog + " + " + t.get(i).tamTrace() + " *" + t.get(i).getNumRepeticiones());
+            this.totalEventosLog = this.totalEventosLog + (t.get(i).tamTrace() * t.get(i).getNumRepeticiones());
+        }
+        //Obtenemos el fitness
+        Double fitness = 1 - (costeIndividuo / (this.totalEventosLog * parametrosImpl.getINSERT() + (menorCamino * t.size() * parametrosImpl.getSKIP())));
         return fitness;
     }
     

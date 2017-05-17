@@ -5,18 +5,27 @@
  */
 package Gui;
 
+import Algoritmos.AlgoritmoA;
 import Problem.InterfazSalida;
 import Problem.InterfazTraza;
 import Problem.NState;
 import Problem.Readers;
-import static Problem.NState.StateMove.OK;
-import static Problem.NState.StateMove.SKIP;
+import static Problem.NState.StateMove.*;
+import domainLogic.exceptions.EmptyLogException;
+import domainLogic.exceptions.InvalidFileExtensionException;
+import domainLogic.exceptions.MalformedFileException;
+import domainLogic.exceptions.NonFinishedWorkflowException;
+import domainLogic.exceptions.WrongLogEntryException;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import es.usc.citius.hipster.model.impl.WeightedNode;
+import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 
@@ -30,6 +39,7 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
      * Creates new form Algoritmo
      */
     private Pantalla v;
+    private int totalTrazas;
 
     public Pantalla getV() {
         return v;
@@ -38,11 +48,12 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
     public void setV(Pantalla v) {
         this.v = v;
     }
-    
+          
     private String textoAlineamientos;
     private DefaultTableModel defaultTableModel;
     private HashMap<String, WeightedNode> ali;
     private HashMap<String, InterfazTraza> traces;
+    private String[] paths;
 
     private void inicializarTabla() {
         defaultTableModel = new DefaultTableModel();
@@ -59,18 +70,27 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
         defaultTableModel.addColumn("Nº Repeticiones");
     }
 
-    public PantallaAlgoritmo() {
+    public PantallaAlgoritmo(String path, String pathModel) {
         initComponents();
         modelo.setEditable(false);
         aliEditor.setEditable(false);
         aliEditor.setContentType("text/html");
         textoAlineamientos = "";
-
+        
         ali = new HashMap<String, WeightedNode>();
         traces = new HashMap<String, InterfazTraza>();
         this.inicializarTabla();
+        String[] params = {path, pathModel};
+        this.paths = params;
     }
-
+    
+    public void alinear() {
+        try {
+            AlgoritmoA.main(paths, this);
+        } catch (IOException | EmptyLogException | WrongLogEntryException | NonFinishedWorkflowException | InvalidFileExtensionException | MalformedFileException ex) {
+            Logger.getLogger(PantallaConfiguracion.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -105,7 +125,7 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
         jScrollPane1 = new javax.swing.JScrollPane();
         Trazas = new javax.swing.JTable();
         jLabel9 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
+        mensajeProceso = new javax.swing.JLabel();
 
         setLayout(null);
 
@@ -186,17 +206,17 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
         jLabel7.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
         jLabel7.setText("Coste:");
         add(jLabel7);
-        jLabel7.setBounds(875, 319, 45, 20);
+        jLabel7.setBounds(780, 320, 45, 20);
 
         costeAli.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
         costeAli.setText("-");
         add(costeAli);
-        costeAli.setBounds(938, 319, 127, 20);
+        costeAli.setBounds(840, 320, 170, 20);
 
         jLabel12.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
         jLabel12.setText("Tiempo Cálculo: ");
         add(jLabel12);
-        jLabel12.setBounds(805, 370, 115, 20);
+        jLabel12.setBounds(780, 370, 115, 20);
 
         tiempoCAli.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
         tiempoCAli.setText("-");
@@ -236,10 +256,10 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
         add(jLabel9);
         jLabel9.setBounds(180, 220, 72, 20);
 
-        jLabel3.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
-        jLabel3.setText("Calculando alineamiento x/y");
-        add(jLabel3);
-        jLabel3.setBounds(308, 738, 260, 22);
+        mensajeProceso.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        mensajeProceso.setText("Calculando alineamiento x/y");
+        add(mensajeProceso);
+        mensajeProceso.setBounds(300, 730, 500, 22);
     }// </editor-fold>//GEN-END:initComponents
 
     private void TrazasMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TrazasMouseClicked
@@ -262,7 +282,6 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
@@ -273,6 +292,7 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JLabel memoria;
     private javax.swing.JLabel memoria1;
+    private javax.swing.JLabel mensajeProceso;
     private javax.swing.JTextArea modelo;
     private javax.swing.JLabel precission;
     private javax.swing.JLabel tiempoC;
@@ -283,7 +303,7 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
         this.coste.setText(Objects.toString(coste, null));
         Double fitnes = ind.getFitness().getCompleteness();
         this.fitness.setText(fitnes.toString());
-        Double precision = ind.getFitness().getCompleteness();
+        Double precision = ind.getFitness().getPreciseness();
         this.precission.setText(precision.toString());
         String t = Objects.toString(tiempo, null);
         this.tiempoC.setText(t + " ms");
@@ -291,11 +311,12 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
 
     @Override
     public void ActualizarTrazas(InterfazTraza trace, WeightedNode nodo) {
-        //Nuevo libro en subasta
         int filas = defaultTableModel.getRowCount();
         defaultTableModel.addRow(new Object[]{filas + 1, trace.getId(), trace.getNumRepeticiones()});
         ali.put(trace.getId(), nodo);
         traces.put(trace.getId(), trace);
+        
+        this.mensajeProceso.setText("Calculando alineamiento " + (filas+1) + "/" + totalTrazas);
     }
 
     public void imprimirAlineamiento(String traza) {
@@ -316,51 +337,34 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
                 str = str + "<br> &emsp &emsp &emsp " + trace.leerTarea(s.getPos() - 1) + " &emsp &emsp &emsp " + s.getTarea();
             } else if (node.action().equals(SKIP)) {
                 str = str + "<br> &emsp &emsp &emsp >> &emsp &emsp &ensp " + s.getTarea();
+            } else if (node.action().equals(ARTIFICIAL)) {
+                str = str + "<br> &emsp &emsp &emsp >>' &emsp &emsp &ensp " + s.getTarea();
             } else {
                 str = str + "<br> &emsp &emsp &emsp " + trace.leerTarea(s.getPos() - 1) + " &emsp &emsp &emsp >> ";
             }
         }
         str = str + "</div>";
         this.aliEditor.setText(str);
-        this.costeAli.setText(Double.toString(trace.getScore()));
+//        DecimalFormat df = new DecimalFormat("#,#####");
+//        Double coste = Double.valueOf(df.format(trace.getScoreRepetido()));
+        this.costeAli.setText(Double.toString(trace.getScoreRepetido()));
+//        this.costeAli.setText(Double.toString(coste));
         this.tiempoCAli.setText(Double.toString(trace.getTiempoC()) + " ms");
-    }
-
-    @Override
-    public void minimumSalidaVisual(WeightedNode nodo, Double coste) {
-
-    }
-
-    @Override
-    public void salidaVisual(ArrayList<WeightedNode> nodosSalida, Readers r) {
-        String str = "";
-        for (int i = 0; i < nodosSalida.size(); i++) {
-            Iterator it2 = nodosSalida.get(i).path().iterator();
-            //La primera iteración corresponde con el Estado Inicial, que no imprimimos
-            it2.next();
-            str = str + "<h3> `" + r.getTrazaPos(i).getId() + "´</h3>";
-            str = str + "<div> &emsp TRAZA &emsp MODELO";
-            while (it2.hasNext()) {
-                WeightedNode node = (WeightedNode) it2.next();
-                NState.State s = (NState.State) node.state();
-                if (node.action().equals(OK)) {
-                    str = str + "<br> &emsp &emsp " + r.getTrazaPos(i).leerTarea(s.getPos() - 1) + " &emsp &emsp &emsp " + s.getTarea();
-                } else if (node.action().equals(SKIP)) {
-                    str = str + "<br> &emsp &emsp >> &emsp &emsp &ensp " + s.getTarea();
-                } else {
-                    str = str + "<br> &emsp &emsp " + r.getTrazaPos(i).leerTarea(s.getPos() - 1) + " &emsp &emsp &emsp >> ";
-                }
-            }
-            str = str + "</div>";
-            str = str + "<h3> Coste del Alineamiento: " + r.getTrazaPos(i).getScore() + "</h3>";
-        }
-        textoAlineamientos = textoAlineamientos + str;
-        this.aliEditor.setText(textoAlineamientos);
     }
 
     @Override
     public void imprimirModelo(CMIndividual ind) {
         String str = "<h3>Modelo " + 1 + " impreso</h3>";
         modelo.append(str);
+    }
+
+    @Override
+    public void setTotalTrazas(int size) {
+        totalTrazas = size;
+    }
+
+    @Override
+    public void minimumSalidaVisual(WeightedNode nodo, Double coste) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

@@ -2,10 +2,7 @@ package Problem;
 
 import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
-import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Random;
 
 public final class NState {
@@ -15,7 +12,7 @@ public final class NState {
 
     //Posibles movimientos del alineamiento
     public enum StateMove {
-        OK, SKIP, INSERT
+        OK, SKIP, INSERT, ARTIFICIAL
     }
 
     public static final class State {
@@ -81,53 +78,6 @@ public final class NState {
         //Ninguna tarea activa en el modelo
         public boolean Enabled() {
             return marcado.getEnabledElements().size() > 0;
-        }
-
-//        @Override
-//        public int hashCode() {
-//            int hash = 5;
-//            hash = 43 * hash + this.pos;
-//            hash = 43 * hash + Objects.hashCode(this.mov);
-//            return hash;
-//        }
-//
-//        @Override
-//        public boolean equals(Object obj) {
-//            final State other = (State) obj;
-//            System.out.println("Comparación "  + this.mov +" "+ other.mov + " " +this.pos +" "+ other.pos + " " +this.tarea +" "+ other.tarea);
-//            return this.pos==other.pos && this.mov == other.mov && (this.tarea == null ? other.tarea == null : this.tarea.equals(other.tarea));
-//        }
-
-//        @Override
-//        public int hashCode() {
-//            int hash = 3;
-//            hash = 37 * hash + this.pos;
-//            return hash;
-//        }
-//
-//        @Override
-//        public boolean equals(Object obj) {
-//            final State other = (State) obj;
-//            if (this.pos != other.pos) {
-//                return false;
-//            }
-//            if (this.marcado.getNumberTokens() != other.marcado.getNumberTokens()) {
-//                return false;
-//            }
-//            
-//            TIntHashSet estasTareas = this.marcado.getEnabledElements();
-//            TIntHashSet otrasTareas = this.marcado.getEnabledElements();
-//            TIntIterator tasks = estasTareas.iterator();
-//            while (tasks.hasNext()) {
-//                int id = tasks.next();
-//                System.out.println(id);
-//                if (!otrasTareas.contains(id)) {
-//                    return false;
-//                }
-//            }
-//            return true;
-//        }
-
-        
+        }        
     }
 }

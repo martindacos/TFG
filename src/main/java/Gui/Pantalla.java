@@ -5,17 +5,6 @@
  */
 package Gui;
 
-import static Problem.NState.StateMove.*;
-import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
-import es.usc.citius.hipster.model.impl.WeightedNode;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Objects;
-import javax.swing.JOptionPane;
-import javax.swing.ListSelectionModel;
-import javax.swing.table.DefaultTableModel;
-
 /**
  *
  * @author marti
@@ -29,12 +18,17 @@ public class Pantalla extends javax.swing.JFrame {
 
     public Pantalla() {
         initComponents();
+
+        this.inicializar();
+    }
+    
+    private void inicializar() {
         this.setTitle("Sistema de Análisis de Conformidad");
         this.setSize(1100, 850);
         this.setResizable(false);
         this.setLocationRelativeTo(null);
         this.setVisible(true);
-        
+                       
         PantallaConfiguracion pl=new PantallaConfiguracion();
         pl.setVisible(true);
         pl.setV(this);

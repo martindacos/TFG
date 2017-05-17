@@ -45,8 +45,6 @@ public class AlgoritmoA {
         ParametrosImpl parametrosImpl;
         
         parametrosImpl = ParametrosImpl.getParametrosImpl();
-        //Logs/g3/grpd_g3pi300.xes Logs/g3/g3.hn
-        //balancedLogs/noise_0/a7/a7_Modif.xes balancedLogs/desiredNets/a7.hn
         switch (args.length) {
             case 2:
                 //Cargamos el Modelo y el Log
@@ -124,7 +122,7 @@ public class AlgoritmoA {
         CostFunction<StateMove, State, Double> cf = new CostFunction<StateMove, State, Double>() {
             @Override
             public Double evaluate(Transition<StateMove, State> transition) {
-                return evaluateToState(transition, parametrosImpl);
+                return evaluateToState(transition, parametrosImpl, ejec);
             }
         };
 
@@ -163,7 +161,7 @@ public class AlgoritmoA {
         CostFunction<StateMove, State, Double> mcf = new CostFunction<StateMove, State, Double>() {
             @Override
             public Double evaluate(Transition<StateMove, State> transition) {
-                return parametrosImpl.getSKIP();
+                return minimumEvaluateToState(transition, parametrosImpl, ejec);
             }
         };
 
@@ -238,9 +236,9 @@ public class AlgoritmoA {
         //Creamos las interfaces de salida por terminal
         InterfazSalida salida = new SalidaTerminalImpl();     
         salidaGrafica.imprimirModelo(miReader.getInd());
+        salidaGrafica.setTotalTrazas(miReader.getTraces().size());
         
         salida.minimumSalidaVisual(mN, bestScore);
-        salidaGrafica.minimumSalidaVisual(mN, bestScore);
         
         ArrayList<WeightedNode> nodosSalida = new ArrayList<>();
         //Tiempo total del cálculo del algoritmo
@@ -292,19 +290,18 @@ public class AlgoritmoA {
             miReader.getTrazaActual().setScore(mejorScore);
             //Guardamos el tiempo de cálculo del alineamiento
             miReader.getTrazaActual().setTiempoC(time_end - time_start);    
-            //           
+            //Imprimimos el alineamiento calculado y sus estadísticas           
             salidaGrafica.ActualizarTrazas(miReader.getTrazaActual(), n);
+            salida.ActualizarTrazas(miReader.getTrazaActual(), n);
             //Pasamos a la siguientes traza del procesado
             miReader.avanzarPos();
         }
-
-        //Para guardar el número de tareas activas en cada estado
-        //Impresion del alineamiento de una manera más visual
-        salida.salidaVisual(nodosSalida, miReader);       
-        //salidaGrafica.salidaVisual(nodosSalida, miReader);
         
         //Calculamos el Conformance Checking del modelo
         double fitness = e.fitness(miReader.getTraces());
+        System.out.println("Fitness viejo = " + fitness);
+        double fitnessNuevo = e.fitnessNuevo(miReader.getTraces(), nodosSalida);
+        System.out.println("Fitness nuevo = " + fitnessNuevo);
         double precission = e.precision(miReader.getTraces(), nodosSalida);
         IndividualFitness individualFitness = new IndividualFitness();
         individualFitness.setCompleteness(fitness);
@@ -356,6 +353,14 @@ public class AlgoritmoA {
                 movements.add(SKIP);
                 //Anadimos la tarea a la coleccion para ejecutarla
                 ejec.anadirSkip(id);
+            }
+        } else {
+            //Buscamos las tareas que tienen algún token en su entrada
+            ejec.tareasTokensEntrada();
+            //Contamos el número de tokens necesarios para ejecutarlas
+            Integer numeroTareas = ejec.tareasTokensRestantes();
+            for (int i=0; i < numeroTareas; i++) {
+                movements.add(ARTIFICIAL);
             }
         }
 
@@ -421,6 +426,14 @@ public class AlgoritmoA {
                 //System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaINSERT());
                 successor.setTarea(ejec.getTareaINSERT());
                 break;
+            case ARTIFICIAL:
+                //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
+                t = ejec.leerTareaArtificial();
+                successor.setTarea(t);
+                //System.out.println("TAREA A HACER EL ARTIFICIAL ----------------> " + t);
+                successor.avanzarMarcado(t);
+                successor.setMov(ARTIFICIAL);
+                break;
         }
 //        System.out.println("Pos traza " + successor.getPos());
 //        System.out.println("MARCADO DESPUES");
@@ -431,7 +444,7 @@ public class AlgoritmoA {
     }
 
     //La función de coste depende del movimiento ejecutado
-    private static Double evaluateToState(Transition<StateMove, State> transition, ParametrosImpl parametrosImpl) {
+    private static Double evaluateToState(Transition<StateMove, State> transition, ParametrosImpl parametrosImpl, EjecTareas ejec) {
         StateMove action = transition.getAction();
         Double cost = null;
         switch (action) {
@@ -443,6 +456,9 @@ public class AlgoritmoA {
                 break;
             case OK:
                 cost = parametrosImpl.getOK();
+                break;
+            case ARTIFICIAL:
+                cost = parametrosImpl.getARTIFICIAL() + ejec.tokenUsados(transition.getState().getTarea()) + 1;
                 break;
         }
         return cost;
@@ -469,6 +485,14 @@ public class AlgoritmoA {
                 movements.add(SKIP);
                 //Anadimos la tarea a la coleccion para ejecutarla
                 ejec.anadirSkip(id);
+            }
+        } else {
+            //Buscamos las tareas que tienen algún token en su entrada
+            ejec.tareasTokensEntrada();
+            //Contamos el número de tokens necesarios para ejecutarlas
+            Integer numeroTareas = ejec.tareasTokensRestantes();
+            for (int i=0; i < numeroTareas; i++) {
+                movements.add(ARTIFICIAL);
             }
         }
 
@@ -504,16 +528,48 @@ public class AlgoritmoA {
 
         successor.setMarcado(marking);
 
+//        System.out.println("MARCADO ANTES");
+//        System.out.println(successor.getMarcado().toString());
+//        System.out.println("Tareas que se pueden ejecutar: " + successor.getMarcado().getEnabledElements());
+        Integer t;
         switch (action) {
             case SKIP:
                 //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
-                Integer t = ejec.leerTareaSkip();
+                t = ejec.leerTareaSkip();
                 successor.setTarea(t);
+                //System.out.println("TAREA A HACER EL SKIP ----------------> " + t);
                 successor.avanzarMarcado(t);
                 successor.setMov(SKIP);
                 break;
+            case ARTIFICIAL:
+                //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
+                t = ejec.leerTareaArtificial();
+                successor.setTarea(t);
+                //System.out.println("TAREA A HACER EL ARTIFICIAL ----------------> " + t);
+                successor.avanzarMarcado(t);
+                successor.setMov(ARTIFICIAL);
+                break;
         }
 
+//        System.out.println("Pos traza " + successor.getPos());
+//        System.out.println("MARCADO DESPUES");
+//        System.out.println(successor.getMarcado().toString());
+//        System.out.println("EnabledTasks " + successor.getMarcado().getEnabledElements());
         return successor;
+    }
+    
+    //La función de coste depende del movimiento ejecutado
+    private static Double minimumEvaluateToState(Transition<StateMove, State> transition, ParametrosImpl parametrosImpl, EjecTareas ejec) {
+        StateMove action = transition.getAction();
+        Double cost = null;
+        switch (action) {
+            case SKIP:
+                cost = parametrosImpl.getSKIP();
+                break;
+            case ARTIFICIAL:
+                cost = parametrosImpl.getARTIFICIAL() + ejec.tokenUsados(transition.getState().getTarea());
+                break;
+        }
+        return cost;
     }
 }

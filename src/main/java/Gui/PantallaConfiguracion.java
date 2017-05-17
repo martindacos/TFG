@@ -5,16 +5,7 @@
  */
 package Gui;
 
-import Algoritmos.AlgoritmoA;
 import Configuracion.ParametrosImpl;
-import domainLogic.exceptions.EmptyLogException;
-import domainLogic.exceptions.InvalidFileExtensionException;
-import domainLogic.exceptions.MalformedFileException;
-import domainLogic.exceptions.NonFinishedWorkflowException;
-import domainLogic.exceptions.WrongLogEntryException;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 
 /**
@@ -65,7 +56,7 @@ public class PantallaConfiguracion extends javax.swing.JPanel {
         jLabel1 = new javax.swing.JLabel();
         jLabel12 = new javax.swing.JLabel();
         Ruta1 = new javax.swing.JTextField();
-        jButton1 = new javax.swing.JButton();
+        alinear = new javax.swing.JButton();
         jLabel13 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jLabel14 = new javax.swing.JLabel();
@@ -112,15 +103,15 @@ public class PantallaConfiguracion extends javax.swing.JPanel {
         add(Ruta1);
         Ruta1.setBounds(216, 142, 515, 26);
 
-        jButton1.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
-        jButton1.setText("ALINEAR");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        alinear.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        alinear.setText("ALINEAR");
+        alinear.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                alinearActionPerformed(evt);
             }
         });
-        add(jButton1);
-        jButton1.setBounds(361, 467, 146, 31);
+        add(alinear);
+        alinear.setBounds(361, 467, 146, 31);
 
         jLabel13.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
         jLabel13.setText("OK:");
@@ -171,25 +162,18 @@ public class PantallaConfiguracion extends javax.swing.JPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_Ruta1ActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void alinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_alinearActionPerformed
         parametrosImpl.setOK(Double.parseDouble(OK.getText()));
         parametrosImpl.setINSERT(Double.parseDouble(INSERT.getText()));
         parametrosImpl.setSKIP(Double.parseDouble(SKIP.getText()));
         
-        this.v.getContentPane().setVisible(false);
-        PantallaAlgoritmo pl = new PantallaAlgoritmo();
+        this.getV().getContentPane().setVisible(false);
+        PantallaAlgoritmo pl = new PantallaAlgoritmo(path, pathModel);
         pl.setVisible(true);
         pl.setV(this.getV());
         this.getV().setContentPane(pl);
-        
-        String[] params = {path, pathModel};
-        try {
-            AlgoritmoA.main(params, pl);
-        } catch (IOException | EmptyLogException | WrongLogEntryException | NonFinishedWorkflowException | InvalidFileExtensionException | MalformedFileException ex) {
-            Logger.getLogger(PantallaConfiguracion.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_jButton1ActionPerformed
-
+        pl.alinear();
+    }//GEN-LAST:event_alinearActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField INSERT;
@@ -197,7 +181,7 @@ public class PantallaConfiguracion extends javax.swing.JPanel {
     private javax.swing.JTextField Ruta;
     private javax.swing.JTextField Ruta1;
     private javax.swing.JTextField SKIP;
-    private javax.swing.JButton jButton1;
+    private javax.swing.JButton alinear;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
