@@ -15,6 +15,7 @@ public class Traza implements InterfazTraza{
 
     public Traza() {
         this.tareas = new ArrayList<>();
+        this.numRepeticiones = 1;
     }
         
     public ArrayList<Integer> getTareas() {

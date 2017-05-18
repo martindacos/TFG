@@ -12,144 +12,171 @@ import java.util.Iterator;
  *
  * @author marti
  */
-public class EstadisticasImpl implements InterfazEstadisticas{
+public class EstadisticasImpl implements InterfazEstadisticas {
 
     private double minimumIndividualCost;
-    private double totalEventosLog;  
+    private double totalEventosLog;
     private Double costeIndividuo;
     private final ParametrosImpl parametrosImpl;
-    
+
     public EstadisticasImpl() {
         this.totalEventosLog = 0d;
         parametrosImpl = ParametrosImpl.getParametrosImpl();
     }
-    
+
     @Override
     public void setCosteCorto(double coste) {
         this.minimumIndividualCost = coste;
     }
-    
+
     @Override
     public Double costeTraza(ArrayList<Traza> t, int pos) {
         return t.get(pos).getScore();
     }
-        
+
     @Override
-    public Double costeIndividuo(ArrayList<InterfazTraza> t){
+    public Double costeIndividuo(ArrayList<InterfazTraza> t) {
         Double aux = 0d;
-        for (int i=0; i<t.size(); i++) {
-            //Obtenemos el coste de la traza y su número de repeticiones y lo anadimos
-            aux = aux + t.get(i).getScore() * t.get(i).getNumRepeticiones();
+        if (t != null) {
+            for (int i = 0; i < t.size(); i++) {
+                //Obtenemos el coste de la traza y su número de repeticiones y lo anadimos
+                aux = aux + t.get(i).getScore() * t.get(i).getNumRepeticiones();
+            }
         }
         return aux;
     }
-    
+
     @Override
     public Double fitness(ArrayList<InterfazTraza> t) {
         //Obtenemos el coste 
         costeIndividuo = costeIndividuo(t);
-        //Realizamos el sumatorio para todas la trazas del log
-        for (int i=0; i<t.size(); i++) {
-            //System.out.println("TotalEventosLog: " + totalEventosLog + " + " + t.get(i).tamTrace() + " *" + t.get(i).getNumRepeticiones());
-            this.totalEventosLog = this.totalEventosLog + (t.get(i).tamTrace() * t.get(i).getNumRepeticiones());
+        Double fitness = 0d;
+        if (t != null && t.size() > 0) {
+            //Realizamos el sumatorio para todas la trazas del log
+            for (int i = 0; i < t.size(); i++) {
+                this.totalEventosLog = this.totalEventosLog + (t.get(i).tamTrace() * t.get(i).getNumRepeticiones());
+            }
+            //Obtenemos el fitness
+            if (this.minimumIndividualCost > 0 && costeIndividuo > 0) {
+                //System.out.println(costeIndividuo);
+                fitness = 1 - (costeIndividuo / (this.totalEventosLog * parametrosImpl.getINSERT() + (this.minimumIndividualCost * t.size() * parametrosImpl.getSKIP())));
+                //System.out.println(this.totalEventosLog +" "+parametrosImpl.getINSERT() + " "+ this.minimumIndividualCost + " " + t.size() +" "+ parametrosImpl.getSKIP());
+            }
+            if (fitness < 0d) {
+                fitness = 0d;
+            }
         }
-        //Obtenemos el fitness
-        Double fitness = 1 - (costeIndividuo / (this.totalEventosLog * parametrosImpl.getINSERT() + (this.minimumIndividualCost * t.size() * parametrosImpl.getSKIP())));
         return fitness;
     }
-    
+
     public int menorCamino(ArrayList<WeightedNode> nodosSalida) {
         int menorCamino = 999999999;
-        for (int i = 0; i < nodosSalida.size(); i++) {
-            int aux=0;
-            Iterator it2 = nodosSalida.get(i).path().iterator();
-            //La primera iteración corresponde con el Estado Inicial
-            it2.next();
-            while (it2.hasNext()) {
-                WeightedNode node = (WeightedNode) it2.next();
-                NState.State s = (NState.State) node.state();
-                if (node.action().equals(OK) || node.action().equals(INSERT)) {
-                    aux++;
+        if (nodosSalida != null) {
+            for (int i = 0; i < nodosSalida.size(); i++) {
+                int aux = 0;
+                Iterator it2 = nodosSalida.get(i).path().iterator();
+                //La primera iteración corresponde con el Estado Inicial
+                it2.next();
+                while (it2.hasNext()) {
+                    WeightedNode node = (WeightedNode) it2.next();
+                    if (node.action().equals(OK) || node.action().equals(INSERT)) {
+                        aux++;
+                    }
+                }
+                if (aux < menorCamino) {
+                    menorCamino = aux;
                 }
             }
-            if (aux < menorCamino) menorCamino = aux;
         }
         return menorCamino;
     }
-    
+
     @Override
     public Double fitnessNuevo(ArrayList<InterfazTraza> t, ArrayList<WeightedNode> nodosSalida) {
-        //Obtenemos el coste 
-        //costeIndividuo = costeIndividuo(t);
-        int menorCamino = this.menorCamino(nodosSalida);
-        //Realizamos el sumatorio para todas la trazas del log
-        for (int i=0; i<t.size(); i++) {
-            //System.out.println("TotalEventosLog: " + totalEventosLog + " + " + t.get(i).tamTrace() + " *" + t.get(i).getNumRepeticiones());
-            this.totalEventosLog = this.totalEventosLog + (t.get(i).tamTrace() * t.get(i).getNumRepeticiones());
+        Double fitness = 0d;
+        costeIndividuo = costeIndividuo(t);
+        if (t != null && nodosSalida != null) {
+            int menorCamino = this.menorCamino(nodosSalida);
+            //Realizamos el sumatorio para todas la trazas del log
+            for (int i = 0; i < t.size(); i++) {
+                //System.out.println("TotalEventosLog: " + totalEventosLog + " + " + t.get(i).tamTrace() + " *" + t.get(i).getNumRepeticiones());
+                this.totalEventosLog = this.totalEventosLog + (t.get(i).tamTrace() * t.get(i).getNumRepeticiones());
+            }
+            //Obtenemos el fitness
+            fitness = 1 - (costeIndividuo / (this.totalEventosLog * parametrosImpl.getINSERT() + (menorCamino * t.size() * parametrosImpl.getSKIP())));
+            if (fitness < 0) {
+                fitness = 0d;
+            }
         }
-        //Obtenemos el fitness
-        Double fitness = 1 - (costeIndividuo / (this.totalEventosLog * parametrosImpl.getINSERT() + (menorCamino * t.size() * parametrosImpl.getSKIP())));
         return fitness;
     }
-    
+
     //Calculamos el número de tareas que tienen el mismo contexto que el prefijo
     public Integer tareasPrefijo(ArrayList<InterfazTraza> t, ArrayList<Integer> prefijo) {
         HashSet<Integer> actividades = new HashSet<Integer>();
-
-        //Para todas la trazas del log
-        for (int i = 0; i < t.size(); i++) {
-            //En un principio ambos contextos son iguales
-            boolean iguales = true;
-            int j = 0;
-            //Mientras no acabemos las tareas de la traza o del prefijo
-            while (j < t.get(i).tamTrace() && j < prefijo.size()) {
-                //Comparamos si ambas tareas son distintas
-                if (t.get(i).leerTarea(j).intValue() != prefijo.get(j).intValue()) {
-                    //Si son distintas no tienen el mismo contexto
-                    iguales = false;
+        if (t != null && prefijo != null) {
+            //Para todas la trazas del log
+            for (int i = 0; i < t.size(); i++) {
+                //En un principio ambos contextos son iguales
+                boolean iguales = true;
+                int j = 0;
+                //Mientras no acabemos las tareas de la traza o del prefijo
+                while (j < t.get(i).tamTrace() && j < prefijo.size()) {
+                    //Comparamos si ambas tareas son distintas
+                    if (t.get(i).leerTarea(j).intValue() != prefijo.get(j).intValue()) {
+                        //Si son distintas no tienen el mismo contexto
+                        iguales = false;
+                    }
+                    j++;
                 }
-                j++;
-            }
-            //Si son iguales y existe la siguientes tarea de la traza
-            if (iguales && j < t.get(i).tamTrace()) {
-                //Añadimos la tarea sólo en caso de que no se encuentre añadida
-                actividades.add(t.get(i).leerTarea(j));
+                //Si son iguales y existe la siguientes tarea de la traza
+                if (iguales && j < t.get(i).tamTrace()) {
+                    //Añadimos la tarea sólo en caso de que no se encuentre añadida
+                    actividades.add(t.get(i).leerTarea(j));
+                }
             }
         }
         //System.out.println("ActividadesMismoContexto: " +actividades);
         return actividades.size();
     }
-        
+
     @Override
     public Double precision(ArrayList<InterfazTraza> t, ArrayList<WeightedNode> nodosSalida) {
-        ArrayList<ArrayList<State>> tareasActivasEstado = tareasActivasEstado(nodosSalida);
-        Double subPrecission = 0d;
-        //Para todas las trazas del log
-        for (int i=0; i < t.size(); i++) {
-            //Array para guardar las tareas del prefijo
-            ArrayList<Integer> prefijo = new ArrayList<Integer>();
-            //Para todas las tareas de la traza
-            for (int j=0; j < t.get(i).tamTrace(); j++) {
-                //Añadimos al prefijo la tarea anterior a la procesada
-                if (j>0) prefijo.add(t.get(i).leerTarea(j-1));
-                //Calculamos el contexto del prefijo
-                double enL = this.tareasPrefijo(t, prefijo);
-                //System.out.println("Subprecision = "+ subPrecission + " + " + t.get(i).getNumRepeticiones() +" * ("+ enL + " / " + tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size() +" )");
-                //Realizamos el sumatorio controlando que el número de tareas activas sea mayor que 1
-                if (tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size() > 0) {
-                    subPrecission = subPrecission + t.get(i).getNumRepeticiones() * (enL / tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size());                   
+        Double precission = 0d;
+        if (t != null && nodosSalida != null) {
+            ArrayList<ArrayList<State>> tareasActivasEstado = tareasActivasEstado(nodosSalida);
+            Double subPrecission = 0d;
+            //Para todas las trazas del log
+            for (int i = 0; i < t.size(); i++) {
+                //Array para guardar las tareas del prefijo
+                ArrayList<Integer> prefijo = new ArrayList<Integer>();
+                //Para todas las tareas de la traza
+                for (int j = 0; j < t.get(i).tamTrace(); j++) {
+                    //Añadimos al prefijo la tarea anterior a la procesada
+                    if (j > 0) {
+                        prefijo.add(t.get(i).leerTarea(j - 1));
+                    }
+                    //Calculamos el contexto del prefijo
+                    double enL = this.tareasPrefijo(t, prefijo);
+                    //System.out.println("Subprecision = "+ subPrecission + " + " + t.get(i).getNumRepeticiones() +" * ("+ enL + " / " + tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size() +" )");
+                    //Realizamos el sumatorio controlando que el número de tareas activas sea mayor que 1
+                    if (tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size() > 0) {
+                        subPrecission = subPrecission + t.get(i).getNumRepeticiones() * (enL / tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size());
+                    }
                 }
+                //System.out.println();
             }
-            //System.out.println();
+            //Obtenemos la precisión
+            if (totalEventosLog > 0 && subPrecission > 0) {
+                precission = 1 / this.totalEventosLog * subPrecission;
+            }
+            //System.out.println("Precision = 1 / " + totalEventosLog + " * " + subPrecission);
         }
-        //Obtenemos la precisión
-        Double precission = 1 / this.totalEventosLog * subPrecission;
-        //System.out.println("Precision = 1 / " + totalEventosLog + " * " + subPrecission);
         return precission;
     }
 
     //Cálculo de las tareas activas en cada estado   
-    public ArrayList<ArrayList<State>> tareasActivasEstado(ArrayList<WeightedNode> nodosSalida) {       
+    public ArrayList<ArrayList<State>> tareasActivasEstado(ArrayList<WeightedNode> nodosSalida) {
         ArrayList<ArrayList<State>> tareasActivasEstado = new ArrayList<ArrayList<State>>();
         for (int i = 0; i < nodosSalida.size(); i++) {
             ArrayList<NState.State> tareasEstadoTraza = new ArrayList<NState.State>();

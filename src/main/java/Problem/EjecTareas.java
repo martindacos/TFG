@@ -26,7 +26,7 @@ public class EjecTareas {
     private int numOfTokens;
     private int endPlace;
     private TIntHashSet possibleEnabledTasks;
-    
+
     TIntHashSet tareasTokensEntrada;
 
     public EjecTareas() {
@@ -58,30 +58,36 @@ public class EjecTareas {
     public void anadirInsert(Integer a) {
         tareaINSERT = a;
     }
-        
+
     public void anadirSkip(Integer a) {
         tareasSkip.add(a);
     }
 
     public Integer leerTareaSkip() {
-        Integer skip = tareasSkip.get(0);
-        tareasSkip.remove(0);
-        return skip;
+        if (tareasSkip != null && !tareasSkip.isEmpty()) {
+            Integer skip = tareasSkip.get(0);
+            tareasSkip.remove(0);
+            return skip;
+        } else {
+            return null;
+        }
     }
 
     public Integer leerTareaArtificial() {
-        Integer artificial = 0;
-        int i = 0;
-        for (Map.Entry<Integer, Integer> entry : tareasArtificiales.entrySet()) {
-            if (i == tareaArtificialActual) {
-                artificial = entry.getKey();
+        Integer artificial = null;
+        if (tareasArtificiales != null && !tareasArtificiales.isEmpty()) {
+            int i = 0;
+            for (Map.Entry<Integer, Integer> entry : tareasArtificiales.entrySet()) {
+                if (i == tareaArtificialActual) {
+                    artificial = entry.getKey();
+                }
+                i++;
             }
-            i++;
+            tareaArtificialActual++;
         }
-        tareaArtificialActual++;
         return artificial;
     }
-        
+
     public ArrayList<HashMap<TIntHashSet, Integer>> getTokens() {
         return tokens;
     }
@@ -101,7 +107,7 @@ public class EjecTareas {
 
         return clone;
     }
-    
+
     public void setTokens(ArrayList<HashMap<TIntHashSet, Integer>> tokens) {
         this.tokens = tokens;
     }
@@ -137,68 +143,80 @@ public class EjecTareas {
     public void setPossibleEnabledTasks(TIntHashSet possibleEnabledTasks) {
         this.possibleEnabledTasks = possibleEnabledTasks;
     }
-   
+
     //Función que revisa las tareas que tienen algún token en su entrada
     public TIntHashSet tareasTokensEntrada() {
         tareasTokensEntrada = new TIntHashSet();
-        for (int i = 0; i < tokens.size(); i++) {
-            HashMap<TIntHashSet, Integer> tareas = tokens.get(i);
-            for (Map.Entry<TIntHashSet, Integer> entry : tareas.entrySet()) {
-                //System.out.println("clave=" + entry.getKey() + ", valor=" + entry.getValue());
-                //Si tienen algún token
-                if (entry.getValue() > 0) {
-                    TIntHashSet subsets = entry.getKey();
-                    TIntIterator tasks = subsets.iterator();
-                    //Añadimos las tareas a la lista
-                    while (tasks.hasNext()) {
-                        int id = tasks.next();
-                        tareasTokensEntrada.add(id);
-                        //System.out.println("Tareas " + id);
+        if (tokens != null) {
+            for (int i = 0; i < tokens.size(); i++) {
+                HashMap<TIntHashSet, Integer> tareas = tokens.get(i);
+                for (Map.Entry<TIntHashSet, Integer> entry : tareas.entrySet()) {
+                    //System.out.println("clave=" + entry.getKey() + ", valor=" + entry.getValue());
+                    //Si tienen algún token
+                    if (entry.getValue() > 0) {
+                        TIntHashSet subsets = entry.getKey();
+                        TIntIterator tasks = subsets.iterator();
+                        //Añadimos las tareas a la lista
+                        while (tasks.hasNext()) {
+                            int id = tasks.next();
+                            tareasTokensEntrada.add(id);
+                            //System.out.println("Tareas " + id);
+                        }
                     }
                 }
             }
         }
         return tareasTokensEntrada;
     }
-    
+
     //Función que revisa las tareas que tienen algún token en su entrada
     //Lo guardamos en un HasMap de Tarea y Tokens restantes
     public Integer tareasTokensRestantes() {
         tareasArtificiales = new HashMap();
-        for (int i = 0; i < tokens.size(); i++) {
-            HashMap<TIntHashSet, Integer> tareas = tokens.get(i);
-            for (Map.Entry<TIntHashSet, Integer> entry : tareas.entrySet()) {
-                //System.out.println("clave=" + entry.getKey() + ", valor=" + entry.getValue());
-                //Para las tareas que actualmente no tienen tokens
-                if (entry.getValue() == 0) {
-                    TIntHashSet subsets = entry.getKey();
-                    TIntIterator tasks = subsets.iterator();
-                    while (tasks.hasNext()) {
-                        int id = tasks.next();
-                        //Revisamos si la tarea se encuentra en la lista
-                        if (tareasTokensEntrada.contains(id)) {
-                            //Si se encuentra le añadimos un token mas
-                            if (tareasArtificiales.get(id) != null) {
-                                int tokens = tareasArtificiales.get(id);
-                                tokens++;
-                                tareasArtificiales.put(id, tokens);
-                            }else {
-                                tareasArtificiales.put(id, 1);
+        if (tokens != null && tareasTokensEntrada != null) {
+            for (int i = 0; i < tokens.size(); i++) {
+                HashMap<TIntHashSet, Integer> tareas = tokens.get(i);
+                for (Map.Entry<TIntHashSet, Integer> entry : tareas.entrySet()) {
+                    //System.out.println("clave=" + entry.getKey() + ", valor=" + entry.getValue());
+                    //Para las tareas que actualmente no tienen tokens
+                    if (entry.getValue() == 0) {
+                        TIntHashSet subsets = entry.getKey();
+                        TIntIterator tasks = subsets.iterator();
+                        while (tasks.hasNext()) {
+                            int id = tasks.next();
+                            //Revisamos si la tarea se encuentra en la lista
+                            if (tareasTokensEntrada.contains(id)) {
+                                //Si se encuentra le añadimos un token mas
+                                if (tareasArtificiales.get(id) != null) {
+                                    int token = tareasArtificiales.get(id);
+                                    token++;
+                                    tareasArtificiales.put(id, token);
+                                } else {
+                                    tareasArtificiales.put(id, 1);
+                                }
                             }
                         }
                     }
                 }
             }
+//            System.out.println("******");
+//            for (Map.Entry<Integer, Integer> entry : tareasArtificiales.entrySet()) {
+//                System.out.println("Tarea=" + entry.getKey() + ", Tokens Necesarios=" + entry.getValue());
+//            }
+//            System.out.println("--------");
         }
-//        System.out.println("******");
-//        for (Map.Entry<Integer, Integer> entry : tareasArtificiales.entrySet()) {
-//            System.out.println("Tarea=" + entry.getKey() + ", Tokens Necesarios=" + entry.getValue());
-//        }
-//        System.out.println("--------");
         return tareasArtificiales.size();
     }
-    
-    public Integer tokenUsados (int task) {
-        return tareasArtificiales.get(task);
+
+    public Integer tokenUsados(int task) {
+        if (tareasArtificiales != null) {
+            return tareasArtificiales.get(task);
+        } else {
+            return null;
+        }
+    }
+
+    public void setTareasArtificiales(HashMap<Integer, Integer> tareasArtificiales) {
+        this.tareasArtificiales = tareasArtificiales;
     }
 }
