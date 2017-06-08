@@ -19,6 +19,7 @@ public class EjecTareas {
     private ArrayList<Integer> tareasSkip;
     private HashMap<Integer, Integer> tareasArtificiales;
     private Integer tareaArtificialActual;
+
     //Colección de elementos que vamos a guardar del marcado
     ArrayList<HashMap<TIntHashSet, Integer>> tokens;
     //Elementos para la copia del marcado
@@ -144,9 +145,20 @@ public class EjecTareas {
         this.possibleEnabledTasks = possibleEnabledTasks;
     }
 
+    //Función que revisa cuantos tokens son necesarios para ejecutar la tarea forzada
+    //Lo guardamos en un HasMap de Tarea y Tokens restantes
+    public void anadirTareaForzada(Integer a) {
+        if (tareasArtificiales == null) {
+            tareasArtificiales = new HashMap();
+        }
+        tareasArtificiales.put(a, 0);
+    }
+
     //Función que revisa las tareas que tienen algún token en su entrada
     public TIntHashSet tareasTokensEntrada() {
-        tareasTokensEntrada = new TIntHashSet();
+        if (tareasTokensEntrada == null) {
+            tareasTokensEntrada = new TIntHashSet();
+        }
         if (tokens != null) {
             for (int i = 0; i < tokens.size(); i++) {
                 HashMap<TIntHashSet, Integer> tareas = tokens.get(i);
@@ -172,7 +184,9 @@ public class EjecTareas {
     //Función que revisa las tareas que tienen algún token en su entrada
     //Lo guardamos en un HasMap de Tarea y Tokens restantes
     public Integer tareasTokensRestantes() {
-        tareasArtificiales = new HashMap();
+        if (tareasArtificiales == null) {
+            tareasArtificiales = new HashMap();
+        }
         if (tokens != null && tareasTokensEntrada != null) {
             for (int i = 0; i < tokens.size(); i++) {
                 HashMap<TIntHashSet, Integer> tareas = tokens.get(i);

@@ -1,5 +1,6 @@
-package Problem;
+package Salida;
 
+import Problem.InterfazTraza;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import es.usc.citius.hipster.model.impl.WeightedNode;
 import java.util.ArrayList;

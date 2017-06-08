@@ -1,5 +1,6 @@
 package Problem;
 
+import Estadisticas.EstadisticasImpl;
 import static Problem.NState.StateMove.*;
 import es.usc.citius.hipster.model.impl.WeightedNode;
 import java.util.ArrayList;
@@ -15,22 +16,22 @@ import static org.junit.Assert.*;
  * @author marti
  */
 public class EstadisticasImplTest {
-    
+
     public EstadisticasImplTest() {
     }
-    
+
     @BeforeClass
     public static void setUpClass() {
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }
@@ -73,90 +74,6 @@ public class EstadisticasImplTest {
         Double expResult = 29.5d;
         Double result = instance.costeIndividuo(t);
         assertEquals(expResult, result);
-    }
-
-    /**
-     * Test of fitness method, of class EstadisticasImpl.
-     */
-    @Test
-    public void testFitnessNull() {
-        ArrayList<InterfazTraza> t = null;
-        EstadisticasImpl instance = new EstadisticasImpl();
-        Double expResult = 0d;
-        Double result = instance.fitness(t);
-        assertEquals(expResult, result);
-    }
-
-    @Test
-    public void testFitnessVacio() {
-        ArrayList<InterfazTraza> t = new ArrayList();
-        EstadisticasImpl instance = new EstadisticasImpl();
-        Double expResult = 0d;
-        Double result = instance.fitness(t);
-        assertEquals(expResult, result);
-    }
-
-    @Test
-    public void testFitnessDatos() {
-        ArrayList<InterfazTraza> t = new ArrayList();
-        InterfazTraza e = new Traza();
-        e.anadirTarea(1);
-        e.anadirTarea(2);
-        e.anadirTarea(3);
-        e.anadirTarea(4);
-        e.anadirTarea(5);
-        e.anadirTarea(6);
-        e.setScore(4);
-        e.setNumRepeticiones(1);
-
-        InterfazTraza e2 = new Traza();
-        e2.anadirTarea(1);
-        e2.anadirTarea(2);
-        e2.anadirTarea(3);
-        e2.anadirTarea(4);
-        e2.setScore(8.5);
-        e2.setNumRepeticiones(3);
-
-        t.add(e);
-        t.add(e2);
-
-        EstadisticasImpl instance = new EstadisticasImpl();
-        instance.setCosteCorto(1d);
-        //Teoricamente daría -0.2291 pero como es negativo es 0
-        Double expResult = 0d;
-        Double result = instance.fitness(t);
-        assertEquals(expResult, result);
-    }
-
-    @Test
-    public void testFitnessDatos2() {
-        ArrayList<InterfazTraza> t = new ArrayList();
-        InterfazTraza e = new Traza();
-        e.anadirTarea(1);
-        e.anadirTarea(2);
-        e.anadirTarea(3);
-        e.anadirTarea(4);
-        e.anadirTarea(5);
-        e.anadirTarea(6);
-        e.setScore(4);
-        e.setNumRepeticiones(1);
-
-        InterfazTraza e2 = new Traza();
-        e2.anadirTarea(1);
-        e2.anadirTarea(2);
-        e2.anadirTarea(3);
-        e2.anadirTarea(4);
-        e2.setScore(8.5);
-        e2.setNumRepeticiones(3);
-
-        t.add(e);
-        t.add(e2);
-
-        EstadisticasImpl instance = new EstadisticasImpl();
-        instance.setCosteCorto(3d);
-        Double expResult = 0.1805d;
-        Double result = instance.fitness(t);
-        assertEquals(expResult, result, 0.0001);
     }
 
     /**
@@ -323,7 +240,7 @@ public class EstadisticasImplTest {
         Double result = instance.fitnessNuevo(t, nodosSalida);
         assertEquals(expResult, result, 0.0001);
     }
-    
+
     /**
      * Test of tareasPrefijo method, of class EstadisticasImpl.
      */
@@ -377,6 +294,7 @@ public class EstadisticasImplTest {
         Integer result = instance.tareasPrefijo(t, prefijo);
         assertEquals(expResult, result);
     }
+
     /**
      * Test of precision method, of class EstadisticasImpl.
      */
@@ -410,6 +328,7 @@ public class EstadisticasImplTest {
         assertEquals(expResult, result);
         fail("Chungo");
     }
+
     /**
      * Test of tareasActivasEstado method, of class EstadisticasImpl.
      */
@@ -424,5 +343,5 @@ public class EstadisticasImplTest {
         //TODO review the generated test code and remove the default call to fail.
         fail("Chungo");
     }
-    
+
 }

@@ -1,7 +1,11 @@
-package Problem;
+package Estadisticas;
 
+import Estadisticas.InterfazEstadisticas;
 import Configuracion.ParametrosImpl;
+import Problem.InterfazTraza;
+import Problem.NState;
 import Problem.NState.State;
+import Problem.Traza;
 import static Problem.NState.StateMove.*;
 import es.usc.citius.hipster.model.impl.WeightedNode;
 import java.util.ArrayList;
@@ -14,7 +18,6 @@ import java.util.Iterator;
  */
 public class EstadisticasImpl implements InterfazEstadisticas {
 
-    private double minimumIndividualCost;
     private double totalEventosLog;
     private Double costeIndividuo;
     private final ParametrosImpl parametrosImpl;
@@ -22,11 +25,6 @@ public class EstadisticasImpl implements InterfazEstadisticas {
     public EstadisticasImpl() {
         this.totalEventosLog = 0d;
         parametrosImpl = ParametrosImpl.getParametrosImpl();
-    }
-
-    @Override
-    public void setCosteCorto(double coste) {
-        this.minimumIndividualCost = coste;
     }
 
     @Override
@@ -44,29 +42,6 @@ public class EstadisticasImpl implements InterfazEstadisticas {
             }
         }
         return aux;
-    }
-
-    @Override
-    public Double fitness(ArrayList<InterfazTraza> t) {
-        //Obtenemos el coste 
-        costeIndividuo = costeIndividuo(t);
-        Double fitness = 0d;
-        if (t != null && t.size() > 0) {
-            //Realizamos el sumatorio para todas la trazas del log
-            for (int i = 0; i < t.size(); i++) {
-                this.totalEventosLog = this.totalEventosLog + (t.get(i).tamTrace() * t.get(i).getNumRepeticiones());
-            }
-            //Obtenemos el fitness
-            if (this.minimumIndividualCost > 0 && costeIndividuo > 0) {
-                //System.out.println(costeIndividuo);
-                fitness = 1 - (costeIndividuo / (this.totalEventosLog * parametrosImpl.getINSERT() + (this.minimumIndividualCost * t.size() * parametrosImpl.getSKIP())));
-                //System.out.println(this.totalEventosLog +" "+parametrosImpl.getINSERT() + " "+ this.minimumIndividualCost + " " + t.size() +" "+ parametrosImpl.getSKIP());
-            }
-            if (fitness < 0d) {
-                fitness = 0d;
-            }
-        }
-        return fitness;
     }
 
     public int menorCamino(ArrayList<WeightedNode> nodosSalida) {

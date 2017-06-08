@@ -1,5 +1,8 @@
-package Problem;
+package Salida;
 
+import Problem.InterfazTraza;
+import Problem.NState;
+import Salida.InterfazSalida;
 import static Problem.NState.StateMove.*;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import es.usc.citius.hipster.model.impl.WeightedNode;

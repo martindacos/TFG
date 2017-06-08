@@ -6,7 +6,7 @@
 package Gui;
 
 import Algoritmos.AlgoritmoA;
-import Problem.InterfazSalida;
+import Salida.InterfazSalida;
 import Problem.InterfazTraza;
 import Problem.NState;
 import Problem.Readers;
