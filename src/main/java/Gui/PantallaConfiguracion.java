@@ -26,20 +26,17 @@ public class PantallaConfiguracion extends javax.swing.JPanel {
     public void setV(Pantalla v) {
         this.v = v;
     }
-    
+
     private final JFileChooser fc = new JFileChooser();
     private String path;
     private String pathModel;
     private ParametrosImpl parametrosImpl;
-    
+
     public PantallaConfiguracion() {
         initComponents();
-        
+
         parametrosImpl = ParametrosImpl.getParametrosImpl();
-        OK.setText(Double.toString(parametrosImpl.getOK()));
-        INSERT.setText(Double.toString(parametrosImpl.getINSERT()));
-        SKIP.setText(Double.toString(parametrosImpl.getSKIP()));
-        
+
     }
 
     /**
@@ -64,6 +61,7 @@ public class PantallaConfiguracion extends javax.swing.JPanel {
         OK = new javax.swing.JTextField();
         SKIP = new javax.swing.JTextField();
         INSERT = new javax.swing.JTextField();
+        alinear1 = new javax.swing.JButton();
 
         setLayout(null);
 
@@ -104,14 +102,14 @@ public class PantallaConfiguracion extends javax.swing.JPanel {
         Ruta1.setBounds(216, 142, 515, 26);
 
         alinear.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
-        alinear.setText("ALINEAR");
+        alinear.setText("ALINEAR AD");
         alinear.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 alinearActionPerformed(evt);
             }
         });
         add(alinear);
-        alinear.setBounds(361, 467, 146, 31);
+        alinear.setBounds(550, 470, 146, 31);
 
         jLabel13.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
         jLabel13.setText("OK:");
@@ -138,6 +136,16 @@ public class PantallaConfiguracion extends javax.swing.JPanel {
         SKIP.setBounds(617, 282, 114, 26);
         add(INSERT);
         INSERT.setBounds(385, 282, 110, 26);
+
+        alinear1.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        alinear1.setText("ALINEAR");
+        alinear1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                alinear1ActionPerformed(evt);
+            }
+        });
+        add(alinear1);
+        alinear1.setBounds(361, 467, 146, 31);
     }// </editor-fold>//GEN-END:initComponents
 
     private void RutaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_RutaMouseClicked
@@ -160,20 +168,34 @@ public class PantallaConfiguracion extends javax.swing.JPanel {
 
     private void Ruta1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Ruta1ActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_Ruta1ActionPerformed
-
-    private void alinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_alinearActionPerformed
-        parametrosImpl.setOK(Double.parseDouble(OK.getText()));
-        parametrosImpl.setINSERT(Double.parseDouble(INSERT.getText()));
-        parametrosImpl.setSKIP(Double.parseDouble(SKIP.getText()));
-        
         this.getV().getContentPane().setVisible(false);
         PantallaAlgoritmo pl = new PantallaAlgoritmo(path, pathModel);
         pl.setVisible(true);
         pl.setV(this.getV());
         this.getV().setContentPane(pl);
         pl.alinear();
+    }//GEN-LAST:event_Ruta1ActionPerformed
+
+    private void alinearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_alinearActionPerformed
+
+        this.getV().getContentPane().setVisible(false);
+        PantallaAlgoritmo pl = new PantallaAlgoritmo(path, pathModel);
+        pl.setVisible(true);
+        pl.setV(this.getV());
+        this.getV().setContentPane(pl);
+        pl.alinear2();
     }//GEN-LAST:event_alinearActionPerformed
+
+    private void alinear1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_alinear1ActionPerformed
+        // TODO add your handling code here:
+
+        this.getV().getContentPane().setVisible(false);
+        PantallaAlgoritmo pl = new PantallaAlgoritmo(path, pathModel);
+        pl.setVisible(true);
+        pl.setV(this.getV());
+        this.getV().setContentPane(pl);
+        pl.alinear();
+    }//GEN-LAST:event_alinear1ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField INSERT;
@@ -182,6 +204,7 @@ public class PantallaConfiguracion extends javax.swing.JPanel {
     private javax.swing.JTextField Ruta1;
     private javax.swing.JTextField SKIP;
     private javax.swing.JButton alinear;
+    private javax.swing.JButton alinear1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;

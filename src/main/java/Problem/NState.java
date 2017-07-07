@@ -16,7 +16,7 @@ public final class NState {
 
     //Posibles movimientos del alineamiento
     public enum StateMove {
-        OK, SKIP, INSERT, ARTIFICIAL
+        SINCRONO, MODELO, TRAZA, MODELO_FORZADO
     }
 
     public static final class State {
@@ -33,6 +33,7 @@ public final class NState {
         public State(CMIndividual ind) {
             pos = 0;
             marcado = new CMMarking(ind, new Random(666));
+            tarea = null;
         }
 
         public State(State a) {
@@ -61,6 +62,10 @@ public final class NState {
 
         public void setMov(StateMove mov) {
             this.mov = mov;
+        }
+
+        public StateMove getMov() {
+            return mov;
         }
 
         public void avanzarTarea() {
@@ -100,7 +105,7 @@ public final class NState {
         public boolean finalModelo(CMIndividual ind) {
             //Si el modelo NO tiene tarea final
             if (ind.getEndTasks().size() == 0) {
-                System.out.println(marcado.toString());
+                //System.out.println(marcado.toString());
                 return sinTokens();
             } else {
                 return false;
@@ -111,5 +116,15 @@ public final class NState {
         public boolean Enabled() {
             return marcado.getEnabledElements().size() > 0;
         }
+
+        public boolean enabled() {
+            return marcado.getEnabledElements().size() > 0;
+        }
+
+        @Override
+        public String toString() {
+            return "State{" + "pos=" + pos + ", mov=" + mov + ", tarea=" + tarea + '}';
+        }
+
     }
 }

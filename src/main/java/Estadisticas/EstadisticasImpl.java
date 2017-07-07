@@ -1,13 +1,12 @@
 package Estadisticas;
 
-import Estadisticas.InterfazEstadisticas;
 import Configuracion.ParametrosImpl;
 import Problem.InterfazTraza;
 import Problem.NState;
 import Problem.NState.State;
 import Problem.Traza;
 import static Problem.NState.StateMove.*;
-import es.usc.citius.hipster.model.impl.WeightedNode;
+import es.usc.citius.hipster.model.AbstractNode;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -19,12 +18,32 @@ import java.util.Iterator;
 public class EstadisticasImpl implements InterfazEstadisticas {
 
     private double totalEventosLog;
-    private Double costeIndividuo;
     private final ParametrosImpl parametrosImpl;
+
+    private Double costeIndividuo;
+    private Double fitness;
+    private Double precission;
+    private Long tiempoCalculo;
+    private Double memoriaConsumida;
 
     public EstadisticasImpl() {
         this.totalEventosLog = 0d;
         parametrosImpl = ParametrosImpl.getParametrosImpl();
+    }
+
+    @Override
+    public Double getFitness() {
+        return fitness;
+    }
+
+    @Override
+    public Double getPrecission() {
+        return precission;
+    }
+
+    @Override
+    public Long getTiempoCalculo() {
+        return tiempoCalculo;
     }
 
     @Override
@@ -44,7 +63,7 @@ public class EstadisticasImpl implements InterfazEstadisticas {
         return aux;
     }
 
-    public int menorCamino(ArrayList<WeightedNode> nodosSalida) {
+    public int menorCamino(ArrayList<AbstractNode> nodosSalida) {
         int menorCamino = 999999999;
         if (nodosSalida != null) {
             for (int i = 0; i < nodosSalida.size(); i++) {
@@ -53,8 +72,8 @@ public class EstadisticasImpl implements InterfazEstadisticas {
                 //La primera iteración corresponde con el Estado Inicial
                 it2.next();
                 while (it2.hasNext()) {
-                    WeightedNode node = (WeightedNode) it2.next();
-                    if (node.action().equals(OK) || node.action().equals(INSERT)) {
+                    AbstractNode node = (AbstractNode) it2.next();
+                    if (node.action().equals(SINCRONO) || node.action().equals(TRAZA)) {
                         aux++;
                     }
                 }
@@ -67,8 +86,8 @@ public class EstadisticasImpl implements InterfazEstadisticas {
     }
 
     @Override
-    public Double fitnessNuevo(ArrayList<InterfazTraza> t, ArrayList<WeightedNode> nodosSalida) {
-        Double fitness = 0d;
+    public Double fitnessNuevo(ArrayList<InterfazTraza> t, ArrayList<AbstractNode> nodosSalida) {
+        fitness = 0d;
         costeIndividuo = costeIndividuo(t);
         if (t != null && nodosSalida != null) {
             int menorCamino = this.menorCamino(nodosSalida);
@@ -78,7 +97,7 @@ public class EstadisticasImpl implements InterfazEstadisticas {
                 this.totalEventosLog = this.totalEventosLog + (t.get(i).tamTrace() * t.get(i).getNumRepeticiones());
             }
             //Obtenemos el fitness
-            fitness = 1 - (costeIndividuo / (this.totalEventosLog * parametrosImpl.getINSERT() + (menorCamino * t.size() * parametrosImpl.getSKIP())));
+            fitness = 1 - (costeIndividuo / (this.totalEventosLog * parametrosImpl.getC_TRAZA() + (menorCamino * t.size() * parametrosImpl.getC_MODELO())));
             if (fitness < 0) {
                 fitness = 0d;
             }
@@ -116,8 +135,8 @@ public class EstadisticasImpl implements InterfazEstadisticas {
     }
 
     @Override
-    public Double precision(ArrayList<InterfazTraza> t, ArrayList<WeightedNode> nodosSalida) {
-        Double precission = 0d;
+    public Double precission(ArrayList<InterfazTraza> t, ArrayList<AbstractNode> nodosSalida) {
+        precission = 0d;
         if (t != null && nodosSalida != null) {
             ArrayList<ArrayList<State>> tareasActivasEstado = tareasActivasEstado(nodosSalida);
             Double subPrecission = 0d;
@@ -136,7 +155,14 @@ public class EstadisticasImpl implements InterfazEstadisticas {
                     //System.out.println("Subprecision = "+ subPrecission + " + " + t.get(i).getNumRepeticiones() +" * ("+ enL + " / " + tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size() +" )");
                     //Realizamos el sumatorio controlando que el número de tareas activas sea mayor que 1
                     if (tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size() > 0) {
-                        subPrecission = subPrecission + t.get(i).getNumRepeticiones() * (enL / tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size());
+                        int divisor = tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size();
+//                        if (enL > 1) {
+//                            enL = 1;
+//                        }
+//                        if (divisor > 1) {
+//                            divisor = 1;
+//                        }
+                        subPrecission = subPrecission + t.get(i).getNumRepeticiones() * (enL / divisor);
                     }
                 }
                 //System.out.println();
@@ -151,17 +177,17 @@ public class EstadisticasImpl implements InterfazEstadisticas {
     }
 
     //Cálculo de las tareas activas en cada estado   
-    public ArrayList<ArrayList<State>> tareasActivasEstado(ArrayList<WeightedNode> nodosSalida) {
+    public ArrayList<ArrayList<State>> tareasActivasEstado(ArrayList<AbstractNode> nodosSalida) {
         ArrayList<ArrayList<State>> tareasActivasEstado = new ArrayList<ArrayList<State>>();
         for (int i = 0; i < nodosSalida.size(); i++) {
             ArrayList<NState.State> tareasEstadoTraza = new ArrayList<NState.State>();
             Iterator it2 = nodosSalida.get(i).path().iterator();
             //La primera iteración corresponde con el Estado Inicial, que no imprimimos
-            WeightedNode node2 = (WeightedNode) it2.next();
+            AbstractNode node2 = (AbstractNode) it2.next();
             NState.State s2 = (NState.State) node2.state();
             tareasEstadoTraza.add(s2);
             while (it2.hasNext()) {
-                WeightedNode node = (WeightedNode) it2.next();
+                AbstractNode node = (AbstractNode) it2.next();
                 NState.State s = (NState.State) node.state();
                 tareasEstadoTraza.add(s);
             }
@@ -173,5 +199,20 @@ public class EstadisticasImpl implements InterfazEstadisticas {
     @Override
     public Double getCoste() {
         return this.costeIndividuo;
+    }
+
+    @Override
+    public void setTiempoCalculo(Long tiempo) {
+        tiempoCalculo = tiempo;
+    }
+
+    @Override
+    public void setMemoriaConsumida(double memoria) {
+        memoriaConsumida = memoria;
+    }
+
+    @Override
+    public double getMemoriaConsumida() {
+        return this.memoriaConsumida;
     }
 }

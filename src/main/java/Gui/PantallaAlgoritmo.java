@@ -6,6 +6,7 @@
 package Gui;
 
 import Algoritmos.AlgoritmoA;
+import Algoritmos.AlgoritmoAD;
 import Salida.InterfazSalida;
 import Problem.InterfazTraza;
 import Problem.NState;
@@ -17,6 +18,7 @@ import domainLogic.exceptions.MalformedFileException;
 import domainLogic.exceptions.NonFinishedWorkflowException;
 import domainLogic.exceptions.WrongLogEntryException;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import es.usc.citius.hipster.model.AbstractNode;
 import es.usc.citius.hipster.model.impl.WeightedNode;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -48,10 +50,10 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
     public void setV(Pantalla v) {
         this.v = v;
     }
-          
+
     private String textoAlineamientos;
     private DefaultTableModel defaultTableModel;
-    private HashMap<String, WeightedNode> ali;
+    private HashMap<String, AbstractNode> ali;
     private HashMap<String, InterfazTraza> traces;
     private String[] paths;
 
@@ -76,14 +78,14 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
         aliEditor.setEditable(false);
         aliEditor.setContentType("text/html");
         textoAlineamientos = "";
-        
-        ali = new HashMap<String, WeightedNode>();
+
+        ali = new HashMap<String, AbstractNode>();
         traces = new HashMap<String, InterfazTraza>();
         this.inicializarTabla();
         String[] params = {path, pathModel};
         this.paths = params;
     }
-    
+
     public void alinear() {
         try {
             AlgoritmoA.main(paths, this);
@@ -91,6 +93,15 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
             Logger.getLogger(PantallaConfiguracion.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    public void alinear2() {
+        try {
+            AlgoritmoAD.main(paths, this);
+        } catch (IOException | EmptyLogException | WrongLogEntryException | NonFinishedWorkflowException | InvalidFileExtensionException | MalformedFileException ex) {
+            Logger.getLogger(PantallaConfiguracion.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -269,7 +280,6 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
         }
     }//GEN-LAST:event_TrazasMouseClicked
 
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTable Trazas;
     private javax.swing.JEditorPane aliEditor;
@@ -299,7 +309,7 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
     private javax.swing.JLabel tiempoCAli;
     // End of variables declaration//GEN-END:variables
     @Override
-    public void estadisticasModelo(CMIndividual ind, Double coste, long tiempo) {
+    public void estadisticasModelo(CMIndividual ind, double coste, long tiempo, double m) {
         this.coste.setText(Objects.toString(coste, null));
         Double fitnes = ind.getFitness().getCompleteness();
         this.fitness.setText(fitnes.toString());
@@ -310,19 +320,19 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
     }
 
     @Override
-    public void ActualizarTrazas(InterfazTraza trace, WeightedNode nodo) {
+    public void ActualizarTrazas(InterfazTraza trace, AbstractNode nodo, boolean ad) {
         int filas = defaultTableModel.getRowCount();
         defaultTableModel.addRow(new Object[]{filas + 1, trace.getId(), trace.getNumRepeticiones()});
         ali.put(trace.getId(), nodo);
         traces.put(trace.getId(), trace);
-        
-        this.mensajeProceso.setText("Calculando alineamiento " + (filas+1) + "/" + totalTrazas);
+
+        this.mensajeProceso.setText("Calculando alineamiento " + (filas + 1) + "/" + totalTrazas);
     }
 
     public void imprimirAlineamiento(String traza) {
         String str = "";
 
-        WeightedNode nodo = ali.get(traza);
+        WeightedNode nodo = (WeightedNode) ali.get(traza);
         InterfazTraza trace = traces.get(traza);
 
         Iterator it2 = nodo.path().iterator();
@@ -333,11 +343,11 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
         while (it2.hasNext()) {
             WeightedNode node = (WeightedNode) it2.next();
             NState.State s = (NState.State) node.state();
-            if (node.action().equals(OK)) {
+            if (node.action().equals(SINCRONO)) {
                 str = str + "<br> &emsp &emsp &emsp " + trace.leerTarea(s.getPos() - 1) + " &emsp &emsp &emsp " + s.getTarea();
-            } else if (node.action().equals(SKIP)) {
+            } else if (node.action().equals(MODELO)) {
                 str = str + "<br> &emsp &emsp &emsp >> &emsp &emsp &ensp " + s.getTarea();
-            } else if (node.action().equals(ARTIFICIAL)) {
+            } else if (node.action().equals(MODELO_FORZADO)) {
                 str = str + "<br> &emsp &emsp &emsp >>' &emsp &emsp &ensp " + s.getTarea();
             } else {
                 str = str + "<br> &emsp &emsp &emsp " + trace.leerTarea(s.getPos() - 1) + " &emsp &emsp &emsp >> ";

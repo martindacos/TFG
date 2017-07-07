@@ -5,6 +5,8 @@ import Problem.NState;
 import Salida.InterfazSalida;
 import static Problem.NState.StateMove.*;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import es.usc.citius.hipster.model.AbstractNode;
+import es.usc.citius.hipster.model.impl.ADStarNodeImpl;
 import es.usc.citius.hipster.model.impl.WeightedNode;
 import java.util.Iterator;
 
@@ -29,9 +31,9 @@ public class SalidaTerminalImpl implements InterfazSalida {
             while (it2.hasNext()) {
                 WeightedNode node = (WeightedNode) it2.next();
                 NState.State s = (NState.State) node.state();
-                if (node.action().equals(SKIP)) {
+                if (node.action().equals(MODELO)) {
                     System.out.println("\t>>\t" + s.getTarea());
-                }else {
+                } else {
                     System.out.println("\t>>'\t" + s.getTarea());
                 }
             }
@@ -41,14 +43,17 @@ public class SalidaTerminalImpl implements InterfazSalida {
     }
 
     @Override
-    public void estadisticasModelo(CMIndividual ind, Double coste, long tiempo) {
+    public void estadisticasModelo(CMIndividual ind, double coste, long tiempo, double memoria) {
         if (imprimir) {
             System.out.println();
             System.out.println("********** ESTADÍSTICAS DEL MODELO **************");
-            System.out.println("Coste del modelo: " + coste);
+            int cI = (int) coste;
+            System.out.println("Coste del modelo: " + cI);
+            System.out.println("Tiempo total de cálculo = " + tiempo + " ms");
             System.out.println("Fitness del modelo: " + ind.getFitness().getCompleteness());
             System.out.println("Precission del modelo: " + ind.getFitness().getPreciseness());
-            System.out.println("Tiempo total de cálculo = " + tiempo + " ms");
+            int mI = (int) memoria;
+            System.out.println("Memoria total consumida = " + mI);
         }
     }
 
@@ -63,7 +68,7 @@ public class SalidaTerminalImpl implements InterfazSalida {
     }
 
     @Override
-    public void ActualizarTrazas(InterfazTraza trace, WeightedNode nodo) {
+    public void ActualizarTrazas(InterfazTraza trace, AbstractNode nodo, boolean ad) {
         if (imprimir) {
             Iterator it2 = nodo.path().iterator();
             //La primera iteración corresponde con el Estado Inicial, que no imprimimos
@@ -74,13 +79,18 @@ public class SalidaTerminalImpl implements InterfazSalida {
             System.out.println("---------SALIDA VISUAL----------");
             System.out.println("\tTRAZA\tMODELO");
             while (it2.hasNext()) {
-                WeightedNode node = (WeightedNode) it2.next();
+                AbstractNode node;
+                if (ad) {
+                    node = (WeightedNode) it2.next();
+                } else {
+                    node = (ADStarNodeImpl) it2.next();
+                }
                 NState.State s = (NState.State) node.state();
-                if (node.action().equals(OK)) {
+                if (node.action().equals(SINCRONO)) {
                     System.out.println("\t" + trace.leerTarea(s.getPos() - 1) + "\t" + s.getTarea());
-                } else if (node.action().equals(SKIP)) {
+                } else if (node.action().equals(MODELO)) {
                     System.out.println("\t>>\t" + s.getTarea());
-                } else if (node.action().equals(ARTIFICIAL)) {
+                } else if (node.action().equals(MODELO_FORZADO)) {
                     System.out.println("\t>>'\t" + s.getTarea());
                 } else {
                     System.out.println("\t" + trace.leerTarea(s.getPos() - 1) + "\t>>");
@@ -90,6 +100,7 @@ public class SalidaTerminalImpl implements InterfazSalida {
             System.out.println("Coste del alineamiento = " + trace.getScore());
             System.out.println("Coste del alineamiento con repeticiones = " + trace.getScoreRepetido());
             System.out.println("Tiempo de cálculo del alineamiento = " + trace.getTiempoC() + " ms");
+            System.out.println("Memoria consuminda por el alineamiento = " + trace.getMemoriaC());
         }
     }
 

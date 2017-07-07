@@ -13,13 +13,12 @@ import java.util.Map;
  */
 public class EjecTareas {
 
-    private Integer tareaOK;
-    private Integer tareaINSERT;
+    private Integer tareaSINCRONO;
+    private Integer tareaTRAZA;
     //Posibles tareas a ejecutar en esta instancia de la traza
-    private ArrayList<Integer> tareasSkip;
-    private HashMap<Integer, Integer> tareasArtificiales;
-    private Integer tareaArtificialActual;
-
+    private ArrayList<Integer> tareasMODELO;
+    private HashMap<Integer, Integer> tareasModeloForzado;
+    private Integer tareaModeloForzadoActual;
     //Colección de elementos que vamos a guardar del marcado
     ArrayList<HashMap<TIntHashSet, Integer>> tokens;
     //Elementos para la copia del marcado
@@ -28,63 +27,70 @@ public class EjecTareas {
     private int endPlace;
     private TIntHashSet possibleEnabledTasks;
 
-    TIntHashSet tareasTokensEntrada;
+    private TIntHashSet tareasTokensEntrada;
+    //Tareas que ya fueron ejecutadas en el modelo
+    private TIntHashSet tareasEjecutadasModelo;
 
     public EjecTareas() {
+        tareasEjecutadasModelo = new TIntHashSet();
     }
 
-    public ArrayList<Integer> getTareasSkip() {
-        return tareasSkip;
+    public ArrayList<Integer> getTareasModelo() {
+        return tareasMODELO;
     }
 
-    public Integer getTareaINSERT() {
-        return tareaINSERT;
+    public Integer getTareaTRAZA() {
+        return tareaTRAZA;
     }
 
-    public Integer getTareaOK() {
-        return tareaOK;
+    public Integer getTareaSINCRONA() {
+        return tareaSINCRONO;
     }
 
     public void clear() {
-        this.tareaOK = null;
-        tareasSkip = new ArrayList<Integer>();
-        tareasArtificiales = new HashMap<>();
-        tareaArtificialActual = 0;
+        this.tareaSINCRONO = null;
+        tareasMODELO = new ArrayList<Integer>();
+        tareasModeloForzado = new HashMap<>();
+        tareaModeloForzadoActual = 0;
     }
 
-    public void anadirOk(Integer a) {
-        tareaOK = a;
+    public void clearEjecutadas() {
+        tareasEjecutadasModelo = new TIntHashSet();
     }
 
-    public void anadirInsert(Integer a) {
-        tareaINSERT = a;
+    public void anadirSincrono(Integer a) {
+        tareaSINCRONO = a;
     }
 
-    public void anadirSkip(Integer a) {
-        tareasSkip.add(a);
+    public void anadirTraza(Integer a) {
+        tareaTRAZA = a;
     }
 
-    public Integer leerTareaSkip() {
-        if (tareasSkip != null && !tareasSkip.isEmpty()) {
-            Integer skip = tareasSkip.get(0);
-            tareasSkip.remove(0);
-            return skip;
+    public void anadirModelo(Integer a) {
+        tareasMODELO.add(a);
+    }
+
+    public Integer leerTareaModelo() {
+        if (tareasMODELO != null && !tareasMODELO.isEmpty()) {
+            Integer modelo = tareasMODELO.get(0);
+            tareasMODELO.remove(0);
+            return modelo;
         } else {
             return null;
         }
     }
 
-    public Integer leerTareaArtificial() {
+    public Integer leerTareaModeloForzado() {
         Integer artificial = null;
-        if (tareasArtificiales != null && !tareasArtificiales.isEmpty()) {
+        if (tareasModeloForzado != null && !tareasModeloForzado.isEmpty()) {
             int i = 0;
-            for (Map.Entry<Integer, Integer> entry : tareasArtificiales.entrySet()) {
-                if (i == tareaArtificialActual) {
+            for (Map.Entry<Integer, Integer> entry : tareasModeloForzado.entrySet()) {
+                if (i == tareaModeloForzadoActual) {
                     artificial = entry.getKey();
                 }
                 i++;
             }
-            tareaArtificialActual++;
+            tareaModeloForzadoActual++;
         }
         return artificial;
     }
@@ -145,13 +151,17 @@ public class EjecTareas {
         this.possibleEnabledTasks = possibleEnabledTasks;
     }
 
+    public void setTareasModeloForzado(HashMap<Integer, Integer> tareasModeloForzado) {
+        this.tareasModeloForzado = tareasModeloForzado;
+    }
+
     //Función que revisa cuantos tokens son necesarios para ejecutar la tarea forzada
     //Lo guardamos en un HasMap de Tarea y Tokens restantes
     public void anadirTareaForzada(Integer a) {
-        if (tareasArtificiales == null) {
-            tareasArtificiales = new HashMap();
+        if (tareasModeloForzado == null) {
+            tareasModeloForzado = new HashMap();
         }
-        tareasArtificiales.put(a, 0);
+        tareasModeloForzado.put(a, 0);
     }
 
     //Función que revisa las tareas que tienen algún token en su entrada
@@ -184,8 +194,8 @@ public class EjecTareas {
     //Función que revisa las tareas que tienen algún token en su entrada
     //Lo guardamos en un HasMap de Tarea y Tokens restantes
     public Integer tareasTokensRestantes() {
-        if (tareasArtificiales == null) {
-            tareasArtificiales = new HashMap();
+        if (tareasModeloForzado == null) {
+            tareasModeloForzado = new HashMap();
         }
         if (tokens != null && tareasTokensEntrada != null) {
             for (int i = 0; i < tokens.size(); i++) {
@@ -201,12 +211,12 @@ public class EjecTareas {
                             //Revisamos si la tarea se encuentra en la lista
                             if (tareasTokensEntrada.contains(id)) {
                                 //Si se encuentra le añadimos un token mas
-                                if (tareasArtificiales.get(id) != null) {
-                                    int token = tareasArtificiales.get(id);
+                                if (tareasModeloForzado.get(id) != null) {
+                                    int token = tareasModeloForzado.get(id);
                                     token++;
-                                    tareasArtificiales.put(id, token);
+                                    tareasModeloForzado.put(id, token);
                                 } else {
-                                    tareasArtificiales.put(id, 1);
+                                    tareasModeloForzado.put(id, 1);
                                 }
                             }
                         }
@@ -219,18 +229,24 @@ public class EjecTareas {
 //            }
 //            System.out.println("--------");
         }
-        return tareasArtificiales.size();
+        return tareasModeloForzado.size();
     }
 
     public Integer tokenUsados(int task) {
-        if (tareasArtificiales != null) {
-            return tareasArtificiales.get(task);
+        if (tareasModeloForzado != null) {
+            return tareasModeloForzado.get(task);
         } else {
             return null;
         }
     }
 
-    public void setTareasArtificiales(HashMap<Integer, Integer> tareasArtificiales) {
-        this.tareasArtificiales = tareasArtificiales;
+    public void addTareaModelo(Integer t) {
+        if (!tareasEjecutadasModelo.contains(t)) {
+            tareasEjecutadasModelo.add(t);
+        }
+    }
+
+    public boolean isEjecutedTask(Integer t) {
+        return tareasEjecutadasModelo.contains(t);
     }
 }
