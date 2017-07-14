@@ -320,7 +320,7 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
     }
 
     @Override
-    public void ActualizarTrazas(InterfazTraza trace, AbstractNode nodo, boolean ad) {
+    public void ActualizarTrazas(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind) {
         int filas = defaultTableModel.getRowCount();
         defaultTableModel.addRow(new Object[]{filas + 1, trace.getId(), trace.getNumRepeticiones()});
         ali.put(trace.getId(), nodo);
@@ -371,10 +371,5 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
     @Override
     public void setTotalTrazas(int size) {
         totalTrazas = size;
-    }
-
-    @Override
-    public void minimumSalidaVisual(WeightedNode nodo, Double coste) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

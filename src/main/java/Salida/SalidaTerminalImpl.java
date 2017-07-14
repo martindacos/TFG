@@ -19,30 +19,6 @@ public class SalidaTerminalImpl implements InterfazSalida {
     private boolean imprimir = true;
 
     @Override
-    public void minimumSalidaVisual(WeightedNode nodo, Double coste) {
-        if (imprimir) {
-            Iterator it2 = nodo.path().iterator();
-            //La primera iteración corresponde con el Estado Inicial
-            it2.next();
-//        System.out.println(nodo.path());
-            System.out.println();
-            System.out.println("---------SALIDA VISUAL----------");
-            System.out.println("\tTRAZA\tMODELO");
-            while (it2.hasNext()) {
-                WeightedNode node = (WeightedNode) it2.next();
-                NState.State s = (NState.State) node.state();
-                if (node.action().equals(MODELO)) {
-                    System.out.println("\t>>\t" + s.getTarea());
-                } else {
-                    System.out.println("\t>>'\t" + s.getTarea());
-                }
-            }
-            System.out.println();
-            System.out.println("Coste del camino más corto: " + coste);
-        }
-    }
-
-    @Override
     public void estadisticasModelo(CMIndividual ind, double coste, long tiempo, double memoria) {
         if (imprimir) {
             System.out.println();
@@ -68,7 +44,7 @@ public class SalidaTerminalImpl implements InterfazSalida {
     }
 
     @Override
-    public void ActualizarTrazas(InterfazTraza trace, AbstractNode nodo, boolean ad) {
+    public void ActualizarTrazas(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind) {
         if (imprimir) {
             Iterator it2 = nodo.path().iterator();
             //La primera iteración corresponde con el Estado Inicial, que no imprimimos
@@ -87,13 +63,13 @@ public class SalidaTerminalImpl implements InterfazSalida {
                 }
                 NState.State s = (NState.State) node.state();
                 if (node.action().equals(SINCRONO)) {
-                    System.out.println("\t" + trace.leerTarea(s.getPos() - 1) + "\t" + s.getTarea());
+                    System.out.println("\t" + ind.getTask(trace.leerTarea(s.getPos() - 1)).getTask().getId() + "\t" + ind.getTask(s.getTarea()).getTask().getId());
                 } else if (node.action().equals(MODELO)) {
-                    System.out.println("\t>>\t" + s.getTarea());
+                    System.out.println("\t>>\t" + ind.getTask(s.getTarea()).getTask().getId());
                 } else if (node.action().equals(MODELO_FORZADO)) {
-                    System.out.println("\t>>'\t" + s.getTarea());
+                    System.out.println("\t>>'\t" + ind.getTask(s.getTarea()).getTask().getId());
                 } else {
-                    System.out.println("\t" + trace.leerTarea(s.getPos() - 1) + "\t>>");
+                    System.out.println("\t" + ind.getTask(trace.leerTarea(s.getPos() - 1)).getTask().getId() + "\t>>");
                 }
             }
             System.out.println();

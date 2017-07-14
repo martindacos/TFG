@@ -7,7 +7,7 @@ package Configuracion;
 //Interfaz que indica los costes asociados a cada movimientoposible del algoritmo
 public interface Parametros {
 
-    public static final double COSTE_MODELO_FORZADO = 6d;
+    public static final double COSTE_MODELO_FORZADO = 3d;
     public static final double COSTE_MODELO = 3d;
     public static final double COSTE_TRAZA = 1d;
     //Este coste no puede ser de 0. Retaremos este añadido cuando calculemos los costes

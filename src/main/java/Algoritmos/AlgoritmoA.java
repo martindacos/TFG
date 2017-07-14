@@ -212,7 +212,7 @@ public class AlgoritmoA {
             miReader.getTrazaActual().setScore(nuevoScoreR);
             //Guardamos el tiempo de cálculo del alineamiento
             miReader.getTrazaActual().setTiempoC(time_end - time_start);
-            salida.ActualizarTrazas(miReader.getTrazaActual(), n, true);
+            salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd());
 
             ejec.clearEjecutadas();
 

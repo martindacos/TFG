@@ -14,7 +14,7 @@ public interface InterfazTraza {
     //Función que dada una posición recupera la tarea correspondiente de la traza
     Integer leerTarea(int pos);
 
-    //Función queda dada una posición devuelve la heurística de la traza
+    //Función queda dada una posición, el modelo y la última tarea ejecutada devuelve la heurística de la traza
     Double getHeuristica(int pos, CMIndividual m, Integer lastEjecuted);
 
     //Función que dada una posición indica si la traza fue procesada

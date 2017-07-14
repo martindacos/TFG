@@ -12,10 +12,6 @@ import java.util.ArrayList;
  */
 public interface InterfazSalida {
 
-    /*Función que imprime el camino más corto para el modelo, almacenado 
-    en un único nodo*/
-    void minimumSalidaVisual(WeightedNode nodo, Double coste);
-
     //Función que imprime las estadísticas del modelo (fitness, precission, coste, tiempoCálculo)
     void estadisticasModelo(CMIndividual ind, double coste, long tiempo, double memoria);
 
@@ -26,7 +22,7 @@ public interface InterfazSalida {
     void imprimirModelo(CMIndividual ind);
 
     //Función que imprime las trazas y su nodo solución (alineamiento)
-    void ActualizarTrazas(InterfazTraza trace, AbstractNode nodo, boolean ad);
+    void ActualizarTrazas(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind);
 
     //Función que imprime el número total de trazas a alinear
     public void setTotalTrazas(int size);

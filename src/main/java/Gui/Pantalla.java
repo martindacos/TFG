@@ -14,22 +14,20 @@ public class Pantalla extends javax.swing.JFrame {
     /**
      * Creates new form PantallaSalidaVisual
      */
-
-
     public Pantalla() {
         initComponents();
 
         this.inicializar();
     }
-    
+
     private void inicializar() {
         this.setTitle("Sistema de Análisis de Conformidad");
-        this.setSize(1100, 850);
+        this.setSize(900, 650);
         this.setResizable(false);
         this.setLocationRelativeTo(null);
         this.setVisible(true);
-                       
-        PantallaConfiguracion pl=new PantallaConfiguracion();
+
+        PantallaConfiguracion pl = new PantallaConfiguracion();
         pl.setVisible(true);
         pl.setV(this);
         this.setContentPane(pl);
@@ -94,6 +92,4 @@ public class Pantalla extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
-
-
 }

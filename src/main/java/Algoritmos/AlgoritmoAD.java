@@ -148,6 +148,7 @@ public class AlgoritmoAD {
             double mejorScore = 0d;
             boolean parar = false;
 
+            //miReader.avanzarPos();
             miReader.getTrazaActual().print();
             long time_start, time_end;
             //Empezamos a tomar la medida del tiempo
@@ -215,7 +216,7 @@ public class AlgoritmoAD {
             //Guardamos el nodo con los estados soluciones de la traza
             nodosSalida.add(n);
             //Guardamos el coste obtenido en el alineamiento
-            double j = 0d;
+            int j = 0;
             Iterator it2 = n.path().iterator();
             //La primera iteración corresponde con el Estado Inicial, que no imprimimos
             it2.next();
@@ -235,7 +236,7 @@ public class AlgoritmoAD {
             miReader.getTrazaActual().setTiempoC(time_end - time_start);
             //Imprimimos el alineamiento calculado y sus estadísticas           
             //salidaGrafica.ActualizarTrazas(miReader.getTrazaActual(), n);
-            salida.ActualizarTrazas(miReader.getTrazaActual(), n, false);
+            salida.ActualizarTrazas(miReader.getTrazaActual(), n, false, miReader.getInd());
 
             ejec.clearEjecutadas();
 
@@ -273,7 +274,7 @@ public class AlgoritmoAD {
 //
 //        System.out.println("Pos de la traza (lo contiene el estado) : " + state.getPos());
 //        System.out.println("Tarea de la traza : " + e);
-        //System.out.println("Marcado en la seleccion de movimientos " + state.getMarcado().toString());
+//        System.out.println("Marcado en la seleccion de movimientos " + state.getMarcado().toString());
 //        System.out.println("-----------------------");
         //Si NO acabamos de procesar la traza
         if (state.enabled()) {

@@ -151,10 +151,9 @@ public class EjecTareas {
         this.possibleEnabledTasks = possibleEnabledTasks;
     }
 
-    public void setTareasModeloForzado(HashMap<Integer, Integer> tareasModeloForzado) {
-        this.tareasModeloForzado = tareasModeloForzado;
-    }
-
+//    public void setTareasModeloForzado(HashMap<Integer, Integer> tareasModeloForzado) {
+//        this.tareasModeloForzado = tareasModeloForzado;
+//    }
     //Función que revisa cuantos tokens son necesarios para ejecutar la tarea forzada
     //Lo guardamos en un HasMap de Tarea y Tokens restantes
     public void anadirTareaForzada(Integer a) {
