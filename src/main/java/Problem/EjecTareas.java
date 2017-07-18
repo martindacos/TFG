@@ -1,6 +1,5 @@
 package Problem;
 
-import domainLogic.workflow.algorithms.geneticMining.CMTask.CMSet;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
 import java.util.ArrayList;
@@ -215,7 +214,10 @@ public class EjecTareas {
                                     token++;
                                     tareasModeloForzado.put(id, token);
                                 } else {
-                                    tareasModeloForzado.put(id, 1);
+                                    //Si la tarea no se encuentra como movimiento en el modelo
+                                    if (!isModelTask(id)) {
+                                        tareasModeloForzado.put(id, 1);
+                                    }
                                 }
                             }
                         }
@@ -247,5 +249,24 @@ public class EjecTareas {
 
     public boolean isEjecutedTask(Integer t) {
         return tareasEjecutadasModelo.contains(t);
+    }
+
+    public boolean isModelTask(Integer t) {
+        return tareasMODELO.contains(t);
+    }
+
+    //Devuelve el nº de tareas que se van a forzar
+    public int forzarTareasTraza(InterfazTraza traza, int posProcesado) {
+        if (tareasTokensEntrada == null) {
+            tareasTokensEntrada = new TIntHashSet();
+        }
+        int forzadas = 1;
+        //Añadimos las tareas restantes de la traza para contar el nº de tokens restantes
+        for (int i = posProcesado; i < traza.tamTrace(); i++) {
+            tareasTokensEntrada.add(traza.leerTarea(i));
+            forzadas++;
+        }
+
+        return forzadas;
     }
 }

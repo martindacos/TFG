@@ -101,26 +101,6 @@ public class AlgoritmoAD {
             }
         };
 
-        //Definimos el problema de búsqueda
-        //create components for the algorithm (factory of nodes)
-        ADStarNodeFactory factory = new ADStarNodeFactory<>(
-                BinaryOperation.doubleAdditionOp(),
-                ScalarOperation.doubleMultiplicationOp(),
-                hf
-        );
-
-        //crate components for the algorithm (node expander)
-        ADStarNodeExpander expander = new ADStarNodeExpander<>(
-                tf,
-                pf,
-                cf,
-                hf,
-                BinaryOperation.doubleAdditionOp(),
-                ScalarOperation.doubleMultiplicationOp(),
-                factory,
-                parametrosImpl.getE_INICIAL()
-        );
-
         final State finalState = null;
 
         //Guardamos el coste mínimo del camino del individuo
@@ -136,11 +116,32 @@ public class AlgoritmoAD {
         //Total de memoria consumida por el algoritmo
         double total_memoria = 0;
 
-        //System.out.println(initialState.getMarcado().toString());
+        System.out.println(initialState.getMarcado().toString());
         ADStarForward.Iterator it;
 
         //Iteramos sobre el problema de búsqueda
         for (int i = 0; i < miReader.getTraces().size(); i++) {
+
+            //Definimos el problema de búsqueda
+            //create components for the algorithm (factory of nodes)
+            ADStarNodeFactory factory = new ADStarNodeFactory<>(
+                    BinaryOperation.doubleAdditionOp(),
+                    ScalarOperation.doubleMultiplicationOp(),
+                    hf
+            );
+
+            //crate components for the algorithm (node expander)
+            ADStarNodeExpander expander = new ADStarNodeExpander<>(
+                    tf,
+                    pf,
+                    cf,
+                    hf,
+                    BinaryOperation.doubleAdditionOp(),
+                    ScalarOperation.doubleMultiplicationOp(),
+                    factory,
+                    parametrosImpl.getE_INICIAL()
+            );
+
             initialState.getMarcado().restartMarking();
             it = new ADStarForward<>(initialState, finalState, expander).iterator();
 
@@ -158,6 +159,7 @@ public class AlgoritmoAD {
 
             while (it.hasNext()) {
 //                Map<State, ADStarNodeImpl> listaAbiertos = it.getOpen();
+//                System.out.println("Tamaño lista abiertos: " + listaAbiertos.size());
 //
 //                for (Map.Entry entry : listaAbiertos.entrySet()) {
 //                    System.out.println(entry.getValue().toString());
@@ -166,7 +168,7 @@ public class AlgoritmoAD {
                 ADStarNodeImpl n1 = (ADStarNodeImpl) it.next();
                 State s = (State) n1.state();
                 double estimacion = (double) n1.getScore();
-                //System.out.println("Estimacion coste estado seleccionado: " + estimacion);
+                //System.out.println("Estimación: " + estimacion);
 
                 //Final del modelo y final de la traza (para hacer skips y inserts al final)
                 if (parar) {
@@ -325,17 +327,25 @@ public class AlgoritmoAD {
         }
 
         if (anadirForzadas) {
+            //Añadimos como tareas forzados las tareas restantes de la traza
+            Integer numeroTareas = 0;
+            //numeroTareas = ejec.forzarTareasTraza(trace, state.getPos());
+
             //Añadimos la tarea de la traza
             if (!trace.procesadoTraza(state.getPos())) {
-                //Anadimos el movimiento posible
-                movements.add(MODELO_FORZADO);
-                //Anadimos la tarea de la traza a la clase auxiliar
-                ejec.anadirTareaForzada(e);
+                /* Si a la tarea no le realizamos un movimiento en el modelo la añadimos
+                como modelo_forzado */
+                if (!ejec.isModelTask(e)) {
+                    //Anadimos el movimiento posible
+                    movements.add(MODELO_FORZADO);
+                    //Anadimos la tarea de la traza a la clase auxiliar
+                    ejec.anadirTareaForzada(e);
+                }
             }
             //Buscamos las tareas que tienen algún token en su entrada
             ejec.tareasTokensEntrada();
             //Contamos el número de tokens necesarios para ejecutarlas
-            Integer numeroTareas = ejec.tareasTokensRestantes();
+            numeroTareas = ejec.tareasTokensRestantes();
             for (int i = 1; i < numeroTareas; i++) {
                 movements.add(MODELO_FORZADO);
             }
@@ -351,7 +361,7 @@ public class AlgoritmoAD {
         possibleEnabledTasksClone.addAll(state.getMarcado().getEnabledElements());
         ejec.setPossibleEnabledTasks(possibleEnabledTasksClone);
 
-        //System.out.println("Posible movimientos del estado : " + movements);
+        //System.out.println(movements);
         trace.addMemoriaC(movements.size());
         //Devolvemos una coleccion con los posibles movimientos
         List<Transition<StateMove, State>> it = new ArrayList();
