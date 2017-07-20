@@ -29,15 +29,24 @@ public final class NState {
         private StateMove mov;
         //Para identificar a tareas dumming nos skips
         private Integer tarea;
+        //Tareas que ya fueron ejecutadas en el modelo
+        private TIntHashSet tareasEjecutadasModelo;
 
         public State(CMIndividual ind) {
             pos = 0;
             marcado = new CMMarking(ind, new Random(666));
             tarea = null;
+            tareasEjecutadasModelo = new TIntHashSet();
         }
 
         public State(State a) {
             pos = a.getPos();
+            //Creamos una copia de las tareas ejecutadas en el modelo
+            tareasEjecutadasModelo = new TIntHashSet(a.getTareasEjecutadasModelo());
+        }
+
+        public TIntHashSet getTareasEjecutadasModelo() {
+            return tareasEjecutadasModelo;
         }
 
         public int getPos() {
@@ -78,6 +87,7 @@ public final class NState {
 
         public void avanzarMarcado(Integer e) {
             marcado.execute(e);
+            tareasEjecutadasModelo.add(e);
         }
 
         //La tarea final se ha ejecutado y no quedan tareas activas
@@ -117,14 +127,13 @@ public final class NState {
             return marcado.getEnabledElements().size() > 0;
         }
 
-        public boolean enabled() {
-            return marcado.getEnabledElements().size() > 0;
-        }
-
         @Override
         public String toString() {
             return "State{" + "pos=" + pos + ", mov=" + mov + ", tarea=" + tarea + '}';
         }
 
+        public boolean isEjecutedTask(Integer t) {
+            return tareasEjecutadasModelo.contains(t);
+        }
     }
 }

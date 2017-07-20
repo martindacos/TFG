@@ -214,8 +214,6 @@ public class AlgoritmoA {
             miReader.getTrazaActual().setTiempoC(time_end - time_start);
             salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd());
 
-            ejec.clearEjecutadas();
-
             //Pasamos a la siguientes traza del procesado
             miReader.avanzarPos();
         }
@@ -253,11 +251,11 @@ public class AlgoritmoA {
 //        //System.out.println("Marcado en la seleccion de movimientos " + state.getMarcado().toString());
 //        System.out.println("-----------------------");
         //Si NO acabamos de procesar la traza
-        if (state.enabled()) {
+        if (state.Enabled()) {
             //La tarea de la traza ya habia sido ejecutada en el modelo o la acabamos de procesar
             if (e == null) {
                 anadirForzadas = true;
-            } else if (ejec.isEjecutedTask(e)) {
+            } else if (state.isEjecutedTask(e)) {
                 anadirForzadas = true;
             }
 
@@ -270,7 +268,6 @@ public class AlgoritmoA {
                 movements.add(MODELO);
                 //Anadimos la tarea a la coleccion para ejecutarla
                 ejec.anadirModelo(id);
-                ejec.addTareaModelo(id);
             }
         } else {
             anadirForzadas = true;
@@ -294,7 +291,6 @@ public class AlgoritmoA {
                     //Anadimos el movimiento y la tarea
                     movements.add(SINCRONO);
                     ejec.anadirSincrono(e);
-                    ejec.addTareaModelo(e);
                     break;
                 }
             }
@@ -309,9 +305,9 @@ public class AlgoritmoA {
                 ejec.anadirTareaForzada(e);
             }
             //Buscamos las tareas que tienen algún token en su entrada
-            ejec.tareasTokensEntrada();
+            ejec.tareasTokensEntrada(state.getMarcado().getTokens());
             //Contamos el número de tokens necesarios para ejecutarlas
-            Integer numeroTareas = ejec.tareasTokensRestantes();
+            Integer numeroTareas = ejec.tareasTokensRestantes(state.getMarcado().getTokens());
             for (int i = 1; i < numeroTareas; i++) {
                 movements.add(MODELO_FORZADO);
             }

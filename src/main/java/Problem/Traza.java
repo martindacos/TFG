@@ -113,7 +113,7 @@ public class Traza implements InterfazTraza {
         }
 
         r = tareas.size() - pos;
-        //System.out.println("Tarea " + tarea + " Maximo entre " + tareasFin + " y " + r);
+        //System.out.println("Tarea " + tarea + " Maximo entre (tareas restantes modelo) " + tareasFin + " y (tareas restantes traza) " + r);
         resultado = Math.max(tareasFin, r);
         return resultado;
     }
