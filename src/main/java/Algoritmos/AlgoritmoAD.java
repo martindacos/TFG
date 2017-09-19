@@ -160,10 +160,6 @@ public class AlgoritmoAD {
             while (it.hasNext()) {
 //                Map<State, ADStarNodeImpl> listaAbiertos = it.getOpen();
 //                System.out.println("Tamaño lista abiertos: " + listaAbiertos.size());
-//
-//                for (Map.Entry entry : listaAbiertos.entrySet()) {
-//                    System.out.println(entry.getValue().toString());
-//                }
 
                 ADStarNodeImpl n1 = (ADStarNodeImpl) it.next();
                 State s = (State) n1.state();
@@ -287,14 +283,18 @@ public class AlgoritmoAD {
         possibleEnabledTasksClone.addAll(state.getMarcado().getEnabledElements());
         ejec.setPossibleEnabledTasks(possibleEnabledTasksClone);
 
-        if (e == null) {
-            anadirForzadas = true;
-        } else if (state.isEjecutedTask(e)) {
-            anadirForzadasTraza = true;
-        }
-
+//        if (e == null) {
+//            anadirForzadas = true;
+//        } else if (state.isEjecutedTask(e)) {
+//            anadirForzadasTraza = true;
+//        }
         //Si existen elementos activos en el modelo
         if (state.Enabled()) {
+            if (e == null) {
+                anadirForzadas = true;
+            } else if (state.isEjecutedTask(e)) {
+                anadirForzadasTraza = true;
+            }
             //Tareas activas del modelo
             TIntHashSet posiblesTareas = state.getTareas();
             TIntIterator tasks = posiblesTareas.iterator();
@@ -305,6 +305,9 @@ public class AlgoritmoAD {
                 //Anadimos la tarea a la coleccion para ejecutarla
                 ejec.anadirModelo(id);
             }
+        } else {
+            anadirForzadasTraza = true;
+            anadirForzadas = true;
         }
 
         //Si NO acabamos de procesar la traza
@@ -334,18 +337,17 @@ public class AlgoritmoAD {
         if (anadirForzadas) {
             //Buscamos las tareas que tienen algún token en su entrada
             ejec.tareasTokensEntrada(state.getMarcado().getTokens());
-            //Contamos el número de tokens necesarios para ejecutarlas
-            Integer numeroTareas = ejec.tareasTokensRestantes(state.getMarcado().getTokens());
-            for (int i = 0; i < numeroTareas; i++) {
-                movements.add(MODELO_FORZADO);
-            }
         }
 
         //Solo forzamos las tareas restantes de la traza
         if (anadirForzadasTraza) {
             //Añadimos como tareas forzados las tareas restantes de la traza
             ejec.addTareasTraza(trace, state.getPos());
-            Integer numeroTareas = ejec.tokensNecesariosTareas(state.getMarcado().getTokens());
+        }
+
+        if (anadirForzadas || anadirForzadasTraza) {
+            //Contamos el número de tokens necesarios para ejecutarlas
+            Integer numeroTareas = ejec.tareasTokensRestantes(state.getMarcado().getTokens());
             for (int i = 0; i < numeroTareas; i++) {
                 movements.add(MODELO_FORZADO);
             }
@@ -413,7 +415,6 @@ public class AlgoritmoAD {
                 successor.setTarea(ejec.getTareaTRAZA());
                 break;
             case MODELO_FORZADO:
-                //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
                 t = ejec.leerTareaModeloForzado();
                 successor.setTarea(t);
                 //System.out.println("TAREA A HACER EL ARTIFICIAL ----------------> " + t);

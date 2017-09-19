@@ -236,50 +236,6 @@ public class EjecTareas {
         return tareasMODELO.contains(t);
     }
 
-    //Función que revisa los tokens necesarios para ejecutar las tareas
-    //Lo guardamos en un HasMap de Tarea y Tokens restantes
-    public Integer tokensNecesariosTareas(ArrayList<HashMap<TIntHashSet, Integer>> tokens) {
-        if (tareasModeloForzado == null) {
-            tareasModeloForzado = new HashMap();
-        }
-        if (tokens != null && tareasTokensEntrada != null) {
-            for (int i = 0; i < tokens.size(); i++) {
-                HashMap<TIntHashSet, Integer> tareas = tokens.get(i);
-                for (Map.Entry<TIntHashSet, Integer> entry : tareas.entrySet()) {
-                    //System.out.println("clave=" + entry.getKey() + ", valor=" + entry.getValue());
-                    //Para las tareas que actualmente no tienen tokens (no están activas)
-                    if (entry.getValue() == 0) {
-                        TIntHashSet subsets = entry.getKey();
-                        TIntIterator tasks = subsets.iterator();
-                        while (tasks.hasNext()) {
-                            int id = tasks.next();
-                            //Revisamos si la tarea se encuentra en la lista
-                            if (tareasTokensEntrada.contains(id)) {
-                                //Si se encuentra le añadimos un token mas
-                                if (tareasModeloForzado.get(id) != null) {
-                                    int token = tareasModeloForzado.get(id);
-                                    token++;
-                                    tareasModeloForzado.put(id, token);
-                                } else {
-                                    //Si la tarea no se encuentra como movimiento en el modelo
-                                    //if (!isModelTask(id)) {
-                                    tareasModeloForzado.put(id, 1);
-                                    //}
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-//            System.out.println("******");
-//            for (Map.Entry<Integer, Integer> entry : tareasModeloForzado.entrySet()) {
-//                System.out.println("Tarea=" + entry.getKey() + ", Tokens Necesarios=" + entry.getValue());
-//            }
-//            System.out.println("--------");
-        }
-        return tareasModeloForzado.size();
-    }
-
     public void addTareasTraza(InterfazTraza traza, int posProcesado) {
         if (tareasTokensEntrada == null) {
             tareasTokensEntrada = new TIntHashSet();
@@ -288,11 +244,5 @@ public class EjecTareas {
         for (int i = posProcesado; i < traza.tamTrace(); i++) {
             tareasTokensEntrada.add(traza.leerTarea(i));
         }
-    }
-
-    //Devuelve el nº de tareas que se van a forzar
-    public int forzarTareasTraza(ArrayList<HashMap<TIntHashSet, Integer>> tokens) {
-        //Obtenemos el nº de tokens necesarios para ejecutar las tareas
-        return tokensNecesariosTareas(tokens);
     }
 }
