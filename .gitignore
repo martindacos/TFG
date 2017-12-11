@@ -9,3 +9,5 @@ src/main/java/Task/
 src/main/java/Hipster/
 .*
 *.iml
+classes/
+src/main/java/META-INF/*
