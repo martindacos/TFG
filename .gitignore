@@ -7,3 +7,5 @@ src/main/java/Individual/
 src/main/java/marking/
 src/main/java/Task/
 src/main/java/Hipster/
+.*
+*.iml

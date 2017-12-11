@@ -10,7 +10,7 @@ public interface Parametros {
     public static final double COSTE_MODELO_FORZADO = 3d;
     public static final double COSTE_MODELO = 3d;
     public static final double COSTE_TRAZA = 1d;
-    //Este coste no puede ser de 0. Retaremos este añadido cuando calculemos los costes
+    //Este coste no puede ser de 0. Restaremos este añadido cuando calculemos los costes
     public static final double COSTE_SINCRONO = 0.00001d;
 
     //Parámetros específicos del Algoritmo AD*

@@ -1,0 +1,3 @@
+mvn install:install-file -Dfile=/home/martin/Descargas/ProDiGen-2.0.jar -DgroupId=ProDiGen -DartifactId=ProDiGen -Dversion=2.0 -Dpackaging=jar
+
+mvn install:install-file -Dfile=/home/martin/Documentos/projects/Aligments/hipster/classes/artifacts/hipster_pom_jar/hipster.jar -DgroupId=Hipster -DartifactId=Hipster -Dversion=2.0 -Dpackaging=jar
