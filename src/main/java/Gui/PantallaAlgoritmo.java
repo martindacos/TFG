@@ -1,16 +1,10 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package Gui;
 
-import Algoritmos.AlgoritmoA;
-import Algoritmos.AlgoritmoAD;
+import Mains.MainA;
+import Mains.MainAD;
 import Salida.InterfazSalida;
 import Problem.InterfazTraza;
 import Problem.NState;
-import Problem.Readers;
 import static Problem.NState.StateMove.*;
 import domainLogic.exceptions.EmptyLogException;
 import domainLogic.exceptions.InvalidFileExtensionException;
@@ -21,8 +15,6 @@ import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import es.usc.citius.hipster.model.AbstractNode;
 import es.usc.citius.hipster.model.impl.WeightedNode;
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Objects;
@@ -88,7 +80,7 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
 
     public void alinear() {
         try {
-            AlgoritmoA.main(paths, this);
+            MainA.main(paths);
         } catch (IOException | EmptyLogException | WrongLogEntryException | NonFinishedWorkflowException | InvalidFileExtensionException | MalformedFileException ex) {
             Logger.getLogger(PantallaConfiguracion.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -96,7 +88,7 @@ public class PantallaAlgoritmo extends javax.swing.JPanel implements InterfazSal
 
     public void alinear2() {
         try {
-            AlgoritmoAD.main(paths, this);
+            MainAD.main(paths);
         } catch (IOException | EmptyLogException | WrongLogEntryException | NonFinishedWorkflowException | InvalidFileExtensionException | MalformedFileException ex) {
             Logger.getLogger(PantallaConfiguracion.class.getName()).log(Level.SEVERE, null, ex);
         }

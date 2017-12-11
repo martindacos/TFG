@@ -1,22 +1,18 @@
 package Algoritmos;
 
 import Configuracion.ParametrosImpl;
+import Estadisticas.EstadisticasImpl;
+import Estadisticas.InterfazEstadisticas;
 import Problem.EjecTareas;
-import Salida.InterfazSalida;
 import Problem.InterfazTraza;
+import Problem.NState;
 import Problem.NState.State;
 import Problem.NState.StateMove;
 import static Problem.NState.StateMove.*;
-import Gui.PantallaAlgoritmo;
-import Estadisticas.EstadisticasImpl;
-import Estadisticas.InterfazEstadisticas;
+
 import Problem.Readers;
+import Salida.InterfazSalida;
 import Salida.SalidaTerminalImpl;
-import domainLogic.exceptions.EmptyLogException;
-import domainLogic.exceptions.InvalidFileExtensionException;
-import domainLogic.exceptions.MalformedFileException;
-import domainLogic.exceptions.NonFinishedWorkflowException;
-import domainLogic.exceptions.WrongLogEntryException;
 import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
@@ -28,12 +24,10 @@ import es.usc.citius.hipster.model.function.ActionFunction;
 import es.usc.citius.hipster.model.function.ActionStateTransitionFunction;
 import es.usc.citius.hipster.model.function.CostFunction;
 import es.usc.citius.hipster.model.function.HeuristicFunction;
-import es.usc.citius.hipster.model.impl.ADStarNodeImpl;
 import es.usc.citius.hipster.model.impl.WeightedNode;
 import es.usc.citius.hipster.model.problem.*;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -42,58 +36,44 @@ import java.util.Random;
 
 public class AlgoritmoA {
 
-    public static void main(String[] args, PantallaAlgoritmo salidaGrafica) throws IOException, EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
-        Readers miReader;
+    public static void problem(Readers miReader) {
         ParametrosImpl parametrosImpl;
 
         parametrosImpl = ParametrosImpl.getParametrosImpl();
-        switch (args.length) {
-            case 2:
-                //Cargamos el Modelo y el Log
-                miReader = Readers.getReader(args[0], args[1]);
-                miReader.getInd().print();
-                //miReader.setTracesETM();
-                //miReader.setTracesG3();
-                break;
-            default:
-                //Cargamos un 
-                miReader = Readers.getReader();
-                miReader.getInd().print();
-        }
 
-        final State initialState = new State(miReader.getInd());
+        final NState.State initialState = new NState.State(miReader.getInd());
         initialState.getMarcado().restartMarking();
 
         EjecTareas ejec = new EjecTareas();
 
         /*Funciones para el algoritmo A* */
-        ActionFunction<StateMove, State> af = new ActionFunction<StateMove, State>() {
+        ActionFunction<StateMove, State> af = new ActionFunction<NState.StateMove, NState.State>() {
             @Override
-            public Iterable<StateMove> actionsFor(State state) {
-                return validMovementsFor(state, miReader.getTrazaActual(), ejec);
+            public Iterable<NState.StateMove> actionsFor(NState.State state) {
+                return AlgoritmoA.validMovementsFor(state, miReader.getTrazaActual(), ejec);
             }
         };
 
         ActionStateTransitionFunction<StateMove, State> atf;
-        atf = new ActionStateTransitionFunction<StateMove, State>() {
+        atf = new ActionStateTransitionFunction<NState.StateMove, NState.State>() {
             @Override
-            public State apply(StateMove action, State state) {
-                return applyActionToState(action, state, ejec, miReader.getInd());
+            public NState.State apply(NState.StateMove action, NState.State state) {
+                return AlgoritmoA.applyActionToState(action, state, ejec, miReader.getInd());
             }
         };
 
         //Definición de la función de coste
-        CostFunction<StateMove, State, Double> cf = new CostFunction<StateMove, State, Double>() {
+        CostFunction<StateMove, State, Double> cf = new CostFunction<NState.StateMove, NState.State, Double>() {
             @Override
-            public Double evaluate(Transition<StateMove, State> transition) {
-                return evaluateToState(transition, parametrosImpl, ejec);
+            public Double evaluate(Transition<NState.StateMove, NState.State> transition) {
+                return AlgoritmoA.evaluateToState(transition, parametrosImpl, ejec);
             }
         };
 
         //Definición de la función heurística
-        HeuristicFunction<State, Double> hf = new HeuristicFunction<State, Double>() {
+        HeuristicFunction<State, Double> hf = new HeuristicFunction<NState.State, Double>() {
             @Override
-            public Double estimate(State state) {
+            public Double estimate(NState.State state) {
                 //Sólo Poñemos a Heurística. Da g() xa se encarga Hipster.
                 //Heurística. Número de elementos que faltan por procesar da traza
                 return miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea()) * parametrosImpl.getC_SINCRONO();
@@ -120,13 +100,13 @@ public class AlgoritmoA {
             //Definimos el problema de búsqueda
             SearchProblem<StateMove, State, WeightedNode<StateMove, State, Double>> p
                     = ProblemBuilder.create()
-                            .initialState(initialState)
-                            .defineProblemWithExplicitActions()
-                            .useActionFunction(af)
-                            .useTransitionFunction(atf)
-                            .useCostFunction(cf)
-                            .useHeuristicFunction(hf)
-                            .build();
+                    .initialState(initialState)
+                    .defineProblemWithExplicitActions()
+                    .useActionFunction(af)
+                    .useTransitionFunction(atf)
+                    .useCostFunction(cf)
+                    .useHeuristicFunction(hf)
+                    .build();
 
             WeightedNode n = null;
             double mejorScore = 0d;
@@ -149,7 +129,7 @@ public class AlgoritmoA {
 
                 WeightedNode n1 = (WeightedNode) it.next();
 
-                State s = (State) n1.state();
+                NState.State s = (NState.State) n1.state();
                 double estimacion = (double) n1.getScore();
                 //System.out.println("Estimacion coste estado seleccionado: " + estimacion);
                 //Final del modelo y final de la traza (para hacer skips y inserts al final)

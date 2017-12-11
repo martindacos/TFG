@@ -7,16 +7,10 @@ import Problem.InterfazTraza;
 import Problem.NState.State;
 import Problem.NState.StateMove;
 import static Problem.NState.StateMove.*;
-import Gui.PantallaAlgoritmo;
 import Estadisticas.EstadisticasImpl;
 import Estadisticas.InterfazEstadisticas;
 import Problem.Readers;
 import Salida.SalidaTerminalImpl;
-import domainLogic.exceptions.EmptyLogException;
-import domainLogic.exceptions.InvalidFileExtensionException;
-import domainLogic.exceptions.MalformedFileException;
-import domainLogic.exceptions.NonFinishedWorkflowException;
-import domainLogic.exceptions.WrongLogEntryException;
 import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
@@ -33,35 +27,18 @@ import es.usc.citius.hipster.model.function.impl.ScalarOperation;
 import es.usc.citius.hipster.model.impl.ADStarNodeImpl;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 public class AlgoritmoAD {
 
-    public static void main(String[] args, PantallaAlgoritmo salidaGrafica) throws IOException, EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
-        Readers miReader;
+    public static void problem(Readers miReader) {
         ParametrosImpl parametrosImpl;
-
         parametrosImpl = ParametrosImpl.getParametrosImpl();
-        switch (args.length) {
-            case 2:
-                //Cargamos el Modelo y el Log
-                miReader = Readers.getReader(args[0], args[1]);
-                miReader.getInd().print();
-                //miReader.setTracesETM();
-                //miReader.setTracesG3();
-                break;
-            default:
-                //Cargamos un 
-                miReader = Readers.getReader();
-                miReader.getInd().print();
-        }
 
         final State initialState = new State(miReader.getInd());
         initialState.getMarcado().restartMarking();
@@ -232,7 +209,7 @@ public class AlgoritmoAD {
             miReader.getTrazaActual().setScore(nuevoScoreR);
             //Guardamos el tiempo de cálculo del alineamiento
             miReader.getTrazaActual().setTiempoC(time_end - time_start);
-            //Imprimimos el alineamiento calculado y sus estadísticas           
+            //Imprimimos el alineamiento calculado y sus estadísticas
             //salidaGrafica.ActualizarTrazas(miReader.getTrazaActual(), n);
             salida.ActualizarTrazas(miReader.getTrazaActual(), n, false, miReader.getInd());
 

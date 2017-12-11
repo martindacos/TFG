@@ -90,7 +90,27 @@ public class Readers {
             j++;
         }
     }
-    
+
+    private Readers(Log log, CMIndividual ind) {
+        this.log = log;
+        this.ind = ind;
+
+        traces = new ArrayList<>();
+        ConcurrentHashMap<String, CaseInstance> traces = log.getCaseInstances();
+        for (String traceKey : traces.keySet()) {
+            CaseInstance trace = traces.get(traceKey);
+            Integer numRepetitions = trace.getNumInstances();
+            TIntArrayList tasks = trace.getTaskSequence();
+            Traza traza = new Traza();
+            traza.setId(trace.getId());
+            for (int i=0; i < tasks.size(); i++) {
+                traza.anadirTarea(tasks.get(i));
+            }
+            traza.setNumRepeticiones(numRepetitions);
+            this.traces.add(traza);
+        }
+    }
+
     private Readers() {
         //Modelo fijo de prueba
         ind = new CMIndividual(5);
