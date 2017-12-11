@@ -36,6 +36,29 @@ public class Readers {
     private int pos = 0;
     private ArrayList<InterfazTraza> traces;
 
+    public Readers(Log miLog) {
+        this.createLog(miLog);
+    }
+
+    //Como el log siempre va a ser el mismo para todos, lo creamos una sola vez
+    public final void createLog(Log miLog) {
+        traces = new ArrayList<>();
+        log = miLog;
+
+        ConcurrentHashMap<String, CaseInstance> traces = log.getCaseInstances();
+        for (String traceKey : traces.keySet()) {
+            CaseInstance trace = traces.get(traceKey);
+            Integer numRepetitions = trace.getNumInstances();
+            TIntArrayList tasks = trace.getTaskSequence();
+            Traza traza = new Traza();
+            for (int i = 0; i < tasks.size(); i++) {
+                traza.anadirTarea(tasks.get(i));
+            }
+            traza.setNumRepeticiones(numRepetitions);
+            this.traces.add(traza);
+        }
+    }
+
     public static Readers getReader() {
         if (miReader == null) {
             miReader = new Readers();
@@ -198,6 +221,11 @@ public class Readers {
 
     public CMIndividual getInd() {
         return ind;
+    }
+
+    public void setInd(CMIndividual ind) {
+        this.pos = 0;
+        this.ind = ind;
     }
 
     public ArrayList<InterfazTraza> getTraces() {
