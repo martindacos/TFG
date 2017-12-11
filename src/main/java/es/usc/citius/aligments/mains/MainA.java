@@ -1,12 +1,12 @@
-package Mains;
+package es.usc.citius.aligments.mains;
 
-import Algoritmos.AlgoritmoAD;
-import Problem.Readers;
+import es.usc.citius.aligments.algoritmos.AlgoritmoA;
+import es.usc.citius.aligments.problem.Readers;
 import domainLogic.exceptions.*;
 
 import java.io.IOException;
 
-public class MainAD {
+public class MainA {
     public static void main(String[] args) throws IOException, EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
         Readers miReader;
         switch (args.length) {
@@ -23,6 +23,6 @@ public class MainAD {
                 miReader.getInd().print();
         }
 
-        AlgoritmoAD.problem(miReader);
+        AlgoritmoA.problem(miReader);
     }
 }

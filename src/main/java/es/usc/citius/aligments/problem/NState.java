@@ -1,8 +1,7 @@
-package Problem;
+package es.usc.citius.aligments.problem;
 
 import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
-import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -3,9 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package Gui;
+package es.usc.citius.aligments.gui;
 
-import Configuracion.ParametrosImpl;
+import es.usc.citius.aligments.config.ParametrosImpl;
 import javax.swing.JFileChooser;
 
 /**

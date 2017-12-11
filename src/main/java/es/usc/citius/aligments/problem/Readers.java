@@ -1,4 +1,4 @@
-package Problem;
+package es.usc.citius.aligments.problem;
 
 import domainLogic.exceptions.EmptyLogException;
 import domainLogic.exceptions.InvalidFileExtensionException;

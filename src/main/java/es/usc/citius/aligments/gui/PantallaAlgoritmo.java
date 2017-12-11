@@ -1,11 +1,11 @@
-package Gui;
+package es.usc.citius.aligments.gui;
 
-import Mains.MainA;
-import Mains.MainAD;
-import Salida.InterfazSalida;
-import Problem.InterfazTraza;
-import Problem.NState;
-import static Problem.NState.StateMove.*;
+import es.usc.citius.aligments.mains.MainA;
+import es.usc.citius.aligments.mains.MainAD;
+import es.usc.citius.aligments.salida.InterfazSalida;
+import es.usc.citius.aligments.problem.InterfazTraza;
+import es.usc.citius.aligments.problem.NState;
+import static es.usc.citius.aligments.problem.NState.StateMove.*;
 import domainLogic.exceptions.EmptyLogException;
 import domainLogic.exceptions.InvalidFileExtensionException;
 import domainLogic.exceptions.MalformedFileException;

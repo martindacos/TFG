@@ -1,4 +1,4 @@
-package Problem;
+package es.usc.citius.aligments.problem;
 
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
@@ -80,6 +80,7 @@ public class EjecTareas {
             for (Map.Entry<Integer, Integer> entry : tareasModeloForzado.entrySet()) {
                 if (i == tareaModeloForzadoActual) {
                     artificial = entry.getKey();
+                    break;
                 }
                 i++;
             }

@@ -1,7 +1,7 @@
-package Estadisticas;
+package es.usc.citius.aligments.estadisticas;
 
-import Problem.InterfazTraza;
-import Problem.Traza;
+import es.usc.citius.aligments.problem.InterfazTraza;
+import es.usc.citius.aligments.problem.Traza;
 import es.usc.citius.hipster.model.AbstractNode;
 import java.util.ArrayList;
 

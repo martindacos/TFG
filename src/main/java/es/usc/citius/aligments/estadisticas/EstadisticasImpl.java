@@ -1,11 +1,11 @@
-package Estadisticas;
+package es.usc.citius.aligments.estadisticas;
 
-import Configuracion.ParametrosImpl;
-import Problem.InterfazTraza;
-import Problem.NState;
-import Problem.NState.State;
-import Problem.Traza;
-import static Problem.NState.StateMove.*;
+import es.usc.citius.aligments.config.ParametrosImpl;
+import es.usc.citius.aligments.problem.InterfazTraza;
+import es.usc.citius.aligments.problem.NState;
+import es.usc.citius.aligments.problem.NState.State;
+import es.usc.citius.aligments.problem.Traza;
+import static es.usc.citius.aligments.problem.NState.StateMove.*;
 import es.usc.citius.hipster.model.AbstractNode;
 import java.util.ArrayList;
 import java.util.HashSet;

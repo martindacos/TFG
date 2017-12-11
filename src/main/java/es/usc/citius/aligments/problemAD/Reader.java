@@ -1,6 +1,6 @@
-package ProblemAD;
+package es.usc.citius.aligments.problemAD;
 
-import Problem.*;
+import es.usc.citius.aligments.problem.*;
 import domainLogic.exceptions.EmptyLogException;
 import domainLogic.exceptions.InvalidFileExtensionException;
 import domainLogic.exceptions.MalformedFileException;

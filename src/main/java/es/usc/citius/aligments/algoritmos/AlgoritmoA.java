@@ -1,84 +1,85 @@
-package Algoritmos;
+package es.usc.citius.aligments.algoritmos;
 
-import Configuracion.ParametrosImpl;
-import Problem.EjecTareas;
-import Salida.InterfazSalida;
-import Problem.InterfazTraza;
-import Problem.NState.State;
-import Problem.NState.StateMove;
-import static Problem.NState.StateMove.*;
-import Estadisticas.EstadisticasImpl;
-import Estadisticas.InterfazEstadisticas;
-import Problem.Readers;
-import Salida.SalidaTerminalImpl;
+import es.usc.citius.aligments.config.ParametrosImpl;
+import es.usc.citius.aligments.estadisticas.EstadisticasImpl;
+import es.usc.citius.aligments.estadisticas.InterfazEstadisticas;
+import es.usc.citius.aligments.problem.EjecTareas;
+import es.usc.citius.aligments.problem.InterfazTraza;
+import es.usc.citius.aligments.problem.NState;
+import es.usc.citius.aligments.problem.NState.State;
+import es.usc.citius.aligments.problem.NState.StateMove;
+import static es.usc.citius.aligments.problem.NState.StateMove.*;
+
+import es.usc.citius.aligments.problem.Readers;
+import es.usc.citius.aligments.salida.InterfazSalida;
+import es.usc.citius.aligments.salida.SalidaTerminalImpl;
 import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
-import es.usc.citius.hipster.algorithm.ADStarForward;
+import es.usc.citius.hipster.algorithm.AStar;
+import es.usc.citius.hipster.algorithm.Hipster;
 import es.usc.citius.hipster.model.AbstractNode;
 import es.usc.citius.hipster.model.Transition;
+import es.usc.citius.hipster.model.function.ActionFunction;
+import es.usc.citius.hipster.model.function.ActionStateTransitionFunction;
 import es.usc.citius.hipster.model.function.CostFunction;
 import es.usc.citius.hipster.model.function.HeuristicFunction;
-import es.usc.citius.hipster.model.function.TransitionFunction;
-import es.usc.citius.hipster.model.function.impl.ADStarNodeExpander;
-import es.usc.citius.hipster.model.function.impl.ADStarNodeFactory;
-import es.usc.citius.hipster.model.function.impl.BinaryOperation;
-import es.usc.citius.hipster.model.function.impl.ScalarOperation;
-import es.usc.citius.hipster.model.impl.ADStarNodeImpl;
+import es.usc.citius.hipster.model.impl.WeightedNode;
+import es.usc.citius.hipster.model.problem.*;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Random;
 
-public class AlgoritmoAD {
+public class AlgoritmoA {
 
     public static void problem(Readers miReader) {
         ParametrosImpl parametrosImpl;
+
         parametrosImpl = ParametrosImpl.getParametrosImpl();
 
-        final State initialState = new State(miReader.getInd());
+        final NState.State initialState = new NState.State(miReader.getInd());
         initialState.getMarcado().restartMarking();
 
         EjecTareas ejec = new EjecTareas();
 
-        /*Funciones para el algoritmo AD* */
-        TransitionFunction<StateMove, State> tf = new TransitionFunction<StateMove, State>() {
+        /*Funciones para el algoritmo A* */
+        ActionFunction<StateMove, State> af = new ActionFunction<NState.StateMove, NState.State>() {
             @Override
-            public Iterable<Transition<StateMove, State>> transitionsFrom(State state) {
-                return successorFunction(state, miReader.getTrazaActual(), ejec, miReader.getInd());
+            public Iterable<NState.StateMove> actionsFor(NState.State state) {
+                return AlgoritmoA.validMovementsFor(state, miReader.getTrazaActual(), ejec);
             }
         };
 
-        TransitionFunction<StateMove, State> pf = new TransitionFunction<StateMove, State>() {
+        ActionStateTransitionFunction<StateMove, State> atf;
+        atf = new ActionStateTransitionFunction<NState.StateMove, NState.State>() {
             @Override
-            public Iterable<Transition<StateMove, State>> transitionsFrom(State state) {
-                return predecessorFunction(state);
+            public NState.State apply(NState.StateMove action, NState.State state) {
+                return AlgoritmoA.applyActionToState(action, state, ejec, miReader.getInd());
             }
         };
 
         //Definición de la función de coste
-        CostFunction<StateMove, State, Double> cf = new CostFunction<StateMove, State, Double>() {
+        CostFunction<StateMove, State, Double> cf = new CostFunction<NState.StateMove, NState.State, Double>() {
             @Override
-            public Double evaluate(Transition<StateMove, State> transition) {
-                return evaluateToState(transition, parametrosImpl, ejec);
+            public Double evaluate(Transition<NState.StateMove, NState.State> transition) {
+                return AlgoritmoA.evaluateToState(transition, parametrosImpl, ejec);
             }
         };
 
         //Definición de la función heurística
-        HeuristicFunction<State, Double> hf = new HeuristicFunction<State, Double>() {
+        HeuristicFunction<State, Double> hf = new HeuristicFunction<NState.State, Double>() {
             @Override
-            public Double estimate(State state) {
-                double heu = miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea()) * parametrosImpl.getC_SINCRONO();
-                //double heu = 0d;
-                return heu;
+            public Double estimate(NState.State state) {
+                //Sólo Poñemos a Heurística. Da g() xa se encarga Hipster.
+                //Heurística. Número de elementos que faltan por procesar da traza
+                return miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea()) * parametrosImpl.getC_SINCRONO();
+                //return 0d;
             }
         };
-
-        final State finalState = null;
 
         //Guardamos el coste mínimo del camino del individuo
         InterfazEstadisticas e = new EstadisticasImpl();
@@ -89,73 +90,54 @@ public class AlgoritmoAD {
         ArrayList<AbstractNode> nodosSalida = new ArrayList<>();
         //Tiempo total del cálculo del algoritmo
         long total_time = 0;
-
         //Total de memoria consumida por el algoritmo
         double total_memoria = 0;
 
-        System.out.println(initialState.getMarcado().toString());
-        ADStarForward.Iterator it;
-
+        //System.out.println(initialState.getMarcado().toString());
         //Iteramos sobre el problema de búsqueda
         for (int i = 0; i < miReader.getTraces().size(); i++) {
-
-            //Definimos el problema de búsqueda
-            //create components for the algorithm (factory of nodes)
-            ADStarNodeFactory factory = new ADStarNodeFactory<>(
-                    BinaryOperation.doubleAdditionOp(),
-                    ScalarOperation.doubleMultiplicationOp(),
-                    hf
-            );
-
-            //crate components for the algorithm (node expander)
-            ADStarNodeExpander expander = new ADStarNodeExpander<>(
-                    tf,
-                    pf,
-                    cf,
-                    hf,
-                    BinaryOperation.doubleAdditionOp(),
-                    ScalarOperation.doubleMultiplicationOp(),
-                    factory,
-                    parametrosImpl.getE_INICIAL()
-            );
-
             initialState.getMarcado().restartMarking();
-            it = new ADStarForward<>(initialState, finalState, expander).iterator();
+            //Definimos el problema de búsqueda
+            SearchProblem<StateMove, State, WeightedNode<StateMove, State, Double>> p
+                    = ProblemBuilder.create()
+                    .initialState(initialState)
+                    .defineProblemWithExplicitActions()
+                    .useActionFunction(af)
+                    .useTransitionFunction(atf)
+                    .useCostFunction(cf)
+                    .useHeuristicFunction(hf)
+                    .build();
 
-            ADStarNodeImpl n = null;
+            WeightedNode n = null;
             double mejorScore = 0d;
             boolean parar = false;
 
-            //miReader.avanzarPos();
             miReader.getTrazaActual().print();
             long time_start, time_end;
             //Empezamos a tomar la medida del tiempo
             time_start = System.currentTimeMillis();
 
             miReader.getTrazaActual().clear();
+            AStar<StateMove, State, Double, WeightedNode<StateMove, State, Double>> astar = Hipster.createAStar(p);
+            AStar.Iterator it = astar.iterator();
 
             while (it.hasNext()) {
-//                Map<State, ADStarNodeImpl> listaAbiertos = it.getOpen();
-//                System.out.println("Tamaño lista abiertos: " + listaAbiertos.size());
+//                Map<State, WeightedNode<StateMove, State, Double>> listaAbiertos = it.getOpen();
+//                for (Map.Entry entry : listaAbiertos.entrySet()) {
+//                    System.out.println(entry.getValue().toString());
+//                }
 
-                ADStarNodeImpl n1 = (ADStarNodeImpl) it.next();
-                State s = (State) n1.state();
+                WeightedNode n1 = (WeightedNode) it.next();
+
+                NState.State s = (NState.State) n1.state();
                 double estimacion = (double) n1.getScore();
-                //System.out.println("Estimación: " + estimacion);
-
+                //System.out.println("Estimacion coste estado seleccionado: " + estimacion);
                 //Final del modelo y final de la traza (para hacer skips y inserts al final)
                 if (parar) {
                     //System.out.println("------------------SIGO------------------");
-
                     //System.out.println("ESTIMACION " + estimacion + " MEJOR SCORE " + mejorScore);
                     if (estimacion > mejorScore) {
-                        //Paramos el bucle cuando el valor de epsilon actual es 1 o el valor mínimo
-                        //System.out.println("Epsilon actual: " + it.getEpsilon() + " Epsilon final: " + parametrosImpl.getE_FINAL());
-                        if (it.getEpsilon() <= 1d || it.getEpsilon() <= parametrosImpl.getE_FINAL()) {
-                            break;
-                        }
-                        //Reducimos el parámetro de epsilon para refinar la búsqueda
-                        it.setEpsilon(AlgoritmoAD.disminuirEpsilon(parametrosImpl, it.getEpsilon()));
+                        break;
                     }
                 }
 
@@ -191,12 +173,12 @@ public class AlgoritmoAD {
             //Guardamos el nodo con los estados soluciones de la traza
             nodosSalida.add(n);
             //Guardamos el coste obtenido en el alineamiento
-            int j = 0;
+            double j = 0d;
             Iterator it2 = n.path().iterator();
             //La primera iteración corresponde con el Estado Inicial, que no imprimimos
             it2.next();
             while (it2.hasNext()) {
-                ADStarNodeImpl node = (ADStarNodeImpl) it2.next();
+                WeightedNode node = (WeightedNode) it2.next();
                 if (node.action().equals(SINCRONO)) {
                     j++;
                 }
@@ -209,9 +191,7 @@ public class AlgoritmoAD {
             miReader.getTrazaActual().setScore(nuevoScoreR);
             //Guardamos el tiempo de cálculo del alineamiento
             miReader.getTrazaActual().setTiempoC(time_end - time_start);
-            //Imprimimos el alineamiento calculado y sus estadísticas
-            //salidaGrafica.ActualizarTrazas(miReader.getTrazaActual(), n);
-            salida.ActualizarTrazas(miReader.getTrazaActual(), n, false, miReader.getInd());
+            salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd());
 
             //Pasamos a la siguientes traza del procesado
             miReader.avanzarPos();
@@ -232,9 +212,8 @@ public class AlgoritmoAD {
     }
 
     //Devolvemos todos los movimientos posibles en función de la traza y el modelo actual
-    private static Iterable<Transition<StateMove, State>> successorFunction(State state, InterfazTraza trace, EjecTareas ejec, CMIndividual m) {
+    private static Iterable<StateMove> validMovementsFor(State state, InterfazTraza trace, EjecTareas ejec) {
         boolean anadirForzadas = false;
-        boolean anadirForzadasTraza = false;
         //Creamos una lista con los movimientos posibles
         LinkedList<StateMove> movements = new LinkedList<StateMove>();
         //Limpiamos la variables de la clase auxiliar
@@ -248,30 +227,17 @@ public class AlgoritmoAD {
 //
 //        System.out.println("Pos de la traza (lo contiene el estado) : " + state.getPos());
 //        System.out.println("Tarea de la traza : " + e);
-//        System.out.println("Marcado en la seleccion de movimientos " + state.getMarcado().toString());
+//        //System.out.println("Marcado en la seleccion de movimientos " + state.getMarcado().toString());
 //        System.out.println("-----------------------");
-        //Almacenamos el marcado en una clase auxiliar para su posterior copia
-        ArrayList<HashMap<TIntHashSet, Integer>> tokensA = state.getMarcado().getTokens();
-        ejec.setTokens(tokensA);
-        ejec.setEndPlace(state.getMarcado().getEndPlace());
-        ejec.setNumOfTokens(state.getMarcado().getNumberTokens());
-        ejec.setStartPlace(state.getMarcado().getStartPlace());
-        TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
-        possibleEnabledTasksClone.addAll(state.getMarcado().getEnabledElements());
-        ejec.setPossibleEnabledTasks(possibleEnabledTasksClone);
-
-//        if (e == null) {
-//            anadirForzadas = true;
-//        } else if (state.isEjecutedTask(e)) {
-//            anadirForzadasTraza = true;
-//        }
-        //Si existen elementos activos en el modelo
+        //Si NO acabamos de procesar la traza
         if (state.Enabled()) {
+            //La tarea de la traza ya habia sido ejecutada en el modelo o la acabamos de procesar
             if (e == null) {
                 anadirForzadas = true;
             } else if (state.isEjecutedTask(e)) {
-                anadirForzadasTraza = true;
+                anadirForzadas = true;
             }
+
             //Tareas activas del modelo
             TIntHashSet posiblesTareas = state.getTareas();
             TIntIterator tasks = posiblesTareas.iterator();
@@ -283,7 +249,6 @@ public class AlgoritmoAD {
                 ejec.anadirModelo(id);
             }
         } else {
-            anadirForzadasTraza = true;
             anadirForzadas = true;
         }
 
@@ -310,38 +275,37 @@ public class AlgoritmoAD {
             }
         }
 
-        //Forzamos las tareas que tienen algún token en su entrada
         if (anadirForzadas) {
+            //Añadimos la tarea de la traza
+            if (!trace.procesadoTraza(state.getPos())) {
+                //Anadimos el movimiento posible
+                movements.add(MODELO_FORZADO);
+                //Anadimos la tarea de la traza a la clase auxiliar
+                ejec.anadirTareaForzada(e);
+            }
             //Buscamos las tareas que tienen algún token en su entrada
             ejec.tareasTokensEntrada(state.getMarcado().getTokens());
-        }
-
-        //Solo forzamos las tareas restantes de la traza
-        if (anadirForzadasTraza) {
-            //Añadimos como tareas forzados las tareas restantes de la traza
-            ejec.addTareasTraza(trace, state.getPos());
-        }
-
-        if (anadirForzadas || anadirForzadasTraza) {
             //Contamos el número de tokens necesarios para ejecutarlas
             Integer numeroTareas = ejec.tareasTokensRestantes(state.getMarcado().getTokens());
-            for (int i = 0; i < numeroTareas; i++) {
+            for (int i = 1; i < numeroTareas; i++) {
                 movements.add(MODELO_FORZADO);
             }
         }
 
-        //System.out.println(movements);
+        //Almacenamos el marcado en una clase auxiliar para su posterior copia
+        ArrayList<HashMap<TIntHashSet, Integer>> tokensA = state.getMarcado().getTokens();
+        ejec.setTokens(tokensA);
+        ejec.setEndPlace(state.getMarcado().getEndPlace());
+        ejec.setNumOfTokens(state.getMarcado().getNumberTokens());
+        ejec.setStartPlace(state.getMarcado().getStartPlace());
+        TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
+        possibleEnabledTasksClone.addAll(state.getMarcado().getEnabledElements());
+        ejec.setPossibleEnabledTasks(possibleEnabledTasksClone);
+
+        //System.out.println("Posible movimientos del estado : " + movements);
         trace.addMemoriaC(movements.size());
         //Devolvemos una coleccion con los posibles movimientos
-        List<Transition<StateMove, State>> it = new ArrayList();
-        //Devolvemos una coleccion con los posibles movimientos
-        for (StateMove action : movements) {
-            State successor = AlgoritmoAD.applyActionToState(action, state, ejec, m);
-            Transition t = new Transition(state, action, successor);
-            it.add(t);
-        }
-
-        return it;
+        return movements;
     }
 
     //Realizamos la acción correspondiente en función del movimiento
@@ -392,6 +356,7 @@ public class AlgoritmoAD {
                 successor.setTarea(ejec.getTareaTRAZA());
                 break;
             case MODELO_FORZADO:
+                //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
                 t = ejec.leerTareaModeloForzado();
                 successor.setTarea(t);
                 //System.out.println("TAREA A HACER EL ARTIFICIAL ----------------> " + t);
@@ -426,27 +391,5 @@ public class AlgoritmoAD {
                 break;
         }
         return cost;
-    }
-
-    private static double disminuirEpsilon(ParametrosImpl p, double epsilonActual) {
-        double epsilon;
-
-        //Restamos al valor de epsilon actual su intervalo
-        epsilon = epsilonActual - p.getE_INTERVALO();
-        //Comprobamos que el nuevo valor no es inferior al mínimo
-        if (epsilon < p.getE_FINAL()) {
-            epsilon = p.getE_FINAL();
-        }
-        //Si el valor es inferior a 1 no sería un epsilon valido
-        if (epsilon < 1d) {
-            epsilon = 1d;
-        }
-
-        return epsilon;
-    }
-
-    private static Iterable<Transition<StateMove, State>> predecessorFunction(State state) {
-        System.out.println("Not implemented yet");
-        return null;
     }
 }

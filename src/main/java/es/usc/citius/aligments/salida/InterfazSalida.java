@@ -1,10 +1,8 @@
-package Salida;
+package es.usc.citius.aligments.salida;
 
-import Problem.InterfazTraza;
+import es.usc.citius.aligments.problem.InterfazTraza;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import es.usc.citius.hipster.model.AbstractNode;
-import es.usc.citius.hipster.model.impl.WeightedNode;
-import java.util.ArrayList;
 
 /**
  *

@@ -1,4 +1,4 @@
-package Configuracion;
+package es.usc.citius.aligments.config;
 
 /**
  *
