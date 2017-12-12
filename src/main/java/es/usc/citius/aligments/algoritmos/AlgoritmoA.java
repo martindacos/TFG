@@ -36,13 +36,17 @@ import java.util.Random;
 
 public class AlgoritmoA {
 
-    public static void problem(Readers miReader) {
+    public static void problem(Readers miReader, boolean print) {
         ParametrosImpl parametrosImpl;
 
         parametrosImpl = ParametrosImpl.getParametrosImpl();
 
         final NState.State initialState = new NState.State(miReader.getInd());
         initialState.getMarcado().restartMarking();
+        if (print) {
+            System.out.println(initialState.getMarcado().toString());
+            System.out.println("Tareas que se pueden ejecutar: " + initialState.getMarcado().getEnabledElements());
+        }
 
         EjecTareas ejec = new EjecTareas();
 
@@ -93,7 +97,6 @@ public class AlgoritmoA {
         //Total de memoria consumida por el algoritmo
         double total_memoria = 0;
 
-        //System.out.println(initialState.getMarcado().toString());
         //Iteramos sobre el problema de búsqueda
         for (int i = 0; i < miReader.getTraces().size(); i++) {
             initialState.getMarcado().restartMarking();
@@ -112,12 +115,16 @@ public class AlgoritmoA {
             double mejorScore = 0d;
             boolean parar = false;
 
-            miReader.getTrazaActual().print();
             long time_start, time_end;
             //Empezamos a tomar la medida del tiempo
             time_start = System.currentTimeMillis();
 
             miReader.getTrazaActual().clear();
+
+            if (print) {
+                miReader.getTrazaActual().print();
+            }
+
             AStar<StateMove, State, Double, WeightedNode<StateMove, State, Double>> astar = Hipster.createAStar(p);
             AStar.Iterator it = astar.iterator();
 
@@ -191,7 +198,9 @@ public class AlgoritmoA {
             miReader.getTrazaActual().setScore(nuevoScoreR);
             //Guardamos el tiempo de cálculo del alineamiento
             miReader.getTrazaActual().setTiempoC(time_end - time_start);
-            salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd());
+            if (print) {
+                salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd());
+            }
 
             //Pasamos a la siguientes traza del procesado
             miReader.avanzarPos();
@@ -207,8 +216,9 @@ public class AlgoritmoA {
 
         e.setMemoriaConsumida(total_memoria);
 
-        //salidaGrafica.estadisticasModelo(miReader.getInd(), e.getCoste(), total_time);
-        salida.estadisticasModelo(miReader.getInd(), e.getCoste(), total_time, e.getMemoriaConsumida());
+        if (print) {
+            salida.estadisticasModelo(miReader.getInd(), e.getCoste(), total_time, e.getMemoriaConsumida());
+        }
     }
 
     //Devolvemos todos los movimientos posibles en función de la traza y el modelo actual

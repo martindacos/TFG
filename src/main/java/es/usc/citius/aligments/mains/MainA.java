@@ -23,6 +23,6 @@ public class MainA {
                 miReader.getInd().print();
         }
 
-        AlgoritmoA.problem(miReader);
+        AlgoritmoA.problem(miReader, true);
     }
 }

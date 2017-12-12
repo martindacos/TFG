@@ -23,6 +23,6 @@ public class MainAD {
                 miReader.getInd().print();
         }
 
-        AlgoritmoAD.problem(miReader);
+        AlgoritmoAD.problem(miReader, true);
     }
 }
