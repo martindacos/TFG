@@ -107,7 +107,7 @@ public final class NState {
                     }
                 }
             }
-            System.out.println(sinTokens);
+            //System.out.println(sinTokens);
             return sinTokens <= 1;
         }
 
