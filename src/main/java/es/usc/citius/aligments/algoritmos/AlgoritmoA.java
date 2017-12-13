@@ -8,6 +8,8 @@ import es.usc.citius.aligments.problem.InterfazTraza;
 import es.usc.citius.aligments.problem.NState;
 import es.usc.citius.aligments.problem.NState.State;
 import es.usc.citius.aligments.problem.NState.StateMove;
+
+import static es.usc.citius.aligments.config.Parametros.*;
 import static es.usc.citius.aligments.problem.NState.StateMove.*;
 
 import es.usc.citius.aligments.problem.Readers;
@@ -224,12 +226,23 @@ public class AlgoritmoA {
     //Devolvemos todos los movimientos posibles en función de la traza y el modelo actual
     private static Iterable<StateMove> validMovementsFor(State state, InterfazTraza trace, EjecTareas ejec) {
         boolean anadirForzadas = false;
+        boolean anadirForzadasTraza = false;
         //Creamos una lista con los movimientos posibles
         LinkedList<StateMove> movements = new LinkedList<StateMove>();
         //Limpiamos la variables de la clase auxiliar
         ejec.clear();
         //Leemos la tarea actual de la traza
         Integer e = trace.leerTarea(state.getPos());
+
+        //Almacenamos el marcado en una clase auxiliar para su posterior copia
+        ArrayList<HashMap<TIntHashSet, Integer>> tokensA = state.getMarcado().getTokens();
+        ejec.setTokens(tokensA);
+        ejec.setEndPlace(state.getMarcado().getEndPlace());
+        ejec.setNumOfTokens(state.getMarcado().getNumberTokens());
+        ejec.setStartPlace(state.getMarcado().getStartPlace());
+        TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
+        possibleEnabledTasksClone.addAll(state.getMarcado().getEnabledElements());
+        ejec.setPossibleEnabledTasks(possibleEnabledTasksClone);
 
 //        System.out.println("-----------------------");
 //        System.out.println("Movimiento efectuado : " + state.getMov());
@@ -239,13 +252,13 @@ public class AlgoritmoA {
 //        System.out.println("Tarea de la traza : " + e);
 //        //System.out.println("Marcado en la seleccion de movimientos " + state.getMarcado().toString());
 //        System.out.println("-----------------------");
-        //Si NO acabamos de procesar la traza
+        //Si HAY tareas activas en el modelo
         if (state.Enabled()) {
             //La tarea de la traza ya habia sido ejecutada en el modelo o la acabamos de procesar
             if (e == null) {
                 anadirForzadas = true;
             } else if (state.isEjecutedTask(e)) {
-                anadirForzadas = true;
+                anadirForzadasTraza = true;
             }
 
             //Tareas activas del modelo
@@ -260,6 +273,7 @@ public class AlgoritmoA {
             }
         } else {
             anadirForzadas = true;
+            anadirForzadasTraza = true;
         }
 
         //Si NO acabamos de procesar la traza
@@ -285,32 +299,25 @@ public class AlgoritmoA {
             }
         }
 
+        //Forzamos las tareas que tienen algún token en su entrada
         if (anadirForzadas) {
-            //Añadimos la tarea de la traza
-            if (!trace.procesadoTraza(state.getPos())) {
-                //Anadimos el movimiento posible
-                movements.add(MODELO_FORZADO);
-                //Anadimos la tarea de la traza a la clase auxiliar
-                ejec.anadirTareaForzada(e);
-            }
             //Buscamos las tareas que tienen algún token en su entrada
             ejec.tareasTokensEntrada(state.getMarcado().getTokens());
+        }
+
+        //Solo forzamos las tareas restantes de la traza
+        if (anadirForzadasTraza) {
+            //Añadimos como tareas forzados las tareas restantes de la traza
+            ejec.addTareasTraza(trace, state.getPos());
+        }
+
+        if (anadirForzadas || anadirForzadasTraza) {
             //Contamos el número de tokens necesarios para ejecutarlas
             Integer numeroTareas = ejec.tareasTokensRestantes(state.getMarcado().getTokens());
-            for (int i = 1; i < numeroTareas; i++) {
+            for (int i = 0; i < numeroTareas; i++) {
                 movements.add(MODELO_FORZADO);
             }
         }
-
-        //Almacenamos el marcado en una clase auxiliar para su posterior copia
-        ArrayList<HashMap<TIntHashSet, Integer>> tokensA = state.getMarcado().getTokens();
-        ejec.setTokens(tokensA);
-        ejec.setEndPlace(state.getMarcado().getEndPlace());
-        ejec.setNumOfTokens(state.getMarcado().getNumberTokens());
-        ejec.setStartPlace(state.getMarcado().getStartPlace());
-        TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
-        possibleEnabledTasksClone.addAll(state.getMarcado().getEnabledElements());
-        ejec.setPossibleEnabledTasks(possibleEnabledTasksClone);
 
         //System.out.println("Posible movimientos del estado : " + movements);
         trace.addMemoriaC(movements.size());
@@ -358,7 +365,6 @@ public class AlgoritmoA {
                 successor.setMov(MODELO);
                 break;
             case TRAZA:
-                //Teño que ejecutar a tarea do modelo
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(TRAZA);
@@ -397,7 +403,7 @@ public class AlgoritmoA {
                 cost = parametrosImpl.getC_SINCRONO();
                 break;
             case MODELO_FORZADO:
-                cost = parametrosImpl.getC_MODELO_FORZADO() + ejec.tokenUsados(transition.getState().getTarea()) + 1;
+                cost = parametrosImpl.getC_MODELO_FORZADO() + ejec.tokenUsados(transition.getState().getTarea()) + PENALIZACION_FORZADO;
                 break;
         }
         return cost;

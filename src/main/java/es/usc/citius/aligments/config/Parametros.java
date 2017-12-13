@@ -16,7 +16,7 @@ public interface Parametros {
 
     //Parámetros específicos del Algoritmo AD*
     //double EPSILON_INICIAL = 100000d;
-    public static final double EPSILON_INICIAL = 1d;
+    double EPSILON_INICIAL = 1d;
     double EPSILON_INTERVALO = 100000d;
     //El menor valor posible de Épsilon debería ser 1
     double EPSILON_FINAL = 100000d;

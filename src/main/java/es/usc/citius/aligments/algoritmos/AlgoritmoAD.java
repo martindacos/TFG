@@ -89,7 +89,6 @@ public class AlgoritmoAD {
         InterfazEstadisticas e = new EstadisticasImpl();
         //Creamos las interfaces de salida por terminal
         InterfazSalida salida = new SalidaTerminalImpl();
-        //salidaGrafica.setTotalTrazas(miReader.getTraces().size());
 
         ArrayList<AbstractNode> nodosSalida = new ArrayList<>();
         //Tiempo total del cálculo del algoritmo
@@ -130,7 +129,6 @@ public class AlgoritmoAD {
             double mejorScore = 0d;
             boolean parar = false;
 
-            //miReader.avanzarPos();
             long time_start, time_end;
             //Empezamos a tomar la medida del tiempo
             time_start = System.currentTimeMillis();
@@ -274,7 +272,7 @@ public class AlgoritmoAD {
 //        } else if (state.isEjecutedTask(e)) {
 //            anadirForzadasTraza = true;
 //        }
-        //Si existen elementos activos en el modelo
+        //Si HAY tareas activas en el modelo
         if (state.Enabled()) {
             if (e == null) {
                 anadirForzadas = true;
@@ -393,7 +391,6 @@ public class AlgoritmoAD {
                 successor.setMov(MODELO);
                 break;
             case TRAZA:
-                //Teño que ejecutar a tarea do modelo
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(TRAZA);

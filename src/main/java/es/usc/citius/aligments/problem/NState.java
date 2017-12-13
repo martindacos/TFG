@@ -94,21 +94,23 @@ public final class NState {
             return marcado.isEndPlaceEnabled();
         }
 
+        //Devuelve TRUE cuando quedan tokens en el modelo y FALSE cuando no quedan
         public boolean sinTokens() {
-            Integer sinTokens = 0;
+            Integer numTokens = 0;
             ArrayList<HashMap<TIntHashSet, Integer>> tokens = marcado.getTokens();
             for (int i = 0; i < tokens.size(); i++) {
                 HashMap<TIntHashSet, Integer> tareas = tokens.get(i);
                 for (Map.Entry<TIntHashSet, Integer> entry : tareas.entrySet()) {
                     //System.out.println("clave=" + entry.getKey() + ", valor=" + entry.getValue());
-                    //Si no tienen tokens
+                    //Si tiene tokens
                     if (entry.getValue() != 0) {
-                        sinTokens++;
+                        //Aumentamos su valor en 1 (da igual el nº de tokens que tenga)
+                        numTokens++;
                     }
                 }
             }
-            //System.out.println(sinTokens);
-            return sinTokens <= 1;
+            //System.out.println(numTokens);
+            return numTokens <= 1;
         }
 
         public boolean finalModelo(CMIndividual ind) {
