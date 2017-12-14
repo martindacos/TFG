@@ -139,6 +139,8 @@ public class AlgoritmoA {
                 WeightedNode n1 = (WeightedNode) it.next();
 
                 NState.State s = (NState.State) n1.state();
+                //System.out.println(s.getMarcado().toString());
+                //System.out.println("Tareas que se pueden ejecutar: " + s.getMarcado().getEnabledElements());
                 double estimacion = (double) n1.getScore();
                 //System.out.println("Estimacion coste estado seleccionado: " + estimacion);
                 //Final del modelo y final de la traza (para hacer skips y inserts al final)

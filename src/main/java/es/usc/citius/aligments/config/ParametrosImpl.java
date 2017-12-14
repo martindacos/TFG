@@ -6,16 +6,16 @@ package es.usc.citius.aligments.config;
  */
 public class ParametrosImpl implements Parametros {
 
-    private double C_MODELO_FORZADO = COSTE_MODELO_FORZADO;
-    private double C_MODELO = COSTE_MODELO;
-    private double C_TRAZA = COSTE_TRAZA;
+    private static double C_MODELO_FORZADO = COSTE_MODELO_FORZADO;
+    private static double C_MODELO = COSTE_MODELO;
+    private static double C_TRAZA = COSTE_TRAZA;
     //Este coste no puede ser de 0
-    private double C_SINCRONO = COSTE_SINCRONO;
+    private static double C_SINCRONO = COSTE_SINCRONO;
     private static ParametrosImpl miParametrosImpl;
 
-    private double E_INICIAL = EPSILON_INICIAL;
-    private double E_INTERVALO = EPSILON_INTERVALO;
-    private double E_FINAL = EPSILON_FINAL;
+    private static double E_INICIAL = EPSILON_INICIAL;
+    private static double E_INTERVALO = EPSILON_INTERVALO;
+    private static double E_FINAL = EPSILON_FINAL;
 
     public static ParametrosImpl getParametrosImpl() {
         if (miParametrosImpl == null) {
@@ -60,8 +60,8 @@ public class ParametrosImpl implements Parametros {
         return E_INICIAL;
     }
 
-    public void setE_INICIAL(double E_INICIAL) {
-        this.E_INICIAL = E_INICIAL;
+    public static void setE_INICIAL(double E_INICIAL) {
+        ParametrosImpl.E_INICIAL = E_INICIAL;
     }
 
     public double getE_INTERVALO() {

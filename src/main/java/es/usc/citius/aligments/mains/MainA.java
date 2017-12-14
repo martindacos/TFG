@@ -8,6 +8,10 @@ import java.io.IOException;
 
 public class MainA {
     public static void main(String[] args) throws IOException, EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
+        args = new String[2];
+        args[0] = "/home/martin/Descargas/Citius/LogsAligments/ETM2/ETM.xes";
+        args[1] = "/home/martin/Descargas/Citius/LogsAligments/ETM2/ETM.hn";
+
         Readers miReader;
         switch (args.length) {
             case 2:

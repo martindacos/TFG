@@ -98,9 +98,9 @@ public class EstadisticasImpl implements InterfazEstadisticas {
             }
             //Obtenemos el fitness
             fitness = 1 - (costeIndividuo / (this.totalEventosLog * parametrosImpl.getC_TRAZA() + (menorCamino * t.size() * parametrosImpl.getC_MODELO())));
-            if (fitness < 0) {
-                fitness = 0d;
-            }
+            //if (fitness < 0) {
+            //    fitness = 0d;
+            //}
         }
         return fitness;
     }
