@@ -134,6 +134,15 @@ public class Traza implements InterfazTraza {
     }
 
     @Override
+    public String toString() {
+        String s = "";
+        for (int i = 0; i < tareas.size(); i++) {
+            s = s + tareas.get(i) + " ";
+        }
+        return s;
+    }
+
+    @Override
     public double getTiempoC() {
         return tiempoC;
     }

@@ -30,15 +30,30 @@ import es.usc.citius.hipster.model.impl.WeightedNode;
 import es.usc.citius.hipster.model.problem.*;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Random;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.logging.*;
 
 public class AlgoritmoA {
 
-    public static void problem(Readers miReader, boolean print) {
+    private final static Logger LOGGER = Logger.getLogger("aligments");
+    private static boolean print;
+
+    public static void problem(Readers miReader, boolean logging) {
+        print = logging;
+        Handler fileHandler = null;
+        try {
+            fileHandler = new FileHandler("./aligments.log", false);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        SimpleFormatter simpleFormatter = new SimpleFormatter();
+        fileHandler.setFormatter(simpleFormatter);
+        LOGGER.addHandler(fileHandler);
+        LOGGER.setUseParentHandlers(false);
+        LOGGER.setLevel(Level.INFO);
+
         ParametrosImpl parametrosImpl;
 
         parametrosImpl = ParametrosImpl.getParametrosImpl();
@@ -46,11 +61,15 @@ public class AlgoritmoA {
         final NState.State initialState = new NState.State(miReader.getInd());
         initialState.getMarcado().restartMarking();
         if (print) {
-            System.out.println(initialState.getMarcado().toString());
-            System.out.println("Tareas que se pueden ejecutar: " + initialState.getMarcado().getEnabledElements());
+            LOGGER.log(Level.INFO, initialState.getMarcado().toString());
+            LOGGER.log(Level.INFO, "Tareas que se pueden ejecutar: " + initialState.getMarcado().getEnabledElements());
         }
 
         EjecTareas ejec = new EjecTareas();
+        //Guardamos el coste mínimo del camino del individuo
+        InterfazEstadisticas e = new EstadisticasImpl();
+        //Creamos las interfaces de salida por terminal
+        InterfazSalida salida = new SalidaTerminalImpl();
 
         /*Funciones para el algoritmo A* */
         ActionFunction<StateMove, State> af = new ActionFunction<NState.StateMove, NState.State>() {
@@ -64,7 +83,7 @@ public class AlgoritmoA {
         atf = new ActionStateTransitionFunction<NState.StateMove, NState.State>() {
             @Override
             public NState.State apply(NState.StateMove action, NState.State state) {
-                return AlgoritmoA.applyActionToState(action, state, ejec, miReader.getInd());
+                return AlgoritmoA.applyActionToState(action, state, ejec, miReader.getInd(), e);
             }
         };
 
@@ -86,12 +105,6 @@ public class AlgoritmoA {
                 //return 0d;
             }
         };
-
-        //Guardamos el coste mínimo del camino del individuo
-        InterfazEstadisticas e = new EstadisticasImpl();
-        //Creamos las interfaces de salida por terminal
-        InterfazSalida salida = new SalidaTerminalImpl();
-        //salidaGrafica.setTotalTrazas(miReader.getTraces().size());
 
         ArrayList<AbstractNode> nodosSalida = new ArrayList<>();
         //Tiempo total del cálculo del algoritmo
@@ -123,15 +136,16 @@ public class AlgoritmoA {
 
             miReader.getTrazaActual().clear();
 
-            if (print) {
-                miReader.getTrazaActual().print();
-            }
+            LOGGER.log(Level.INFO, "Traza " + i + " " + miReader.getTrazaActual().toString());
 
             AStar<StateMove, State, Double, WeightedNode<StateMove, State, Double>> astar = Hipster.createAStar(p);
             AStar.Iterator it = astar.iterator();
 
             while (it.hasNext()) {
-//                Map<State, WeightedNode<StateMove, State, Double>> listaAbiertos = it.getOpen();
+                Map<State, WeightedNode<StateMove, State, Double>> listaAbiertos = it.getOpen();
+                if (print) {
+                    LOGGER.log(Level.FINE, "Traza " + i + " -> Tamaño lista abiertos: " + listaAbiertos.size());
+                }
 //                for (Map.Entry entry : listaAbiertos.entrySet()) {
 //                    System.out.println(entry.getValue().toString());
 //                }
@@ -203,8 +217,15 @@ public class AlgoritmoA {
             //Guardamos el tiempo de cálculo del alineamiento
             miReader.getTrazaActual().setTiempoC(time_end - time_start);
             if (print) {
-                salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd());
+                String s = salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd());
+                LOGGER.log(Level.INFO, s);
             }
+
+            if (print) {
+                String statMovs = e.getStatMovs();
+                LOGGER.log(Level.INFO, statMovs);
+            }
+            e.resetMovs();
 
             //Pasamos a la siguientes traza del procesado
             miReader.avanzarPos();
@@ -221,7 +242,13 @@ public class AlgoritmoA {
         e.setMemoriaConsumida(total_memoria);
 
         if (print) {
-            salida.estadisticasModelo(miReader.getInd(), e.getCoste(), total_time, e.getMemoriaConsumida());
+            String s = salida.estadisticasModelo(miReader.getInd(), e.getCoste(), total_time, e.getMemoriaConsumida());
+            LOGGER.log(Level.INFO, s);
+        }
+
+        if (print) {
+            String statMovs = e.getAllStatMovs();
+            LOGGER.log(Level.INFO, statMovs);
         }
     }
 
@@ -246,14 +273,17 @@ public class AlgoritmoA {
         possibleEnabledTasksClone.addAll(state.getMarcado().getEnabledElements());
         ejec.setPossibleEnabledTasks(possibleEnabledTasksClone);
 
-//        System.out.println("-----------------------");
-//        System.out.println("Movimiento efectuado : " + state.getMov());
-//        System.out.println("Tarea sobre la que se hizo el movimiento : " + state.getTarea());
-//
-//        System.out.println("Pos de la traza (lo contiene el estado) : " + state.getPos());
-//        System.out.println("Tarea de la traza : " + e);
-//        //System.out.println("Marcado en la seleccion de movimientos " + state.getMarcado().toString());
-//        System.out.println("-----------------------");
+        String salida = "";
+        salida = salida + "\n-----------------------";
+        salida = salida + "\nMovimiento efectuado : " + state.getMov();
+        salida = salida + "\nTarea sobre la que se hizo el movimiento : " + state.getTarea();
+
+        salida = salida + "\nPos de la traza (lo contiene el estado) : " + state.getPos();
+        salida = salida + "\nTarea de la traza : " + e;
+        //System.out.println("Marcado en la seleccion de movimientos " + state.getMarcado().toString());
+        salida = salida + "\n-----------------------";
+        LOGGER.log(Level.CONFIG, salida);
+
         //Si HAY tareas activas en el modelo
         if (state.Enabled()) {
             //La tarea de la traza ya habia sido ejecutada en el modelo o la acabamos de procesar
@@ -321,14 +351,16 @@ public class AlgoritmoA {
             }
         }
 
-        //System.out.println("Posible movimientos del estado : " + movements);
+        if (print) {
+            LOGGER.log(Level.CONFIG, "Posible movimientos del estado : " + movements);
+        }
         trace.addMemoriaC(movements.size());
         //Devolvemos una coleccion con los posibles movimientos
         return movements;
     }
 
     //Realizamos la acción correspondiente en función del movimiento
-    private static State applyActionToState(StateMove action, State state, EjecTareas ejec, CMIndividual m) {
+    private static State applyActionToState(StateMove action, State state, EjecTareas ejec, CMIndividual m, InterfazEstadisticas stats) {
         State successor = new State(state);
 
         //Recuperamos los datos copiados para el marcado
@@ -345,14 +377,24 @@ public class AlgoritmoA {
 
         successor.setMarcado(marking);
 
-//        System.out.println("MARCADO ANTES");
-//        System.out.println(successor.getMarcado().toString());
-//        System.out.println("Tareas que se pueden ejecutar: " + successor.getMarcado().getEnabledElements());
+        if (print) {
+            String salida = "";
+            salida = salida + "\nMARCADO ANTES";
+            salida = salida + "\n" + successor.getMarcado().toString();
+            salida = salida + "\nTareas que se pueden ejecutar: " + successor.getMarcado().getEnabledElements();
+            LOGGER.log(Level.CONFIG, salida);
+        }
+
+        //Count all movs
+        stats.countTypeMovs(action);
+
         switch (action) {
             case SINCRONO:
                 //Avanzamos el modelo con la tarea que podemos ejecutar
                 successor.avanzarMarcado(ejec.getTareaSINCRONA());
-                //System.out.println("TAREA A HACER EL OK ----------------> " + ejec.getTareaSINCRONA());
+                if (print) {
+                    LOGGER.log(Level.CONFIG, "Tarea del movimiento SINCRONO ----------------> " + ejec.getTareaSINCRONA());
+                }
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(SINCRONO);
@@ -362,7 +404,9 @@ public class AlgoritmoA {
                 //Avanzamos el modelo con una tarea que no tenemos en la traza en la posición actual
                 Integer t = ejec.leerTareaModelo();
                 successor.setTarea(t);
-                //System.out.println("TAREA A HACER EL SKIP ----------------> " + t);
+                if (print) {
+                    LOGGER.log(Level.CONFIG, "Tarea del movimiento MODELO ----------------> " + t);
+                }
                 successor.avanzarMarcado(t);
                 successor.setMov(MODELO);
                 break;
@@ -370,22 +414,30 @@ public class AlgoritmoA {
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(TRAZA);
-                //System.out.println("TAREA A HACER EL INSERT ----------------> " + ejec.getTareaTRAZA());
+                if (print) {
+                    LOGGER.log(Level.CONFIG, "Tarea del movimiento TRAZA ----------------> " + ejec.getTareaTRAZA());
+                }
                 successor.setTarea(ejec.getTareaTRAZA());
                 break;
             case MODELO_FORZADO:
                 //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
                 t = ejec.leerTareaModeloForzado();
                 successor.setTarea(t);
-                //System.out.println("TAREA A HACER EL ARTIFICIAL ----------------> " + t);
+                if (print) {
+                    LOGGER.log(Level.CONFIG, "Tarea del movimiento MODELO_FORZADO ----------------> " + t);
+                }
                 successor.avanzarMarcado(t);
                 successor.setMov(MODELO_FORZADO);
                 break;
         }
-//        System.out.println("Pos traza " + successor.getPos());
-//        System.out.println("MARCADO DESPUES");
-//        System.out.println(successor.getMarcado().toString());
-//        System.out.println("EnabledTasks " + successor.getMarcado().getEnabledElements());
+        if (print) {
+            String salida = "";
+            salida = salida + "\nPos traza " + successor.getPos();
+            salida = salida + "\nMARCADO DESPUES";
+            salida = salida + "\n" + successor.getMarcado().toString();
+            salida = salida + "\nEnabledTasks " + successor.getMarcado().getEnabledElements();
+            LOGGER.log(Level.CONFIG, salida);
+        }
 
         return successor;
     }

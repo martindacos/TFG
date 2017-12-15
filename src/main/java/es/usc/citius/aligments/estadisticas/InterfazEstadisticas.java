@@ -1,6 +1,7 @@
 package es.usc.citius.aligments.estadisticas;
 
 import es.usc.citius.aligments.problem.InterfazTraza;
+import es.usc.citius.aligments.problem.NState;
 import es.usc.citius.aligments.problem.Traza;
 import es.usc.citius.hipster.model.AbstractNode;
 import java.util.ArrayList;
@@ -36,4 +37,12 @@ public interface InterfazEstadisticas {
     Double getFitness();
 
     Double getPrecission();
+
+    void countTypeMovs(NState.StateMove action);
+
+    String getStatMovs();
+
+    void resetMovs();
+
+    String getAllStatMovs();
 }

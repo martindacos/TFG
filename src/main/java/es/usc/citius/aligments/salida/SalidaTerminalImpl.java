@@ -19,18 +19,20 @@ public class SalidaTerminalImpl implements InterfazSalida {
     private boolean imprimir = true;
 
     @Override
-    public void estadisticasModelo(CMIndividual ind, double coste, long tiempo, double memoria) {
+    public String estadisticasModelo(CMIndividual ind, double coste, long tiempo, double memoria) {
+        String s = "";
         if (imprimir) {
-            System.out.println();
-            System.out.println("********** ESTADÍSTICAS DEL MODELO **************");
+            s = s + "\n\n********** ESTADÍSTICAS DEL MODELO **************";
             int cI = (int) coste;
-            System.out.println("Coste del modelo: " + cI);
-            System.out.println("Tiempo total de cálculo = " + tiempo + " ms");
-            System.out.println("Fitness del modelo: " + ind.getFitness().getCompleteness());
-            System.out.println("Precission del modelo: " + ind.getFitness().getPreciseness());
+            s = s + "\nCoste del modelo: " + cI;
+            s = s + "\nTiempo total de cálculo = " + tiempo + " ms";
+            s = s + "\nFitness del modelo: " + ind.getFitness().getCompleteness();
+            s = s + "\nPrecission del modelo: " + ind.getFitness().getPreciseness();
             int mI = (int) memoria;
-            System.out.println("Memoria total consumida = " + mI);
+            s = s + "\nMemoria total consumida = " + mI;
         }
+
+        return s;
     }
 
     @Override
@@ -44,16 +46,16 @@ public class SalidaTerminalImpl implements InterfazSalida {
     }
 
     @Override
-    public void ActualizarTrazas(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind) {
+    public String ActualizarTrazas(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind) {
+        String salida = "";
         if (imprimir) {
             Iterator it2 = nodo.path().iterator();
             //La primera iteración corresponde con el Estado Inicial, que no imprimimos
             it2.next();
-            System.out.println("***************************");
+            salida = salida + "\n***************************";
 //            System.out.println(nodosSalida.get(i).path());
-            System.out.println();
-            System.out.println("---------SALIDA VISUAL----------");
-            System.out.println("\tTRAZA\tMODELO");
+            salida = salida + "\n\n---------SALIDA VISUAL----------";
+            salida = salida + "\n\tTRAZA\tMODELO";
             while (it2.hasNext()) {
                 AbstractNode node;
                 if (ad) {
@@ -63,21 +65,22 @@ public class SalidaTerminalImpl implements InterfazSalida {
                 }
                 NState.State s = (NState.State) node.state();
                 if (node.action().equals(SINCRONO)) {
-                    System.out.println("\t" + ind.getTask(trace.leerTarea(s.getPos() - 1)).getTask().getId() + "\t" + ind.getTask(s.getTarea()).getTask().getId());
+                    salida = salida + "\n\t" + ind.getTask(trace.leerTarea(s.getPos() - 1)).getTask().getId() + "\t" + ind.getTask(s.getTarea()).getTask().getId();
                 } else if (node.action().equals(MODELO)) {
-                    System.out.println("\t>>\t" + ind.getTask(s.getTarea()).getTask().getId());
+                    salida = salida + "\n\t>>\t" + ind.getTask(s.getTarea()).getTask().getId();
                 } else if (node.action().equals(MODELO_FORZADO)) {
-                    System.out.println("\t>>'\t" + ind.getTask(s.getTarea()).getTask().getId());
+                    salida = salida + "\n\t>>'\t" + ind.getTask(s.getTarea()).getTask().getId();
                 } else {
-                    System.out.println("\t" + ind.getTask(trace.leerTarea(s.getPos() - 1)).getTask().getId() + "\t>>");
+                    salida = salida + "\n\t" + ind.getTask(trace.leerTarea(s.getPos() - 1)).getTask().getId() + "\t>>";
                 }
             }
-            System.out.println();
-            System.out.println("Coste del alineamiento = " + trace.getScore());
-            System.out.println("Coste del alineamiento con repeticiones = " + trace.getScoreRepetido());
-            System.out.println("Tiempo de cálculo del alineamiento = " + trace.getTiempoC() + " ms");
-            System.out.println("Memoria consuminda por el alineamiento = " + trace.getMemoriaC());
+            salida = salida + "\n\nCoste del alineamiento = " + trace.getScore();
+            salida = salida + "\nCoste del alineamiento con repeticiones = " + trace.getScoreRepetido();
+            salida = salida + "\nTiempo de cálculo del alineamiento = " + trace.getTiempoC() + " ms";
+            salida = salida + "\nMemoria consuminda por el alineamiento = " + trace.getMemoriaC();
         }
+
+        return salida;
     }
 
     @Override

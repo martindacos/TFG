@@ -11,7 +11,7 @@ import es.usc.citius.hipster.model.AbstractNode;
 public interface InterfazSalida {
 
     //Función que imprime las estadísticas del modelo (fitness, precission, coste, tiempoCálculo)
-    void estadisticasModelo(CMIndividual ind, double coste, long tiempo, double memoria);
+    String estadisticasModelo(CMIndividual ind, double coste, long tiempo, double memoria);
 
     //Función que puede mostrar/ocultar la salida
     void setVisible(boolean visible);
@@ -20,7 +20,7 @@ public interface InterfazSalida {
     void imprimirModelo(CMIndividual ind);
 
     //Función que imprime las trazas y su nodo solución (alineamiento)
-    void ActualizarTrazas(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind);
+    String ActualizarTrazas(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind);
 
     //Función que imprime el número total de trazas a alinear
     public void setTotalTrazas(int size);

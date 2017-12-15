@@ -10,6 +10,7 @@ import es.usc.citius.hipster.model.AbstractNode;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  *
@@ -25,10 +26,16 @@ public class EstadisticasImpl implements InterfazEstadisticas {
     private Double precission;
     private Long tiempoCalculo;
     private Double memoriaConsumida;
+    private Integer countS = 0;
+    private Integer countT = 0;
+    private Integer countM = 0;
+    private Integer countMF = 0;
+    private List<Integer> countResume;
 
     public EstadisticasImpl() {
         this.totalEventosLog = 0d;
         parametrosImpl = ParametrosImpl.getParametrosImpl();
+        countResume = new ArrayList<>();
     }
 
     @Override
@@ -39,6 +46,63 @@ public class EstadisticasImpl implements InterfazEstadisticas {
     @Override
     public Double getPrecission() {
         return precission;
+    }
+
+    @Override
+    public void countTypeMovs(NState.StateMove action) {
+        switch (action) {
+            case SINCRONO:
+                countS++;
+                break;
+            case MODELO:
+                countM++;
+                break;
+            case TRAZA:
+                countT++;
+                break;
+            case MODELO_FORZADO:
+                countMF++;
+                break;
+        }
+    }
+
+    @Override
+    public String getStatMovs() {
+        String s = "";
+        s = s + "\nSINCRONO :" + countS;
+        s = s + "\nTRAZA :" + countT;
+        s = s + "\nMODELO :" + countM;
+        s = s + "\nMODELO FORZADO :" + countMF;
+        return s;
+    }
+
+    @Override
+    public void resetMovs() {
+        if (countResume.size() != 0) {
+            countS = countS + countResume.get(0);
+            countT = countT + countResume.get(1);
+            countM = countM + countResume.get(2);
+            countMF = countMF + countResume.get(3);
+            countResume.clear();
+        }
+        countResume.add(countS);
+        countResume.add(countT);
+        countResume.add(countM);
+        countResume.add(countMF);
+        countS = 0;
+        countT = 0;
+        countM = 0;
+        countMF = 0;
+    }
+
+    @Override
+    public String getAllStatMovs() {
+        String s = "";
+        s = s + "\nSINCRONO :" + countResume.get(0);
+        s = s + "\nTRAZA :" + countResume.get(1);
+        s = s + "\nMODELO :" + countResume.get(2);
+        s = s + "\nMODELO FORZADO :" + countResume.get(3);
+        return s;
     }
 
     @Override
@@ -215,4 +279,6 @@ public class EstadisticasImpl implements InterfazEstadisticas {
     public double getMemoriaConsumida() {
         return this.memoriaConsumida;
     }
+
+
 }
