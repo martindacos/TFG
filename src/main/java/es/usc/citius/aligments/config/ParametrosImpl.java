@@ -32,7 +32,7 @@ public class ParametrosImpl implements Parametros {
         this.C_MODELO_FORZADO = C_MODELO_FORZADO;
     }
 
-    public double getC_MODELO() {
+    public static double getC_MODELO() {
         return C_MODELO;
     }
 
@@ -48,7 +48,7 @@ public class ParametrosImpl implements Parametros {
         this.C_TRAZA = C_TRAZA;
     }
 
-    public double getC_SINCRONO() {
+    public static double getC_SINCRONO() {
         return C_SINCRONO;
     }
 

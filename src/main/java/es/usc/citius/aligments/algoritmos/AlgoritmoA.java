@@ -54,7 +54,7 @@ public class AlgoritmoA {
         //Evitar que el log salga por pantalla
         LOGGER.setUseParentHandlers(false);
         //Definimos el nivel del log
-        LOGGER.setLevel(Level.FINE);
+        LOGGER.setLevel(Level.INFO);
 
         ParametrosImpl parametrosImpl;
 
@@ -103,7 +103,9 @@ public class AlgoritmoA {
             public Double estimate(NState.State state) {
                 //Sólo Poñemos a Heurística. Da g() xa se encarga Hipster.
                 //Heurística. Número de elementos que faltan por procesar da traza
-                return miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea()) * parametrosImpl.getC_SINCRONO();
+                //return miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea()) * parametrosImpl.getC_SINCRONO();
+                //Nueva heurística que tiene en cuenta tanto las tareas restantes por procesar del modelo como de la traza
+                return miReader.getTrazaActual().getHeuristicaPrecise(state.getPos(), miReader.getInd(), state.getTarea());
                 //return 0d;
             }
         };
