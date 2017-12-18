@@ -17,6 +17,10 @@ import java.util.Iterator;
 public class SalidaTerminalImpl implements InterfazSalida {
 
     private boolean imprimir = true;
+    private Integer countS = 0;
+    private Integer countT = 0;
+    private Integer countM = 0;
+    private Integer countMF = 0;
 
     @Override
     public String estadisticasModelo(CMIndividual ind, double coste, long tiempo, double memoria) {
@@ -65,12 +69,16 @@ public class SalidaTerminalImpl implements InterfazSalida {
                 }
                 NState.State s = (NState.State) node.state();
                 if (node.action().equals(SINCRONO)) {
+                    countS++;
                     salida = salida + "\n\t" + ind.getTask(trace.leerTarea(s.getPos() - 1)).getTask().getId() + "\t" + ind.getTask(s.getTarea()).getTask().getId();
                 } else if (node.action().equals(MODELO)) {
+                    countM++;
                     salida = salida + "\n\t>>\t" + ind.getTask(s.getTarea()).getTask().getId();
                 } else if (node.action().equals(MODELO_FORZADO)) {
+                    countMF++;
                     salida = salida + "\n\t>>'\t" + ind.getTask(s.getTarea()).getTask().getId();
                 } else {
+                    countT++;
                     salida = salida + "\n\t" + ind.getTask(trace.leerTarea(s.getPos() - 1)).getTask().getId() + "\t>>";
                 }
             }
@@ -81,6 +89,16 @@ public class SalidaTerminalImpl implements InterfazSalida {
         }
 
         return salida;
+    }
+
+    @Override
+    public String getStatMovs() {
+        String s = "";
+        s = s + "\nSINCRONO :" + countS;
+        s = s + "\nTRAZA :" + countT;
+        s = s + "\nMODELO :" + countM;
+        s = s + "\nMODELO FORZADO :" + countMF;
+        return s;
     }
 
     @Override

@@ -23,5 +23,7 @@ public interface InterfazSalida {
     String ActualizarTrazas(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind);
 
     //Función que imprime el número total de trazas a alinear
-    public void setTotalTrazas(int size);
+    void setTotalTrazas(int size);
+
+    String getStatMovs();
 }
