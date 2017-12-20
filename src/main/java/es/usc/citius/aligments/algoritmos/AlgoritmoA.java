@@ -42,19 +42,21 @@ public class AlgoritmoA {
 
     public static void problem(Readers miReader, boolean logging) {
         print = logging;
-        Handler fileHandler = null;
-        try {
-            fileHandler = new FileHandler("./aligments.log", false);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (print) {
+            Handler fileHandler = null;
+            try {
+                fileHandler = new FileHandler("./aligments.log", false);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            SimpleFormatter simpleFormatter = new SimpleFormatter();
+            fileHandler.setFormatter(simpleFormatter);
+            LOGGER.addHandler(fileHandler);
+            //Evitar que el log salga por pantalla
+            //LOGGER.setUseParentHandlers(false);
+            //Definimos el nivel del log
+            LOGGER.setLevel(Level.INFO);
         }
-        SimpleFormatter simpleFormatter = new SimpleFormatter();
-        fileHandler.setFormatter(simpleFormatter);
-        LOGGER.addHandler(fileHandler);
-        //Evitar que el log salga por pantalla
-        LOGGER.setUseParentHandlers(false);
-        //Definimos el nivel del log
-        LOGGER.setLevel(Level.INFO);
 
         ParametrosImpl parametrosImpl;
 
@@ -144,7 +146,9 @@ public class AlgoritmoA {
             //miReader.avanzarPos();
             miReader.getTrazaActual().clear();
 
-            LOGGER.log(Level.INFO, "Traza nº " + i + " -> " + miReader.getTrazaActual().toString());
+            if (print) {
+                LOGGER.log(Level.INFO, "Traza nº " + i + " -> " + miReader.getTrazaActual().toString());
+            }
 
             AStar<StateMove, State, Double, WeightedNode<StateMove, State, Double>> astar = Hipster.createAStar(p);
             AStar.Iterator it = astar.iterator();
@@ -157,8 +161,8 @@ public class AlgoritmoA {
                 if (print) {
                     LOGGER.log(Level.FINE, "Iteración " + count + " -> Tamaño lista abiertos: " + listaAbiertos.size());
                     //Debug cuando falla el programa
-                    if (count == 19129) {
-                        LOGGER.log(Level.FINE, e.getStatMovs());
+                    if (count == 56000) {
+                        LOGGER.log(Level.INFO, e.getStatMovs());
                         if (n != null) {
                             LOGGER.log(Level.INFO, "Tenemos un nodo final");
                             String s = salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd());
@@ -238,6 +242,7 @@ public class AlgoritmoA {
             if (print) {
                 String s = salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd());
                 LOGGER.log(Level.INFO, s);
+                LOGGER.log(Level.INFO, n.path().toString());
             }
 
             if (print) {
@@ -299,16 +304,18 @@ public class AlgoritmoA {
         possibleEnabledTasksClone.addAll(state.getMarcado().getEnabledElements());
         ejec.setPossibleEnabledTasks(possibleEnabledTasksClone);
 
-        String salida = "";
-        salida = salida + "\n-----------------------";
-        salida = salida + "\nMovimiento efectuado : " + state.getMov();
-        salida = salida + "\nTarea sobre la que se hizo el movimiento : " + state.getTarea();
+        if (print) {
+            String salida = "";
+            salida = salida + "\n-----------------------";
+            salida = salida + "\nMovimiento efectuado : " + state.getMov();
+            salida = salida + "\nTarea sobre la que se hizo el movimiento : " + state.getTarea();
 
-        salida = salida + "\nPos de la traza (lo contiene el estado) : " + state.getPos();
-        salida = salida + "\nTarea de la traza : " + e;
-        //System.out.println("Marcado en la seleccion de movimientos " + state.getMarcado().toString());
-        salida = salida + "\n-----------------------";
-        LOGGER.log(Level.FINEST, salida);
+            salida = salida + "\nPos de la traza (lo contiene el estado) : " + state.getPos();
+            salida = salida + "\nTarea de la traza : " + e;
+            //System.out.println("Marcado en la seleccion de movimientos " + state.getMarcado().toString());
+            salida = salida + "\n-----------------------";
+            LOGGER.log(Level.FINEST, salida);
+        }
 
         //Si HAY tareas activas en el modelo
         if (state.Enabled()) {

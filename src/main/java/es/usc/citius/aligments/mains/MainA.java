@@ -11,7 +11,7 @@ public class MainA {
     public static void main(String[] args) throws IOException, EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
         args = new String[2];
         args[0] = "/home/martin/Descargas/Citius/LogsAligments/ETM2/ETM.xes";
-        args[1] = "/home/martin/Descargas/Citius/LogsAligments/ETM2/HInd72.hn";
+        args[1] = "/home/martin/Descargas/Citius/LogsAligments/ETM2/HInd52.hn";
         //args[0] = "/home/martin/Descargas/Citius/LogsAligments/g2/grouped_g2pi300.xes";
         //args[1] = "/home/martin/Descargas/Citius/LogsAligments/g2/BadIndividual10.hn";
 

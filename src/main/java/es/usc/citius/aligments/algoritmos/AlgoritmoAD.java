@@ -77,7 +77,8 @@ public class AlgoritmoAD {
         HeuristicFunction<State, Double> hf = new HeuristicFunction<State, Double>() {
             @Override
             public Double estimate(State state) {
-                double heu = miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea()) * parametrosImpl.getC_SINCRONO();
+                //double heu = miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea()) * parametrosImpl.getC_SINCRONO();
+                double heu = miReader.getTrazaActual().getHeuristicaPrecise(state.getPos(), miReader.getInd(), state.getTarea());
                 //double heu = 0d;
                 return heu;
             }
