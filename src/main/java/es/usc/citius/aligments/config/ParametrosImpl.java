@@ -40,7 +40,7 @@ public class ParametrosImpl implements Parametros {
         this.C_MODELO = C_MODELO;
     }
 
-    public double getC_TRAZA() {
+    public static double getC_TRAZA() {
         return C_TRAZA;
     }
 

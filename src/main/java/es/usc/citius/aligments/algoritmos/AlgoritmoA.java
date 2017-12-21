@@ -176,10 +176,18 @@ public class AlgoritmoA {
                     }
                 }
                 NState.State s = (NState.State) n1.state();
-                //System.out.println(s.getMarcado().toString());
-                //System.out.println("Tareas que se pueden ejecutar: " + s.getMarcado().getEnabledElements());
                 double estimacion = (double) n1.getScore();
-                //System.out.println("Estimacion coste estado seleccionado: " + estimacion);
+
+                if (print) {
+                    String sa = "";
+                    sa = sa + "\n---------MARCADO--------------";
+                    sa = sa + "\n" + s.getMarcado().toString();
+                    sa = sa + "\nTareas que se pueden ejecutar: " + s.getMarcado().getEnabledElements();
+                    sa = sa + "\nEstimacion coste estado seleccionado: " + estimacion;
+                    sa = sa + "\n-----------------------";
+                    LOGGER.log(Level.FINEST, sa);
+                }
+
                 //Final del modelo y final de la traza (para hacer skips y inserts al final)
                 if (parar) {
                     //System.out.println("------------------SIGO------------------");

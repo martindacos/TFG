@@ -161,8 +161,11 @@ public class Traza implements InterfazTraza {
             newCost = newHeuristic(caminosFin, size, tareasNoProcesadas);
             newCostS = newCost;
             size++;
-            while (newCostS <= newCost) {
-                newCost = newCostS;
+            int maxSize = caminosFin.get(caminosFin.size() - 1).size();
+            while (size <= maxSize) {
+                if (newCostS < newCost){
+                    newCost = newCostS;
+                }
                 newCostS = newHeuristic(caminosFin, size, tareasNoProcesadas);
                 size++;
             }
@@ -179,6 +182,7 @@ public class Traza implements InterfazTraza {
         while (true) {
             int tareasSincronas = 0;
             int tareasModelo = 0;
+            int tareasTraza = 0;
 
             if (j >= caminosFin.size() || caminosFin.get(j).size() > size) {
                 break;
@@ -191,13 +195,12 @@ public class Traza implements InterfazTraza {
                         tareasSincronas++;
                         caminoCopy.remove((Object)t);
                     } else {
-                        tareasModelo++;
+                        tareasTraza++;
                     }
                 }
                 //Tareas que faltan por ejecutar en el modelo y no estan en la traza
-                int noTraza = caminoCopy.size();
-                tareasModelo = tareasModelo + noTraza;
-                double newCost = calHeuristicCost(tareasSincronas, tareasModelo);
+                tareasModelo = caminoCopy.size();
+                double newCost = calHeuristicCost(tareasSincronas, tareasModelo, tareasTraza);
                 if (newCost < coste) {
                     coste = newCost;
                 }
@@ -208,8 +211,9 @@ public class Traza implements InterfazTraza {
         return coste;
     }
 
-    public double calHeuristicCost(int tareasSincronas, int tareasModelo) {
-        double r = tareasSincronas * ParametrosImpl.getC_SINCRONO() + tareasModelo * ParametrosImpl.getC_MODELO();
+    public double calHeuristicCost(int tareasSincronas, int tareasModelo, int tareasTraza) {
+        double r = tareasSincronas * ParametrosImpl.getC_SINCRONO() + tareasModelo * ParametrosImpl.getC_MODELO()
+                + tareasTraza * ParametrosImpl.getC_TRAZA();
         return r;
     }
 
