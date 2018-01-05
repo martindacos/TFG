@@ -273,10 +273,8 @@ public class AlgoritmoA {
 
         e.setMemoriaConsumida(total_memoria);
 
-        if (print) {
-            String s = salida.estadisticasModelo(miReader.getInd(), e.getCoste(), total_time, e.getMemoriaConsumida());
-            LOGGER.log(Level.INFO, s);
-        }
+        String s = salida.estadisticasModelo(miReader.getInd(), e.getCoste(), total_time, e.getMemoriaConsumida());
+        LOGGER.log(Level.INFO, s);
 
         if (print) {
             LOGGER.log(Level.INFO, "\nMovimientos ejecutados");
@@ -293,8 +291,8 @@ public class AlgoritmoA {
 
     //Devolvemos todos los movimientos posibles en función de la traza y el modelo actual
     private static Iterable<StateMove> validMovementsFor(State state, InterfazTraza trace, EjecTareas ejec) {
-        boolean anadirForzadas = false;
-        boolean anadirForzadasTraza = false;
+        //boolean anadirForzadas = false;
+        //boolean anadirForzadasTraza = false;
         //Creamos una lista con los movimientos posibles
         LinkedList<StateMove> movements = new LinkedList<StateMove>();
         //Limpiamos la variables de la clase auxiliar
@@ -328,11 +326,11 @@ public class AlgoritmoA {
         //Si HAY tareas activas en el modelo
         if (state.Enabled()) {
             //La tarea de la traza ya habia sido ejecutada en el modelo o la acabamos de procesar
-            if (e == null) {
+            /*if (e == null) {
                 anadirForzadas = true;
             } else if (state.isEjecutedTask(e)) {
                 anadirForzadasTraza = true;
-            }
+            }*/
 
             //Tareas activas del modelo
             TIntHashSet posiblesTareas = state.getTareas();
@@ -345,8 +343,8 @@ public class AlgoritmoA {
                 ejec.anadirModelo(id);
             }
         } else {
-            anadirForzadas = true;
-            anadirForzadasTraza = true;
+            //anadirForzadas = true;
+            //anadirForzadasTraza = true;
         }
 
         //Si NO acabamos de procesar la traza
@@ -373,7 +371,7 @@ public class AlgoritmoA {
         }
 
         //Forzamos las tareas que tienen algún token en su entrada
-        if (anadirForzadas) {
+        /*if (anadirForzadas) {
             //Buscamos las tareas que tienen algún token en su entrada
             ejec.tareasTokensEntrada(state.getMarcado().getTokens());
         }
@@ -390,7 +388,7 @@ public class AlgoritmoA {
             for (int i = 0; i < numeroTareas; i++) {
                 movements.add(MODELO_FORZADO);
             }
-        }
+        }*/
 
         if (print) {
             LOGGER.log(Level.FINE, "Posible movimientos del estado : " + movements);

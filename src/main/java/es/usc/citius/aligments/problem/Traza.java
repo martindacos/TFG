@@ -124,7 +124,7 @@ public class Traza implements InterfazTraza {
     @Override
     public Double getHeuristicaPrecise(int pos, CMIndividual m, Integer lastEjecuted) {
         double r;
-        List<List<Integer>> caminosFin;
+        double costeCaminosFin;
 
         Integer tarea = leerTarea(pos);
         if (tarea == null) {
@@ -136,44 +136,22 @@ public class Traza implements InterfazTraza {
             }
         }
 
-        //Comprobamos que no hemos calculado ya la distancia a la tarea final
-        if (caminosToFin.containsKey(tarea)) {
-            //Recuperamos la distancia calculada
-            caminosFin = caminosToFin.get(tarea);
-        } else {
-            //Calculamos la nueva distancia
-            caminosFin = tareasToFinPrecise(tarea, m);
-        }
-
         //Recuperamos las tareas no procesadas en la traza
         ArrayList<Integer> tareasNoProcesadas = new ArrayList<>();
         for (int i=pos; i <= tareas.size() - 1; i++) {
             tareasNoProcesadas.add(tareas.get(i));
         }
 
-        if (caminosFin != null && caminosFin.size() > 0) {
-            //Primer tamaño del camino
-            int size = caminosFin.get(0).size();
-            double newCost;
-            double newCostS;
+        //Comprobamos que no hemos calculado ya la distancia a la tarea final
+        //if (caminosToFin.containsKey(tarea)) {
+            //Recuperamos la distancia calculada
+        //    caminosFin = caminosToFin.get(tarea);
+        //} else {
+            //Calculamos la nueva distancia
+        costeCaminosFin = tareasToFinPrecise(tarea, m, tareasNoProcesadas);
+        //}
 
-            j = 0;
-            newCost = newHeuristic(caminosFin, size, tareasNoProcesadas);
-            newCostS = newCost;
-            size++;
-            int maxSize = caminosFin.get(caminosFin.size() - 1).size();
-            while (size <= maxSize) {
-                if (newCostS < newCost){
-                    newCost = newCostS;
-                }
-                newCostS = newHeuristic(caminosFin, size, tareasNoProcesadas);
-                size++;
-            }
-
-            return newCost;
-        } else {
-            return 0d;
-        }
+        return costeCaminosFin;
     }
 
     public double newHeuristic(List<List<Integer>> caminosFin, int size, ArrayList<Integer> tareasNoProcesadas) {
@@ -206,6 +184,31 @@ public class Traza implements InterfazTraza {
                 }
             }
             j++;
+        }
+
+        return coste;
+    }
+
+    public double heuristicaCamino(List<Integer> camino, ArrayList<Integer> tareasNoProcesadas) {
+        double coste = Double.MAX_VALUE;
+        int tareasSincronas = 0;
+        int tareasModelo;
+        int tareasTraza = 0;
+
+        List<Integer> caminoCopy = new ArrayList<>(camino);
+        for (int t : tareasNoProcesadas) {
+            if (caminoCopy.contains(t)) {
+                tareasSincronas++;
+                caminoCopy.remove((Object) t);
+            } else {
+                tareasTraza++;
+            }
+        }
+        //Tareas que faltan por ejecutar en el modelo y no estan en la traza
+        tareasModelo = caminoCopy.size();
+        double newCost = calHeuristicCost(tareasSincronas, tareasModelo, tareasTraza);
+        if (newCost < coste) {
+            coste = newCost;
         }
 
         return coste;
@@ -352,7 +355,8 @@ public class Traza implements InterfazTraza {
         return tareasToFin;
     }
 
-    private List<List<Integer>> tareasToFinPrecise(Integer task, CMIndividual m) {
+    //Obtenemos el camino con el menor coste (en función de la traza) para alcanzar el final del modelo
+    private double tareasToFinPrecise(Integer task, CMIndividual m, ArrayList<Integer> tareasNoProcesadas) {
 
         //Obtenemos la tarea final del modelo si no la tenemos almacenada ya
         if (this.tareaFinalModelo == -1) {
@@ -361,11 +365,12 @@ public class Traza implements InterfazTraza {
                 tareaFinalModelo = it.next();
             } else {
                 //En caso de que no podamos devolver la tarea final devolvemos un error
-                return null;
+                return 0d;
             }
             //Si la tarea ya es la final devolvemos 0
         } else if (task == tareaFinalModelo) {
-            return new ArrayList<>();
+            //Devolvemos el coste de procesar las tareas restantes de la traza
+            return heuristicaCamino(new ArrayList<>(), tareasNoProcesadas);
         }
 
         List<List<Integer>> caminos = new ArrayList();
@@ -375,6 +380,7 @@ public class Traza implements InterfazTraza {
         caminos.add(primera);
         List<List<Integer>> nuevosCaminos = new ArrayList();
         List<List<Integer>> caminosFinalizados = new ArrayList();
+        double costeMenorCamino = Double.MAX_VALUE;
 
         while (caminos.size() > 0) {
             for (int i = 0; i < caminos.size(); i++) {
@@ -392,10 +398,17 @@ public class Traza implements InterfazTraza {
                         //Si el camino no contiene la nueva tarea
                         if (!nuevoCamino.contains(tarea)) {
                             nuevoCamino.add(tarea);
+                            double costeNuevoFin = heuristicaCamino(nuevoCamino, tareasNoProcesadas);
                             if (tarea == tareaFinalModelo) {
                                 caminosFinalizados.add(nuevoCamino);
+                                if (costeNuevoFin < costeMenorCamino) {
+                                    costeMenorCamino = costeNuevoFin;
+                                }
                             } else {
-                                nuevosCaminos.add(nuevoCamino);
+                                //Solo añadimos el nuevo camino si su coste es menor que el menor actual
+                                if (costeNuevoFin <= costeMenorCamino) {
+                                    nuevosCaminos.add(nuevoCamino);
+                                }
                             }
                         }
                         //Si ya contiene esa tarea descartamos el camino (ya se va a explorar)
@@ -410,9 +423,9 @@ public class Traza implements InterfazTraza {
 
         /*Guardamos en el mapa la tarea y los caminos para alcanzar
         la tarea final */
-        caminosToFin.put(task, caminosFinalizados);
+        //caminosToFin.put(task, caminosFinalizados);
 
         //Devolvemos todos los posibles caminos hasta la tarea final
-        return caminosFinalizados;
+        return costeMenorCamino;
     }
 }

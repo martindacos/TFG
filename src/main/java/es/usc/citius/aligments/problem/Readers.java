@@ -397,4 +397,8 @@ public class Readers {
         traces.add(test4);
         traces.add(test5);
     }
+
+    public Log getLog() {
+        return log;
+    }
 }
