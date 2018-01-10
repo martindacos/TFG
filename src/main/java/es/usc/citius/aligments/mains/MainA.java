@@ -16,31 +16,28 @@ import java.util.Random;
 public class MainA {
 
     public static void main(String[] args) throws IOException, EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
-        args = new String[2];
-        args[0] = "/home/martin/Descargas/Citius/LogsAligments/ETM2/ETM.xes";
-        args[1] = "/home/martin/Descargas/Citius/LogsAligments/ETM2/ETM.hn";
+        //args = new String[2];
+        //args[0] = "/home/martin/Descargas/Citius/LogsAligments/ETM2/ETM.xes";
+        //args[1] = "/home/martin/Descargas/Citius/LogsAligments/ETM2/ETM.hn";
         //args[0] = "/home/martin/Descargas/Citius/LogsAligments/g2/grouped_g2pi300.xes";
         //args[1] = "/home/martin/Descargas/Citius/LogsAligments/g2/BadIndividual21.hn";
-        //args[0] = "/home/martin/Descargas/PLG_Logs/28 Actividades/5000.xes";
-        //args[1] = "/home/martin/Descargas/PLG_Logs/28 Actividades/BestIndividual.hn";
 
+        ///home/martin/Descargas/PLG_Logs/49_Actividades/1000.xes /home/martin/Descargas/PLG_Logs/49_Actividades/BestIndividual.hn
         Readers miReader;
         switch (args.length) {
             case 2:
                 //Cargamos el Modelo y el Log
                 miReader = Readers.getReader(args[0], args[1]);
                 miReader.getInd().print();
-                //miReader.setTracesETM();
-                //miReader.setTracesG3();
+                AlgoritmoA.problem(miReader, false);
                 break;
             default:
                 //Cargamos un
-                miReader = Readers.getReader();
+                miReader = Readers.getReader(args[0], args[1]);
                 miReader.getInd().print();
+                fitnessProdigen(miReader);
+                break;
         }
-
-        AlgoritmoA.problem(miReader, false);
-        //fitnessProdigen(miReader);
     }
 
     public static void fitnessProdigen(Readers miReader) {

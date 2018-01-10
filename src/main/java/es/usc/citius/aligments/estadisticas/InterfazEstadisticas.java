@@ -20,8 +20,12 @@ public interface InterfazEstadisticas {
 
     Double fitnessNuevo(ArrayList<InterfazTraza> t, ArrayList<AbstractNode> nodosSalida);
 
+    Double fitnessNuevo(ArrayList<InterfazTraza> t);
+
     //Cálculo de la precisión del modelo
     Double precission(ArrayList<InterfazTraza> t, ArrayList<AbstractNode> nodosSalida);
+
+    Double precission(ArrayList<InterfazTraza> t);
 
     //Función que devuelve el coste de un individuo
     Double getCoste();
@@ -45,4 +49,6 @@ public interface InterfazEstadisticas {
     void resetMovs();
 
     String getAllStatMovs();
+
+    void menorCamino(int n);
 }

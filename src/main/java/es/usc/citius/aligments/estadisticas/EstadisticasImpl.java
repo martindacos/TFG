@@ -31,6 +31,7 @@ public class EstadisticasImpl implements InterfazEstadisticas {
     private Integer countM = 0;
     private Integer countMF = 0;
     private List<Integer> countResume;
+    private int menorCamino = Integer.MAX_VALUE;
 
     public EstadisticasImpl() {
         this.totalEventosLog = 0d;
@@ -127,6 +128,13 @@ public class EstadisticasImpl implements InterfazEstadisticas {
         return aux;
     }
 
+    @Override
+    public void menorCamino(int n) {
+        if (n < menorCamino) {
+            menorCamino = n;
+        }
+    }
+
     public int menorCamino(ArrayList<AbstractNode> nodosSalida) {
         int menorCamino = 999999999;
         if (nodosSalida != null) {
@@ -150,21 +158,32 @@ public class EstadisticasImpl implements InterfazEstadisticas {
     }
 
     @Override
-    public Double fitnessNuevo(ArrayList<InterfazTraza> t, ArrayList<AbstractNode> nodosSalida) {
+    public Double fitnessNuevo(ArrayList<InterfazTraza> t) {
         fitness = 0d;
         costeIndividuo = costeIndividuo(t);
-        if (t != null && nodosSalida != null) {
-            int menorCamino = this.menorCamino(nodosSalida);
+        if (t != null) {
             //Realizamos el sumatorio para todas la trazas del log
             for (int i = 0; i < t.size(); i++) {
-                //System.out.println("TotalEventosLog: " + totalEventosLog + " + " + t.get(i).tamTrace() + " *" + t.get(i).getNumRepeticiones());
                 this.totalEventosLog = this.totalEventosLog + (t.get(i).tamTrace() * t.get(i).getNumRepeticiones());
             }
             //Obtenemos el fitness
             fitness = 1 - (costeIndividuo / (this.totalEventosLog * parametrosImpl.getC_TRAZA() + (menorCamino * t.size() * parametrosImpl.getC_MODELO())));
-            //if (fitness < 0) {
-            //    fitness = 0d;
-            //}
+        }
+        return fitness;
+    }
+
+    @Override
+    public Double fitnessNuevo(ArrayList<InterfazTraza> t, ArrayList<AbstractNode> nodosSalida) {
+        fitness = 0d;
+        costeIndividuo = costeIndividuo(t);
+        if (t != null && nodosSalida != null) {
+            int mCamino = this.menorCamino(nodosSalida);
+            //Realizamos el sumatorio para todas la trazas del log
+            for (int i = 0; i < t.size(); i++) {
+                this.totalEventosLog = this.totalEventosLog + (t.get(i).tamTrace() * t.get(i).getNumRepeticiones());
+            }
+            //Obtenemos el fitness
+            fitness = 1 - (costeIndividuo / (this.totalEventosLog * parametrosImpl.getC_TRAZA() + (menorCamino * t.size() * parametrosImpl.getC_MODELO())));
         }
         return fitness;
     }
@@ -196,6 +215,47 @@ public class EstadisticasImpl implements InterfazEstadisticas {
         }
         //System.out.println("ActividadesMismoContexto: " +actividades);
         return actividades.size();
+    }
+
+    @Override
+    public Double precission(ArrayList<InterfazTraza> t) {
+        precission = 0d;
+        if (t != null) {
+            Double subPrecission = 0d;
+            //Para todas las trazas del log
+            for (int i = 0; i < t.size(); i++) {
+                //Array para guardar las tareas del prefijo
+                ArrayList<Integer> prefijo = new ArrayList<Integer>();
+                //Para todas las tareas de la traza
+                for (int j = 0; j < t.get(i).tamTrace(); j++) {
+                    //Añadimos al prefijo la tarea anterior a la procesada
+                    if (j > 0) {
+                        prefijo.add(t.get(i).leerTarea(j - 1));
+                    }
+                    //Calculamos el contexto del prefijo
+                    double enL = this.tareasPrefijo(t, prefijo);
+                    //System.out.println("Subprecision = "+ subPrecission + " + " + t.get(i).getNumRepeticiones() +" * ("+ enL + " / " + tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size() +" )");
+                    //Realizamos el sumatorio controlando que el número de tareas activas sea mayor que 1
+                    if (t.get(i).getTareasModeloActivas().get(j) > 0) {
+                        int divisor = t.get(i).getTareasModeloActivas().get(j);
+//                        if (enL > 1) {
+//                            enL = 1;
+//                        }
+//                        if (divisor > 1) {
+//                            divisor = 1;
+//                        }
+                        subPrecission = subPrecission + t.get(i).getNumRepeticiones() * (enL / divisor);
+                    }
+                }
+                //System.out.println();
+            }
+            //Obtenemos la precisión
+            if (totalEventosLog > 0 && subPrecission > 0) {
+                precission = 1 / this.totalEventosLog * subPrecission;
+            }
+            //System.out.println("Precision = 1 / " + totalEventosLog + " * " + subPrecission);
+        }
+        return precission;
     }
 
     @Override
