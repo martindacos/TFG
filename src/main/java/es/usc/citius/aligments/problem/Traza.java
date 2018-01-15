@@ -1,11 +1,14 @@
 package es.usc.citius.aligments.problem;
 
+import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import es.usc.citius.aligments.config.ParametrosImpl;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.*;
+
+import static es.usc.citius.aligments.problem.NState.StateMove.SINCRONO;
 
 /**
  *
@@ -30,6 +33,8 @@ public class Traza implements InterfazTraza {
     private Map<Integer, List<List<Integer>>> caminosToFin;
     //Array con el número de tareas activas en el modelo en cada una de las tareas de la traza
     private ArrayList<Integer> tareasModeloActivas;
+    //Hash con la tarea y el coste estimado con TR
+    private HashMap<Integer, Double> estimacionTR;
 
     public Traza() {
         this.tareas = new ArrayList<>();
@@ -39,6 +44,7 @@ public class Traza implements InterfazTraza {
         toFin = new HashMap();
         caminosToFin = new HashMap<>();
         tareasModeloActivas = new ArrayList<>();
+        estimacionTR = new HashMap<>();
     }
 
     public ArrayList<Integer> getTareasModeloActivas() {
@@ -207,6 +213,49 @@ public class Traza implements InterfazTraza {
         costeCaminosFin = tareasToFinPrecise2(tarea, m, tareasNoProcesadas);
 
         return costeCaminosFin;
+    }
+
+    @Override
+    public Double getHeuristicaTokenReplay(int pos, CMIndividual m, CMMarking oldMarking, Integer lastEjecuted, NState.State state) {
+        if (state.getMov() != null && state.getHeuristica() != Double.MAX_VALUE) {
+            double newHeuristic = state.getHeuristica();
+            if (estimacionTR.get(lastEjecuted) != null) {
+                newHeuristic = newHeuristic - estimacionTR.get(lastEjecuted);
+            }
+            state.setHeuristica(newHeuristic);
+            return newHeuristic;
+        } else {
+            //La primera vez entramos aquí
+            //Copiamos el marcado
+            CMMarking marking = new CMMarking(m, new Random(666));
+            marking.restartMarking();
+            marking.setEndPlace(oldMarking.getEndPlace());
+            marking.setNumOfTokens(oldMarking.getNumberTokens());
+            marking.setStartPlace(oldMarking.getStartPlace());
+            ArrayList<HashMap<TIntHashSet, Integer>> tokensN = (ArrayList<HashMap<TIntHashSet, Integer>>) this.cloneTokens(oldMarking.getTokens());
+            marking.setTokens(tokensN);
+            TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
+            possibleEnabledTasksClone.addAll(oldMarking.getEnabledElements());
+            marking.setPossibleEnabledTasks(possibleEnabledTasksClone);
+
+            int modelo = 0;
+            int traza = 0;
+            int sincronas = 0;
+            for (int i = pos; i < tareas.size(); i++) {
+                Integer currentTaskID = tareas.get(i);
+                int numOfTokens = marking.execute(currentTaskID);
+                if (numOfTokens > 0) {
+                    traza++;
+                    estimacionTR.put(currentTaskID, ParametrosImpl.getC_TRAZA());
+                } else {
+                    sincronas++;
+                    estimacionTR.put(currentTaskID, ParametrosImpl.getC_SINCRONO());
+                }
+            }
+            double newHeuristic = calHeuristicCost(sincronas, modelo, traza);
+            state.setHeuristica(newHeuristic);
+            return newHeuristic;
+        }
     }
 
     public double newHeuristic(List<List<Integer>> caminosFin, int size, ArrayList<Integer> tareasNoProcesadas) {
@@ -557,5 +606,21 @@ public class Traza implements InterfazTraza {
 
         //Devolvemos todos los posibles caminos hasta la tarea final
         return costeMenorCamino;
+    }
+
+    private ArrayList<HashMap<TIntHashSet, Integer>> cloneTokens(ArrayList<HashMap<TIntHashSet, Integer>> tokens) {
+        ArrayList<HashMap<TIntHashSet, Integer>> clone = new ArrayList<>();
+
+        for (HashMap<TIntHashSet, Integer> token : tokens) {
+            HashMap<TIntHashSet, Integer> tokenClone = new HashMap<>();
+            for (TIntHashSet tokenKey : token.keySet()) {
+                TIntHashSet tokenKeyClone = new TIntHashSet();
+                tokenKeyClone.addAll(tokenKey);
+                tokenClone.put(tokenKeyClone, token.get(tokenKey));
+            }
+            clone.add(tokenClone);
+        }
+
+        return clone;
     }
 }

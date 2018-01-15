@@ -183,7 +183,7 @@ public class EstadisticasImpl implements InterfazEstadisticas {
                 this.totalEventosLog = this.totalEventosLog + (t.get(i).tamTrace() * t.get(i).getNumRepeticiones());
             }
             //Obtenemos el fitness
-            fitness = 1 - (costeIndividuo / (this.totalEventosLog * parametrosImpl.getC_TRAZA() + (menorCamino * t.size() * parametrosImpl.getC_MODELO())));
+            fitness = 1 - (costeIndividuo / (this.totalEventosLog * parametrosImpl.getC_TRAZA() + (mCamino * t.size() * parametrosImpl.getC_MODELO())));
         }
         return fitness;
     }
@@ -234,26 +234,17 @@ public class EstadisticasImpl implements InterfazEstadisticas {
                     }
                     //Calculamos el contexto del prefijo
                     double enL = this.tareasPrefijo(t, prefijo);
-                    //System.out.println("Subprecision = "+ subPrecission + " + " + t.get(i).getNumRepeticiones() +" * ("+ enL + " / " + tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size() +" )");
                     //Realizamos el sumatorio controlando que el número de tareas activas sea mayor que 1
                     if (t.get(i).getTareasModeloActivas().get(j) > 0) {
                         int divisor = t.get(i).getTareasModeloActivas().get(j);
-//                        if (enL > 1) {
-//                            enL = 1;
-//                        }
-//                        if (divisor > 1) {
-//                            divisor = 1;
-//                        }
                         subPrecission = subPrecission + t.get(i).getNumRepeticiones() * (enL / divisor);
                     }
                 }
-                //System.out.println();
             }
             //Obtenemos la precisión
             if (totalEventosLog > 0 && subPrecission > 0) {
                 precission = 1 / this.totalEventosLog * subPrecission;
             }
-            //System.out.println("Precision = 1 / " + totalEventosLog + " * " + subPrecission);
         }
         return precission;
     }

@@ -111,7 +111,8 @@ public class AlgoritmoA {
                 timer.resume();
                 //Sólo Poñemos a Heurística. Da g() xa se encarga Hipster.
                 //Heurística. Número de elementos que faltan por procesar da traza
-                Double heuristicaPrecise = miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea()) * parametrosImpl.getC_SINCRONO();
+                //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea()) * parametrosImpl.getC_SINCRONO();
+                Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaTokenReplay(state.getPos(), miReader.getInd(), state.getMarcado(), state.getTarea(), state);
                 //Nueva heurística que tiene en cuenta tanto las tareas restantes por procesar del modelo como de la traza
                 //TODO Refinar cas combinación dos elementos ou buscar unha nova solución (estima de máis)
                 //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaPrecise(state.getPos(), miReader.getInd(), state.getTarea());
@@ -167,12 +168,12 @@ public class AlgoritmoA {
             while (it.hasNext()) {
                 count++;
                 WeightedNode n1 = (WeightedNode) it.next();
-                if (print) {
+                /*if (print) {
                     Map<State, WeightedNode<StateMove, State, Double>> listaAbiertos = it.getOpen();
                     LOGGER.log(Level.FINE, "Iteración " + count + " -> Tamaño lista abiertos: " + listaAbiertos.size());
                     //Debug cuando falla el programa
                     if (count == 106000) {
-                        LOGGER.log(Level.INFO, e.getStatMovs());
+                        LOGGER.log(Level.INFO, e.getStatMovs(miReader.getTrazaActual().tamTrace()));
                         if (n != null) {
                             LOGGER.log(Level.INFO, "Tenemos un nodo final");
                             String s = salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd());
@@ -184,7 +185,7 @@ public class AlgoritmoA {
                         LOGGER.log(Level.INFO, n1.path().toString());
                         System.exit(1);
                     }
-                }
+                }*/
                 NState.State s = (NState.State) n1.state();
                 double estimacion = (double) n1.getScore();
 

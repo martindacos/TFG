@@ -22,7 +22,9 @@ public class MainA {
         //args[0] = "/home/martin/Descargas/Citius/LogsAligments/g2/grouped_g2pi300.xes";
         //args[1] = "/home/martin/Descargas/Citius/LogsAligments/g2/BadIndividual21.hn";
 
-        ///home/martin/Descargas/PLG_Logs/49_Actividades/1000.xes /home/martin/Descargas/PLG_Logs/49_Actividades/BestIndividual.hn
+        ///home/martin/Descargas/PLG_Logs/10_Actividades/1000.xes /home/martin/Descargas/PLG_Logs/10_Actividades/BadIndividual.hn
+        ///home/martin/Descargas/PLG_Logs/49_Actividades/1000.xes /home/martin/Descargas/PLG_Logs/49_Actividades/Individual.hn
+        ///home/martin/Descargas/PLG_Logs/123_Actividades/5000.xes /home/martin/Descargas/PLG_Logs/123_Actividades/Individual.hn
         Readers miReader;
         switch (args.length) {
             case 2:
@@ -31,6 +33,7 @@ public class MainA {
                 miReader.getInd().print();
                 AlgoritmoA.problem(miReader, false);
                 break;
+            //Añadir un argumentos más para que entre en el default
             default:
                 //Cargamos un
                 miReader = Readers.getReader(args[0], args[1]);

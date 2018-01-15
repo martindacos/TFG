@@ -30,18 +30,22 @@ public final class NState {
         private Integer tarea;
         //Tareas que ya fueron ejecutadas en el modelo
         private TIntHashSet tareasEjecutadasModelo;
+        //Última heurística calculada
+        private double heuristica;
 
         public State(CMIndividual ind) {
             pos = 0;
             marcado = new CMMarking(ind, new Random(666));
             tarea = null;
             tareasEjecutadasModelo = new TIntHashSet();
+            heuristica = Double.MAX_VALUE;
         }
 
         public State(State a) {
             pos = a.getPos();
             //Creamos una copia de las tareas ejecutadas en el modelo
             tareasEjecutadasModelo = new TIntHashSet(a.getTareasEjecutadasModelo());
+            heuristica = a.getHeuristica();
         }
 
         public TIntHashSet getTareasEjecutadasModelo() {
@@ -60,6 +64,10 @@ public final class NState {
             return tarea;
         }
 
+        public double getHeuristica() {
+            return heuristica;
+        }
+
         public void setTarea(Integer tarea) {
             this.tarea = tarea;
         }
@@ -70,6 +78,10 @@ public final class NState {
 
         public void setMov(StateMove mov) {
             this.mov = mov;
+        }
+
+        public void setHeuristica(double heuristica) {
+            this.heuristica = heuristica;
         }
 
         public StateMove getMov() {
