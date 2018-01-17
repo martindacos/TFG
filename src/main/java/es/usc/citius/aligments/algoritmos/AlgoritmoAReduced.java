@@ -1,23 +1,18 @@
 package es.usc.citius.aligments.algoritmos;
 
+import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
+import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
 import es.usc.citius.aligments.config.ParametrosImpl;
 import es.usc.citius.aligments.estadisticas.EstadisticasImpl;
 import es.usc.citius.aligments.estadisticas.InterfazEstadisticas;
 import es.usc.citius.aligments.problem.EjecTareas;
 import es.usc.citius.aligments.problem.InterfazTraza;
-import es.usc.citius.aligments.problem.NState;
 import es.usc.citius.aligments.problem.NState.State;
 import es.usc.citius.aligments.problem.NState.StateMove;
-
-import static es.usc.citius.aligments.config.Parametros.*;
-import static es.usc.citius.aligments.problem.NState.StateMove.*;
-
 import es.usc.citius.aligments.problem.Readers;
 import es.usc.citius.aligments.salida.InterfazSalida;
 import es.usc.citius.aligments.salida.SalidaTerminalImpl;
-import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
-import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
-import domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
 import es.usc.citius.hipster.algorithm.AStar;
 import es.usc.citius.hipster.algorithm.Hipster;
 import es.usc.citius.hipster.model.AbstractNode;
@@ -27,7 +22,8 @@ import es.usc.citius.hipster.model.function.ActionStateTransitionFunction;
 import es.usc.citius.hipster.model.function.CostFunction;
 import es.usc.citius.hipster.model.function.HeuristicFunction;
 import es.usc.citius.hipster.model.impl.WeightedNode;
-import es.usc.citius.hipster.model.problem.*;
+import es.usc.citius.hipster.model.problem.ProblemBuilder;
+import es.usc.citius.hipster.model.problem.SearchProblem;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
 
@@ -35,7 +31,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.*;
 
-public class AlgoritmoA {
+import static es.usc.citius.aligments.config.Parametros.PENALIZACION_FORZADO;
+import static es.usc.citius.aligments.problem.NState.StateMove.*;
+
+public class AlgoritmoAReduced {
 
     private final static Logger LOGGER = Logger.getLogger("aligments");
     private static boolean print;
@@ -45,6 +44,8 @@ public class AlgoritmoA {
     private static es.usc.citius.aligments.utils.Timer timerInicializarMarcado = new es.usc.citius.aligments.utils.Timer();
     private static es.usc.citius.aligments.utils.Timer timerClonarTokens = new es.usc.citius.aligments.utils.Timer();
     private static es.usc.citius.aligments.utils.Timer timerClonarPosiblesActivas = new es.usc.citius.aligments.utils.Timer();
+
+    private static int contadorInstanciasMarcado = 0;
 
     public static void problem(Readers miReader, boolean logging) {
         es.usc.citius.aligments.utils.Timer timer = new es.usc.citius.aligments.utils.Timer();
@@ -71,7 +72,7 @@ public class AlgoritmoA {
 
         parametrosImpl = ParametrosImpl.getParametrosImpl();
 
-        final NState.State initialState = new NState.State(miReader.getInd());
+        final State initialState = new State(miReader.getInd());
         initialState.getMarcado().restartMarking();
         if (print) {
             LOGGER.log(Level.INFO, initialState.getMarcado().toString());
@@ -85,33 +86,33 @@ public class AlgoritmoA {
         InterfazSalida salida = new SalidaTerminalImpl();
 
         /*Funciones para el algoritmo A* */
-        ActionFunction<StateMove, State> af = new ActionFunction<NState.StateMove, NState.State>() {
+        ActionFunction<StateMove, State> af = new ActionFunction<StateMove, State>() {
             @Override
-            public Iterable<NState.StateMove> actionsFor(NState.State state) {
-                return AlgoritmoA.validMovementsFor(state, miReader.getTrazaActual(), ejec);
+            public Iterable<StateMove> actionsFor(State state) {
+                return AlgoritmoAReduced.validMovementsFor(state, miReader.getTrazaActual(), ejec, miReader.getInd());
             }
         };
 
         ActionStateTransitionFunction<StateMove, State> atf;
-        atf = new ActionStateTransitionFunction<NState.StateMove, NState.State>() {
+        atf = new ActionStateTransitionFunction<StateMove, State>() {
             @Override
-            public NState.State apply(NState.StateMove action, NState.State state) {
-                return AlgoritmoA.applyActionToState(action, state, ejec, miReader.getInd(), e);
+            public State apply(StateMove action, State state) {
+                return AlgoritmoAReduced.applyActionToState(action, state, ejec, miReader.getInd(), e);
             }
         };
 
         //Definición de la función de coste
-        CostFunction<StateMove, State, Double> cf = new CostFunction<NState.StateMove, NState.State, Double>() {
+        CostFunction<StateMove, State, Double> cf = new CostFunction<StateMove, State, Double>() {
             @Override
-            public Double evaluate(Transition<NState.StateMove, NState.State> transition) {
-                return AlgoritmoA.evaluateToState(transition, parametrosImpl, ejec);
+            public Double evaluate(Transition<StateMove, State> transition) {
+                return AlgoritmoAReduced.evaluateToState(transition, parametrosImpl, ejec);
             }
         };
 
         //Definición de la función heurística
-        HeuristicFunction<State, Double> hf = new HeuristicFunction<NState.State, Double>() {
+        HeuristicFunction<State, Double> hf = new HeuristicFunction<State, Double>() {
             @Override
-            public Double estimate(NState.State state) {
+            public Double estimate(State state) {
                 timer.resume();
                 //Sólo Poñemos a Heurística. Da g() xa se encarga Hipster.
                 //Heurística. Número de elementos que faltan por procesar da traza
@@ -126,7 +127,6 @@ public class AlgoritmoA {
             }
         };
 
-        ArrayList<AbstractNode> nodosSalida = new ArrayList<>();
         //Tiempo total del cálculo del algoritmo
         long total_time = 0;
         //Total de memoria consumida por el algoritmo
@@ -156,9 +156,6 @@ public class AlgoritmoA {
             //Empezamos a tomar la medida del tiempo
             time_start = System.currentTimeMillis();
 
-            //miReader.avanzarPos();
-            //miReader.avanzarPos();
-            //miReader.avanzarPos();
             miReader.getTrazaActual().clear();
 
             if (print) {
@@ -168,29 +165,10 @@ public class AlgoritmoA {
             AStar<StateMove, State, Double, WeightedNode<StateMove, State, Double>> astar = Hipster.createAStar(p);
             AStar.Iterator it = astar.iterator();
 
-            int count = 0;
             while (it.hasNext()) {
-                count++;
                 WeightedNode n1 = (WeightedNode) it.next();
-                /*if (print) {
-                    Map<State, WeightedNode<StateMove, State, Double>> listaAbiertos = it.getOpen();
-                    LOGGER.log(Level.FINE, "Iteración " + count + " -> Tamaño lista abiertos: " + listaAbiertos.size());
-                    //Debug cuando falla el programa
-                    if (count == 106000) {
-                        LOGGER.log(Level.INFO, e.getStatMovs(miReader.getTrazaActual().tamTrace()));
-                        if (n != null) {
-                            LOGGER.log(Level.INFO, "Tenemos un nodo final");
-                            String s = salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd());
-                            LOGGER.log(Level.INFO, s);
-                        } else {
-                            LOGGER.log(Level.INFO, "NO tenemos un nodo final");
-                        }
-                        LOGGER.log(Level.INFO, "Estimación del nodo candidato :" + (double) n1.getScore());
-                        LOGGER.log(Level.INFO, n1.path().toString());
-                        System.exit(1);
-                    }
-                }*/
-                NState.State s = (NState.State) n1.state();
+                State s = (State) n1.state();
+
                 double estimacion = (double) n1.getScore();
 
                 if (print) {
@@ -241,20 +219,18 @@ public class AlgoritmoA {
             time_end = System.currentTimeMillis();
             total_time = total_time + (time_end - time_start);
             total_memoria = total_memoria + miReader.getTrazaActual().getMemoriaC();
-            //Guardamos el nodo con los estados soluciones de la traza
-            //nodosSalida.add(n);
             //Guardamos el coste obtenido en el alineamiento
             double j = 0d;
             Iterator it2 = n.path().iterator();
             //La primera iteración corresponde con el Estado Inicial, que no imprimimos
             AbstractNode node2 = (AbstractNode) it2.next();
-            NState.State s2 = (NState.State) node2.state();
+            State s2 = (State) node2.state();
             miReader.getTrazaActual().anadirTareasActivas(s2.getMarcado().getEnabledElements().size());
             //Contador donde se almacena el "menor camino" (para fitness)
             int aux = 0;
             while (it2.hasNext()) {
                 WeightedNode node = (WeightedNode) it2.next();
-                NState.State s = (NState.State) node.state();
+                State s = (State) node.state();
                 if (node.action().equals(SINCRONO)) {
                     j++;
                 }
@@ -265,7 +241,6 @@ public class AlgoritmoA {
                 miReader.getTrazaActual().anadirTareasActivas(s.getMarcado().getEnabledElements().size());
             }
             e.menorCamino(aux);
-//            System.out.println(mejorScore);
             double sobrante = parametrosImpl.getC_SINCRONO() * j;
             double nuevoScore = mejorScore - sobrante;
             double nuevoScoreR = Math.rint(nuevoScore * 100000) / 100000;
@@ -285,7 +260,6 @@ public class AlgoritmoA {
 
             //Pasamos a la siguientes traza del procesado
             miReader.avanzarPos();
-            //System.out.println(i);
         }
 
         timerTotal.stop();
@@ -301,12 +275,6 @@ public class AlgoritmoA {
 
         String s = salida.estadisticasModelo(miReader.getInd(), e.getCoste(), total_time, e.getMemoriaConsumida());
         LOGGER.log(Level.INFO, s);
-        //timer.resume();
-        //timer.stop();
-        //timerMovs.resume();
-        //timerMovs.stop();
-        //timerAct.resume();
-        //timerAct.stop();
         LOGGER.log(Level.INFO, "\n " +
                 "Tiempo cálculo función heurística : " + timer.getReadableElapsedTime() + "\n " +
                 "Tiempo cálculo movimientos : " + timerMovs.getReadableElapsedTime() + "\n " +
@@ -316,7 +284,9 @@ public class AlgoritmoA {
                 "Tiempo clonar tokens : " + timerClonarTokens.getReadableElapsedTime() + "\n " +
                 "Tiempo clonar posibles activas : " + timerClonarPosiblesActivas.getReadableElapsedTime() + "\n " +
                 "\n " +
-                "Tiempo cálculo total : " + timerTotal.getReadableElapsedTime());
+                "Tiempo cálculo total : " + timerTotal.getReadableElapsedTime() +
+                "\n " +
+                "Nº Instancias marcado : " + contadorInstanciasMarcado);
 
         if (print) {
             LOGGER.log(Level.INFO, "\nMovimientos ejecutados" + salida.getStatMovs());
@@ -329,8 +299,12 @@ public class AlgoritmoA {
     }
 
     //Devolvemos todos los movimientos posibles en función de la traza y el modelo actual
-    private static Iterable<StateMove> validMovementsFor(State state, InterfazTraza trace, EjecTareas ejec) {
+    private static Iterable<StateMove> validMovementsFor(State state, InterfazTraza trace, EjecTareas ejec, CMIndividual individual) {
         timerMovs.resume();
+        //TODO Actualizar marcado del estado
+        if (state.getMov() != null) {
+            applyMovs(state, individual);
+        }
         //boolean anadirForzadas = false;
         //boolean anadirForzadasTraza = false;
         //Creamos una lista con los movimientos posibles
@@ -341,14 +315,14 @@ public class AlgoritmoA {
         Integer e = trace.leerTarea(state.getPos());
 
         //Almacenamos el marcado en una clase auxiliar para su posterior copia
-        ArrayList<HashMap<TIntHashSet, Integer>> tokensA = state.getMarcado().getTokens();
+        /*ArrayList<HashMap<TIntHashSet, Integer>> tokensA = state.getMarcado().getTokens();
         ejec.setTokens(tokensA);
         ejec.setEndPlace(state.getMarcado().getEndPlace());
         ejec.setNumOfTokens(state.getMarcado().getNumberTokens());
         ejec.setStartPlace(state.getMarcado().getStartPlace());
         //TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
         //possibleEnabledTasksClone.addAll(state.getMarcado().getEnabledElements());
-        ejec.setPossibleEnabledTasks(state.getMarcado().getEnabledElements());
+        ejec.setPossibleEnabledTasks(state.getMarcado().getEnabledElements());*/
 
         if (print) {
             String salida = "";
@@ -445,7 +419,7 @@ public class AlgoritmoA {
         State successor = new State(state);
 
         //Recuperamos los datos copiados para el marcado (tenemos que clonarlos para evitar "aliasing" con otros estados)
-        timerInicializarMarcado.resume();
+        /*timerInicializarMarcado.resume();
         CMMarking marking = new CMMarking(m, new Random(666));
         //marking.restartMarking();
         marking.setEndPlace(ejec.getEndPlace());
@@ -462,17 +436,17 @@ public class AlgoritmoA {
         marking.setPossibleEnabledTasks(possibleEnabledTasksClone);
         timerClonarPosiblesActivas.pause();
 
-        successor.setMarcado(marking);
+        successor.setMarcado(marking);*/
 
         //SIEMPRE necesario recalcular los elementos activos del modelo
-        TIntHashSet enabledElements = successor.getMarcado().getEnabledElements();
+        /*TIntHashSet enabledElements = successor.getMarcado().getEnabledElements();
         if (print) {
             String salida = "";
             salida = salida + "\nMARCADO ANTES";
             salida = salida + "\n" + successor.getMarcado().toString();
             salida = salida + "\nTareas que se pueden ejecutar: " + enabledElements;
             LOGGER.log(Level.FINEST, salida);
-        }
+        }*/
 
         //Count all movs
         stats.countTypeMovs(action);
@@ -480,10 +454,10 @@ public class AlgoritmoA {
         switch (action) {
             case SINCRONO:
                 //Avanzamos el modelo con la tarea que podemos ejecutar
-                successor.avanzarMarcado(ejec.getTareaSINCRONA());
+                /*successor.avanzarMarcado(ejec.getTareaSINCRONA());
                 if (print) {
                     LOGGER.log(Level.FINEST, "Tarea del movimiento SINCRONO ----------------> " + ejec.getTareaSINCRONA());
-                }
+                }*/
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(SINCRONO);
@@ -493,40 +467,40 @@ public class AlgoritmoA {
                 //Avanzamos el modelo con una tarea que no tenemos en la traza en la posición actual
                 Integer t = ejec.leerTareaModelo();
                 successor.setTarea(t);
-                if (print) {
+                /*if (print) {
                     LOGGER.log(Level.FINEST, "Tarea del movimiento MODELO ----------------> " + t);
                 }
-                successor.avanzarMarcado(t);
+                successor.avanzarMarcado(t);*/
                 successor.setMov(MODELO);
                 break;
             case TRAZA:
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(TRAZA);
-                if (print) {
+                /*if (print) {
                     LOGGER.log(Level.FINEST, "Tarea del movimiento TRAZA ----------------> " + ejec.getTareaTRAZA());
-                }
+                }*/
                 successor.setTarea(ejec.getTareaTRAZA());
                 break;
             case MODELO_FORZADO:
                 //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
                 t = ejec.leerTareaModeloForzado();
                 successor.setTarea(t);
-                if (print) {
+                /*if (print) {
                     LOGGER.log(Level.FINEST, "Tarea del movimiento MODELO_FORZADO ----------------> " + t);
                 }
-                successor.avanzarMarcado(t);
+                successor.avanzarMarcado(t);*/
                 successor.setMov(MODELO_FORZADO);
                 break;
         }
-        if (print) {
+        /*if (print) {
             String salida = "";
             salida = salida + "\nPos traza " + successor.getPos();
             salida = salida + "\nMARCADO DESPUES";
             salida = salida + "\n" + successor.getMarcado().toString();
             salida = salida + "\nEnabledTasks " + successor.getMarcado().getEnabledElements();
             LOGGER.log(Level.FINEST, salida);
-        }
+        }*/
 
         timerAct.pause();
         return successor;
@@ -551,5 +525,74 @@ public class AlgoritmoA {
                 break;
         }
         return cost;
+    }
+
+    private static void applyMovs(State state, CMIndividual individual) {
+        contadorInstanciasMarcado++;
+
+        //Recuperamos los datos copiados para el marcado (tenemos que clonarlos para evitar "aliasing" con otros estados)
+        timerInicializarMarcado.resume();
+        CMMarking marking = new CMMarking(individual, new Random(666));
+        marking.setEndPlace(state.getMarcado().getEndPlace());
+        marking.setNumOfTokens(state.getMarcado().getNumberTokens());
+        marking.setStartPlace(state.getMarcado().getStartPlace());
+        timerInicializarMarcado.pause();
+        timerClonarTokens.resume();
+        ArrayList<HashMap<TIntHashSet, Integer>> tokensN = (ArrayList<HashMap<TIntHashSet, Integer>>) cloneTokens(state.getMarcado().getTokens());
+        marking.setTokens(tokensN);
+        timerClonarTokens.pause();
+        timerClonarPosiblesActivas.resume();
+        TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
+        possibleEnabledTasksClone.addAll(state.getMarcado().getEnabledElements());
+        marking.setPossibleEnabledTasks(possibleEnabledTasksClone);
+        marking.getEnabledElements();
+        timerClonarPosiblesActivas.pause();
+
+        state.setMarcado(marking);
+
+        switch (state.getMov()) {
+            case SINCRONO:
+                //Avanzamos el modelo con la tarea que podemos ejecutar
+                state.avanzarMarcado(state.getTarea());
+                if (print) {
+                    LOGGER.log(Level.FINEST, "Tarea del movimiento SINCRONO ----------------> " + state.getTarea());
+                }
+                break;
+            case MODELO:
+                //Avanzamos el modelo con una tarea que no tenemos en la traza en la posición actual
+                if (print) {
+                    LOGGER.log(Level.FINEST, "Tarea del movimiento MODELO ----------------> " + state.getTarea());
+                }
+                state.avanzarMarcado(state.getTarea());
+                break;
+            case TRAZA:
+                if (print) {
+                    LOGGER.log(Level.FINEST, "Tarea del movimiento TRAZA ----------------> " + state.getTarea());
+                }
+                break;
+            case MODELO_FORZADO:
+                //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
+                if (print) {
+                    LOGGER.log(Level.FINEST, "Tarea del movimiento MODELO_FORZADO ----------------> " + state.getTarea());
+                }
+                state.avanzarMarcado(state.getTarea());
+                break;
+        }
+    }
+
+    private static ArrayList<HashMap<TIntHashSet, Integer>> cloneTokens(ArrayList<HashMap<TIntHashSet, Integer>> tokens) {
+        ArrayList<HashMap<TIntHashSet, Integer>> clone = new ArrayList<>();
+
+        for (HashMap<TIntHashSet, Integer> token : tokens) {
+            HashMap<TIntHashSet, Integer> tokenClone = new HashMap<>();
+            for (TIntHashSet tokenKey : token.keySet()) {
+                TIntHashSet tokenKeyClone = new TIntHashSet();
+                tokenKeyClone.addAll(tokenKey);
+                tokenClone.put(tokenKeyClone, token.get(tokenKey));
+            }
+            clone.add(tokenClone);
+        }
+
+        return clone;
     }
 }

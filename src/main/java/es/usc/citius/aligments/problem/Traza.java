@@ -217,45 +217,75 @@ public class Traza implements InterfazTraza {
 
     @Override
     public Double getHeuristicaTokenReplay(int pos, CMIndividual m, CMMarking oldMarking, Integer lastEjecuted, NState.State state) {
+        //Si ya calculamos la heurística en un estado anterior
         if (state.getMov() != null && state.getHeuristica() != Double.MAX_VALUE) {
+            //Recuperamos la heurística calculada
             double newHeuristic = state.getHeuristica();
             if (estimacionTR.get(lastEjecuted) != null) {
-                newHeuristic = newHeuristic - estimacionTR.get(lastEjecuted);
+                Double aDouble = estimacionTR.get(lastEjecuted);
+                switch (state.getMov()) {
+                    case SINCRONO:
+                        if (aDouble.equals(ParametrosImpl.getC_SINCRONO())) {
+                            newHeuristic = newHeuristic - aDouble;
+                        } else {
+                            newHeuristic = executeTR(pos, m, oldMarking, state);
+                        }
+                        break;
+                    default:
+                        newHeuristic = executeTR(pos, m, oldMarking, state);
+                }
+            } else {
+                //Si la tarea ejecutada no está en la traza es necesario volver a ejecutar el TR
+                //TODO Puede que sea neceario ejecutar la tarea en el modelo porque este no estea actualizado (si se cambia eso en la generación de estados)
+                newHeuristic = executeTR(pos, m, oldMarking, state);
             }
+            //Guardamos la nueva heurística en el estado
             state.setHeuristica(newHeuristic);
             return newHeuristic;
         } else {
             //La primera vez entramos aquí
-            //Copiamos el marcado
-            CMMarking marking = new CMMarking(m, new Random(666));
-            marking.restartMarking();
-            marking.setEndPlace(oldMarking.getEndPlace());
-            marking.setNumOfTokens(oldMarking.getNumberTokens());
-            marking.setStartPlace(oldMarking.getStartPlace());
-            ArrayList<HashMap<TIntHashSet, Integer>> tokensN = (ArrayList<HashMap<TIntHashSet, Integer>>) this.cloneTokens(oldMarking.getTokens());
-            marking.setTokens(tokensN);
-            TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
-            possibleEnabledTasksClone.addAll(oldMarking.getEnabledElements());
-            marking.setPossibleEnabledTasks(possibleEnabledTasksClone);
-
-            int modelo = 0;
-            int traza = 0;
-            int sincronas = 0;
-            for (int i = pos; i < tareas.size(); i++) {
-                Integer currentTaskID = tareas.get(i);
-                int numOfTokens = marking.execute(currentTaskID);
-                if (numOfTokens > 0) {
-                    traza++;
-                    estimacionTR.put(currentTaskID, ParametrosImpl.getC_TRAZA());
-                } else {
-                    sincronas++;
-                    estimacionTR.put(currentTaskID, ParametrosImpl.getC_SINCRONO());
-                }
-            }
-            double newHeuristic = calHeuristicCost(sincronas, modelo, traza);
-            state.setHeuristica(newHeuristic);
-            return newHeuristic;
+            double v = executeTR(pos, m, oldMarking, state);
+            return v;
         }
+    }
+
+    private double executeTR(int pos, CMIndividual m, CMMarking oldMarking, NState.State state) {
+        //Copiamos el marcado
+        CMMarking marking = new CMMarking(m, new Random(666));
+        //marking.restartMarking();
+        marking.setEndPlace(oldMarking.getEndPlace());
+        marking.setNumOfTokens(oldMarking.getNumberTokens());
+        marking.setStartPlace(oldMarking.getStartPlace());
+        ArrayList<HashMap<TIntHashSet, Integer>> tokensN = (ArrayList<HashMap<TIntHashSet, Integer>>) this.cloneTokens(oldMarking.getTokens());
+        marking.setTokens(tokensN);
+        TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
+        possibleEnabledTasksClone.addAll(oldMarking.getEnabledElements());
+        marking.setPossibleEnabledTasks(possibleEnabledTasksClone);
+
+        int modelo = 0;
+        int traza = 0;
+        int sincronas = 0;
+        //Para todas las tareas de la traza (o las restantes)
+        for (int i = pos; i < tareas.size(); i++) {
+            Integer currentTaskID = tareas.get(i);
+            //Ejecutamos la tarea en el modelo, guardando el número de tokens necesarios para su ejecución
+            int numOfTokens = marking.execute(currentTaskID);
+            //Si son necesarios tokens adicionales
+            if (numOfTokens > 0) {
+                //Estimamos que es necesario realizar un movimientos en la traza
+                traza++;
+                estimacionTR.put(currentTaskID, ParametrosImpl.getC_TRAZA());
+            } else {
+                //Si no son necesarios tokens adicionales, es un movimiento síncrono
+                sincronas++;
+                estimacionTR.put(currentTaskID, ParametrosImpl.getC_SINCRONO());
+            }
+        }
+        //Calculamos la nueva heurística en base a los movimientos estimados
+        double newHeuristic = calHeuristicCost(sincronas, modelo, traza);
+        //Guardamos la heurística en el estado
+        state.setHeuristica(newHeuristic);
+        return newHeuristic;
     }
 
     public double newHeuristic(List<List<Integer>> caminosFin, int size, ArrayList<Integer> tareasNoProcesadas) {

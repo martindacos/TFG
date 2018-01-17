@@ -46,6 +46,7 @@ public final class NState {
             //Creamos una copia de las tareas ejecutadas en el modelo
             tareasEjecutadasModelo = new TIntHashSet(a.getTareasEjecutadasModelo());
             heuristica = a.getHeuristica();
+            marcado = a.getMarcado();
         }
 
         public TIntHashSet getTareasEjecutadasModelo() {

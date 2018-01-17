@@ -5,6 +5,7 @@ import domainLogic.workflow.algorithms.geneticMining.fitness.parser.ParserInterf
 import domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
 import domainLogic.workflow.algorithms.geneticMining.population.initial.dependencies.GeneticDependenciesBuilder;
 import es.usc.citius.aligments.algoritmos.AlgoritmoA;
+import es.usc.citius.aligments.algoritmos.AlgoritmoAReduced;
 import es.usc.citius.aligments.problem.Readers;
 import domainLogic.exceptions.*;
 import es.usc.citius.aligments.salida.InterfazSalida;
@@ -31,7 +32,8 @@ public class MainA {
                 //Cargamos el Modelo y el Log
                 miReader = Readers.getReader(args[0], args[1]);
                 miReader.getInd().print();
-                AlgoritmoA.problem(miReader, false);
+                //AlgoritmoA.problem(miReader, false);
+                AlgoritmoAReduced.problem(miReader, false);
                 break;
             //Añadir un argumentos más para que entre en el default
             default:
