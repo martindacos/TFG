@@ -235,8 +235,8 @@ public class EstadisticasImpl implements InterfazEstadisticas {
                     //Calculamos el contexto del prefijo
                     double enL = this.tareasPrefijo(t, prefijo);
                     //Realizamos el sumatorio controlando que el número de tareas activas sea mayor que 1
-                    if (t.get(i).getTareasModeloActivas().get(j) > 0) {
-                        int divisor = t.get(i).getTareasModeloActivas().get(j);
+                    Integer divisor = t.get(i).getTareasModeloActivas().get(j);
+                    if (divisor > 0) {
                         subPrecission = subPrecission + t.get(i).getNumRepeticiones() * (enL / divisor);
                     }
                 }

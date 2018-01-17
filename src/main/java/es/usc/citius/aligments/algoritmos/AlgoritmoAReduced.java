@@ -74,6 +74,7 @@ public class AlgoritmoAReduced {
 
         final State initialState = new State(miReader.getInd());
         initialState.getMarcado().restartMarking();
+        initialState.restartState();
         if (print) {
             LOGGER.log(Level.INFO, initialState.getMarcado().toString());
             LOGGER.log(Level.INFO, "Tareas que se pueden ejecutar: " + initialState.getMarcado().getEnabledElements());
@@ -137,6 +138,8 @@ public class AlgoritmoAReduced {
         timerTotal.start();
         for (int i = 0; i < miReader.getTraces().size(); i++) {
             initialState.getMarcado().restartMarking();
+            initialState.restartState();
+
             //Definimos el problema de búsqueda
             SearchProblem<StateMove, State, WeightedNode<StateMove, State, Double>> p
                     = ProblemBuilder.create()
@@ -225,7 +228,8 @@ public class AlgoritmoAReduced {
             //La primera iteración corresponde con el Estado Inicial, que no imprimimos
             AbstractNode node2 = (AbstractNode) it2.next();
             State s2 = (State) node2.state();
-            miReader.getTrazaActual().anadirTareasActivas(s2.getMarcado().getEnabledElements().size());
+            //miReader.getTrazaActual().anadirTareasActivas(s2.getMarcado().getEnabledElements().size());
+            miReader.getTrazaActual().anadirTareasActivas(s2.getPossibleEnabledTasks().size());
             //Contador donde se almacena el "menor camino" (para fitness)
             int aux = 0;
             while (it2.hasNext()) {
@@ -238,7 +242,9 @@ public class AlgoritmoAReduced {
                     aux++;
                 }
                 //Almacenamos el nº de tareas activas en el modelo durante el alineamiento por cada tarea de la traza (necesario en precission)
-                miReader.getTrazaActual().anadirTareasActivas(s.getMarcado().getEnabledElements().size());
+                //miReader.getTrazaActual().anadirTareasActivas(s.getMarcado().getEnabledElements().size());
+                //System.out.println("Traza " + i + " Tarea "+ j + " " + s.getMarcado().getEnabledElements().size());
+                miReader.getTrazaActual().anadirTareasActivas(s.getPossibleEnabledTasks().size());
             }
             e.menorCamino(aux);
             double sobrante = parametrosImpl.getC_SINCRONO() * j;
@@ -313,16 +319,6 @@ public class AlgoritmoAReduced {
         ejec.clear();
         //Leemos la tarea actual de la traza
         Integer e = trace.leerTarea(state.getPos());
-
-        //Almacenamos el marcado en una clase auxiliar para su posterior copia
-        /*ArrayList<HashMap<TIntHashSet, Integer>> tokensA = state.getMarcado().getTokens();
-        ejec.setTokens(tokensA);
-        ejec.setEndPlace(state.getMarcado().getEndPlace());
-        ejec.setNumOfTokens(state.getMarcado().getNumberTokens());
-        ejec.setStartPlace(state.getMarcado().getStartPlace());
-        //TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
-        //possibleEnabledTasksClone.addAll(state.getMarcado().getEnabledElements());
-        ejec.setPossibleEnabledTasks(state.getMarcado().getEnabledElements());*/
 
         if (print) {
             String salida = "";
@@ -418,47 +414,12 @@ public class AlgoritmoAReduced {
         timerAct.resume();
         State successor = new State(state);
 
-        //Recuperamos los datos copiados para el marcado (tenemos que clonarlos para evitar "aliasing" con otros estados)
-        /*timerInicializarMarcado.resume();
-        CMMarking marking = new CMMarking(m, new Random(666));
-        //marking.restartMarking();
-        marking.setEndPlace(ejec.getEndPlace());
-        marking.setNumOfTokens(ejec.getNumOfTokens());
-        marking.setStartPlace(ejec.getStartPlace());
-        timerInicializarMarcado.pause();
-        timerClonarTokens.resume();
-        ArrayList<HashMap<TIntHashSet, Integer>> tokensN = (ArrayList<HashMap<TIntHashSet, Integer>>) ejec.cloneTokens();
-        marking.setTokens(tokensN);
-        timerClonarTokens.pause();
-        timerClonarPosiblesActivas.resume();
-        TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
-        possibleEnabledTasksClone.addAll(ejec.getPossibleEnabledTasks());
-        marking.setPossibleEnabledTasks(possibleEnabledTasksClone);
-        timerClonarPosiblesActivas.pause();
-
-        successor.setMarcado(marking);*/
-
-        //SIEMPRE necesario recalcular los elementos activos del modelo
-        /*TIntHashSet enabledElements = successor.getMarcado().getEnabledElements();
-        if (print) {
-            String salida = "";
-            salida = salida + "\nMARCADO ANTES";
-            salida = salida + "\n" + successor.getMarcado().toString();
-            salida = salida + "\nTareas que se pueden ejecutar: " + enabledElements;
-            LOGGER.log(Level.FINEST, salida);
-        }*/
-
         //Count all movs
         stats.countTypeMovs(action);
 
         switch (action) {
             case SINCRONO:
                 //Avanzamos el modelo con la tarea que podemos ejecutar
-                /*successor.avanzarMarcado(ejec.getTareaSINCRONA());
-                if (print) {
-                    LOGGER.log(Level.FINEST, "Tarea del movimiento SINCRONO ----------------> " + ejec.getTareaSINCRONA());
-                }*/
-                //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(SINCRONO);
                 successor.setTarea(ejec.getTareaSINCRONA());
@@ -467,40 +428,21 @@ public class AlgoritmoAReduced {
                 //Avanzamos el modelo con una tarea que no tenemos en la traza en la posición actual
                 Integer t = ejec.leerTareaModelo();
                 successor.setTarea(t);
-                /*if (print) {
-                    LOGGER.log(Level.FINEST, "Tarea del movimiento MODELO ----------------> " + t);
-                }
-                successor.avanzarMarcado(t);*/
                 successor.setMov(MODELO);
                 break;
             case TRAZA:
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(TRAZA);
-                /*if (print) {
-                    LOGGER.log(Level.FINEST, "Tarea del movimiento TRAZA ----------------> " + ejec.getTareaTRAZA());
-                }*/
                 successor.setTarea(ejec.getTareaTRAZA());
                 break;
             case MODELO_FORZADO:
                 //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
                 t = ejec.leerTareaModeloForzado();
                 successor.setTarea(t);
-                /*if (print) {
-                    LOGGER.log(Level.FINEST, "Tarea del movimiento MODELO_FORZADO ----------------> " + t);
-                }
-                successor.avanzarMarcado(t);*/
                 successor.setMov(MODELO_FORZADO);
                 break;
         }
-        /*if (print) {
-            String salida = "";
-            salida = salida + "\nPos traza " + successor.getPos();
-            salida = salida + "\nMARCADO DESPUES";
-            salida = salida + "\n" + successor.getMarcado().toString();
-            salida = salida + "\nEnabledTasks " + successor.getMarcado().getEnabledElements();
-            LOGGER.log(Level.FINEST, salida);
-        }*/
 
         timerAct.pause();
         return successor;
@@ -532,13 +474,20 @@ public class AlgoritmoAReduced {
 
         //Recuperamos los datos copiados para el marcado (tenemos que clonarlos para evitar "aliasing" con otros estados)
         timerInicializarMarcado.resume();
-        CMMarking marking = new CMMarking(individual, new Random(666));
+        ArrayList<HashMap<TIntHashSet, Integer>> tokensN2 = cloneTokens(state.getTokens());
+        state.setTokens(tokensN2);
+        state.getMarcado().setTokens(tokensN2);
+        TIntHashSet possibleEnabledTasksClone2 = new TIntHashSet(state.getPossibleEnabledTasks());
+        state.setPossibleEnabledTasks(possibleEnabledTasksClone2);
+        state.getMarcado().setPossibleEnabledTasks(possibleEnabledTasksClone2);
+        timerInicializarMarcado.pause();
+        /*CMMarking marking = new CMMarking(individual, new Random(666));
         marking.setEndPlace(state.getMarcado().getEndPlace());
         marking.setNumOfTokens(state.getMarcado().getNumberTokens());
         marking.setStartPlace(state.getMarcado().getStartPlace());
         timerInicializarMarcado.pause();
         timerClonarTokens.resume();
-        ArrayList<HashMap<TIntHashSet, Integer>> tokensN = (ArrayList<HashMap<TIntHashSet, Integer>>) cloneTokens(state.getMarcado().getTokens());
+        ArrayList<HashMap<TIntHashSet, Integer>> tokensN = cloneTokens(state.getMarcado().getTokens());
         marking.setTokens(tokensN);
         timerClonarTokens.pause();
         timerClonarPosiblesActivas.resume();
@@ -548,7 +497,7 @@ public class AlgoritmoAReduced {
         marking.getEnabledElements();
         timerClonarPosiblesActivas.pause();
 
-        state.setMarcado(marking);
+        state.setMarcado(marking);*/
 
         switch (state.getMov()) {
             case SINCRONO:
@@ -580,7 +529,7 @@ public class AlgoritmoAReduced {
         }
     }
 
-    private static ArrayList<HashMap<TIntHashSet, Integer>> cloneTokens(ArrayList<HashMap<TIntHashSet, Integer>> tokens) {
+    public static ArrayList<HashMap<TIntHashSet, Integer>> cloneTokens(ArrayList<HashMap<TIntHashSet, Integer>> tokens) {
         ArrayList<HashMap<TIntHashSet, Integer>> clone = new ArrayList<>();
 
         for (HashMap<TIntHashSet, Integer> token : tokens) {

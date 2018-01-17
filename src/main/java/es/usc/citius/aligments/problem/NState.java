@@ -2,6 +2,7 @@ package es.usc.citius.aligments.problem;
 
 import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import es.usc.citius.aligments.algoritmos.AlgoritmoAReduced;
 import gnu.trove.set.hash.TIntHashSet;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +33,10 @@ public final class NState {
         private TIntHashSet tareasEjecutadasModelo;
         //Última heurística calculada
         private double heuristica;
+        //Tokens del modelo
+        private ArrayList<HashMap<TIntHashSet, Integer>> tokens;
+        //Tareas activas del modelo
+        private TIntHashSet possibleEnabledTasks;
 
         public State(CMIndividual ind) {
             pos = 0;
@@ -41,12 +46,19 @@ public final class NState {
             heuristica = Double.MAX_VALUE;
         }
 
+        public void restartState() {
+            tokens = AlgoritmoAReduced.cloneTokens(marcado.getTokens());
+            possibleEnabledTasks = new TIntHashSet(marcado.getEnabledElements());
+        }
+
         public State(State a) {
             pos = a.getPos();
             //Creamos una copia de las tareas ejecutadas en el modelo
             tareasEjecutadasModelo = new TIntHashSet(a.getTareasEjecutadasModelo());
             heuristica = a.getHeuristica();
             marcado = a.getMarcado();
+            tokens = a.getTokens();
+            possibleEnabledTasks = a.getPossibleEnabledTasks();
         }
 
         public TIntHashSet getTareasEjecutadasModelo() {
@@ -67,6 +79,22 @@ public final class NState {
 
         public double getHeuristica() {
             return heuristica;
+        }
+
+        public ArrayList<HashMap<TIntHashSet, Integer>> getTokens() {
+            return tokens;
+        }
+
+        public void setTokens(ArrayList<HashMap<TIntHashSet, Integer>> tokens) {
+            this.tokens = tokens;
+        }
+
+        public TIntHashSet getPossibleEnabledTasks() {
+            return possibleEnabledTasks;
+        }
+
+        public void setPossibleEnabledTasks(TIntHashSet possibleEnabledTasks) {
+            this.possibleEnabledTasks = possibleEnabledTasks;
         }
 
         public void setTarea(Integer tarea) {
