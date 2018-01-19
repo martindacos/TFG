@@ -307,7 +307,7 @@ public class AlgoritmoAReduced {
     //Devolvemos todos los movimientos posibles en función de la traza y el modelo actual
     private static Iterable<StateMove> validMovementsFor(State state, InterfazTraza trace, EjecTareas ejec, CMIndividual individual) {
         timerMovs.resume();
-        //TODO Actualizar marcado del estado
+        //TODO Importante: se actualiza el marcado del estado
         if (state.getMov() != null) {
             applyMovs(state, individual);
         }

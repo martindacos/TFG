@@ -12,3 +12,4 @@ src/main/java/Hipster/
 classes/
 src/main/java/META-INF/*
 *.log
+*.xml
