@@ -221,23 +221,17 @@ public class Traza implements InterfazTraza {
         if (state.getMov() != null && state.getHeuristica() != Double.MAX_VALUE) {
             //Recuperamos la heurística calculada
             double newHeuristic = state.getHeuristica();
-            if (estimacionTR.get(lastEjecuted) != null) {
-                Double aDouble = estimacionTR.get(lastEjecuted);
-                switch (state.getMov()) {
-                    case SINCRONO:
-                        if (aDouble.equals(ParametrosImpl.getC_SINCRONO())) {
-                            newHeuristic = newHeuristic - aDouble;
-                        } else {
-                            newHeuristic = executeTR(pos, m, oldMarking, state);
-                        }
-                        break;
-                    default:
-                        newHeuristic = executeTR(pos, m, oldMarking, state);
-                }
-            } else {
-                //Si la tarea ejecutada no está en la traza es necesario volver a ejecutar el TR
-                //TODO Puede que sea neceario ejecutar la tarea en el modelo porque este no estea actualizado (si se cambia eso en la generación de estados)
-                newHeuristic = executeTR(pos, m, oldMarking, state);
+            switch (state.getMov()) {
+                case SINCRONO:
+                    newHeuristic = newHeuristic - ParametrosImpl.getC_SINCRONO();
+                    break;
+                default:
+                    newHeuristic = newHeuristic - ParametrosImpl.getC_TRAZA();
+                    break;
+            }
+            //Comprobamos que la heurística no sea negativa
+            if (newHeuristic < 0) {
+                newHeuristic = 0;
             }
             //Guardamos la nueva heurística en el estado
             state.setHeuristica(newHeuristic);
@@ -274,10 +268,12 @@ public class Traza implements InterfazTraza {
             if (numOfTokens > 0) {
                 //Estimamos que es necesario realizar un movimientos en la traza
                 traza++;
+                //TODO puede no ser necesario almacenar esto
                 estimacionTR.put(currentTaskID, ParametrosImpl.getC_TRAZA());
             } else {
                 //Si no son necesarios tokens adicionales, es un movimiento síncrono
                 sincronas++;
+                //TODO puede no ser necesario almacenar esto
                 estimacionTR.put(currentTaskID, ParametrosImpl.getC_SINCRONO());
             }
         }
