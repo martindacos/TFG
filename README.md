@@ -26,6 +26,8 @@ java -cp target/TFG1-1.0-SNAPSHOT.jar es.usc.citius.aligments.mains.MainA /home/
 ```
 Si lo que queremos es utilizar este código en otro proyecto, utilizamos el "artifacts". Vamos /clasess/artifacts/aligments_jar y encontraremos el .jar para importar en el proyecto (TFG1.jar). Para importarlo podemos utilizar Maven, instalándolo en nuestro repositorio local y añadiendo dicha dependencia al archivo "pom.xml".
 
+*Nota: en la ejecución se recomienda incluír los comandos pertinentes para dotar al programa de una mayor memoria (por ejemplo, aumentamos el tamaño máximo del Heap con -Xmx4096m).
+
 ## Built With
 
 * [Maven](https://maven.apache.org/) - Dependency Management

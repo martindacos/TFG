@@ -112,6 +112,17 @@ public class Readers {
             System.out.println("]");
             j++;
         }
+        //Remove task without inputs and outputs
+        /*TIntObjectHashMap<CMTask> newTasks = new TIntObjectHashMap<>();
+        int contador = 0;
+        for (int i=0; i<ind.getNumOfTasks(); i++) {
+            CMTask task = ind.getTask(i);
+            if (task.getInputs().size() > 0 || task.getOutputs().size() > 0) {
+                newTasks.put(contador, task);
+                contador++;
+            }
+        }
+        ind = new CMIndividual(newTasks);*/
     }
 
     private Readers(Log log, CMIndividual ind) {
@@ -400,5 +411,9 @@ public class Readers {
 
     public Log getLog() {
         return log;
+    }
+
+    public void setPos(int pos) {
+        this.pos = pos;
     }
 }

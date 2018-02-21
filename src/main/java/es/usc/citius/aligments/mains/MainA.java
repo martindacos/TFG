@@ -37,9 +37,10 @@ public class MainA {
                 break;
             //Añadir un argumentos más para que entre en el default
             default:
-                //Cargamos un
+                //Cargamos el Modelo y el Log
                 miReader = Readers.getReader(args[0], args[1]);
                 miReader.getInd().print();
+                //Ejecutamos Token Replay para calcular el fitness
                 fitnessProdigen(miReader);
                 break;
         }

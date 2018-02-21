@@ -223,7 +223,7 @@ public class Traza implements InterfazTraza {
             double newHeuristic = state.getHeuristica();
             switch (state.getMov()) {
                 case SINCRONO:
-                    newHeuristic = newHeuristic - ParametrosImpl.getC_SINCRONO();
+                    newHeuristic = newHeuristic - (ParametrosImpl.getC_SINCRONO() * 2);
                     break;
                 default:
                     newHeuristic = newHeuristic - ParametrosImpl.getC_TRAZA();

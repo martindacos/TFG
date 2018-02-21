@@ -1,6 +1,5 @@
 package es.usc.citius.aligments.algoritmos;
 
-import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
 import es.usc.citius.aligments.config.ParametrosImpl;
@@ -117,8 +116,8 @@ public class AlgoritmoAReduced {
                 timer.resume();
                 //Sólo Poñemos a Heurística. Da g() xa se encarga Hipster.
                 //Heurística. Número de elementos que faltan por procesar da traza
-                //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea()) * parametrosImpl.getC_SINCRONO();
-                Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaTokenReplay(state.getPos(), miReader.getInd(), state.getMarcado(), state.getTarea(), state);
+                Double heuristicaPrecise = miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea()) * parametrosImpl.getC_SINCRONO();
+                //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaTokenReplay(state.getPos(), miReader.getInd(), state.getMarcado(), state.getTarea(), state);
                 //Nueva heurística que tiene en cuenta tanto las tareas restantes por procesar del modelo como de la traza
                 //TODO Refinar cas combinación dos elementos ou buscar unha nova solución (estima de máis)
                 //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaPrecise(state.getPos(), miReader.getInd(), state.getTarea());
@@ -138,6 +137,7 @@ public class AlgoritmoAReduced {
         timerTotal.start();
         for (int i = 0; i < miReader.getTraces().size(); i++) {
             initialState.getMarcado().restartMarking();
+            //miReader.setPos(527);
             initialState.restartState();
 
             //Definimos el problema de búsqueda
@@ -172,14 +172,15 @@ public class AlgoritmoAReduced {
                 WeightedNode n1 = (WeightedNode) it.next();
                 State s = (State) n1.state();
 
-                double estimacion = (double) n1.getScore();
+                double score = (double) n1.getScore();
 
                 if (print) {
                     String sa = "";
-                    sa = sa + "\n---------MARCADO--------------";
-                    sa = sa + "\n" + s.getMarcado().toString();
+                    //sa = sa + "\n---------MARCADO--------------";
+                    //sa = sa + "\n" + s.getMarcado().toString();
                     sa = sa + "\nTareas que se pueden ejecutar: " + s.getMarcado().getEnabledElements();
-                    sa = sa + "\nEstimacion coste estado seleccionado: " + estimacion;
+                    sa = sa + "\nEstimación estado seleccionado: " + n1.getEstimation();
+                    sa = sa + "\nScore estado seleccionado: " + score;
                     sa = sa + "\n-----------------------";
                     LOGGER.log(Level.FINEST, sa);
                 }
@@ -188,7 +189,7 @@ public class AlgoritmoAReduced {
                 if (parar) {
                     //System.out.println("------------------SIGO------------------");
                     //System.out.println("ESTIMACION " + estimacion + " MEJOR SCORE " + mejorScore);
-                    if (estimacion > mejorScore) {
+                    if (score > mejorScore) {
                         break;
                     }
                 }
