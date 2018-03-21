@@ -1,14 +1,16 @@
 package es.usc.citius.aligments.salida;
 
+import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import es.usc.citius.aligments.problem.InterfazTraza;
 import es.usc.citius.aligments.problem.NState;
-import es.usc.citius.aligments.salida.InterfazSalida;
-import static es.usc.citius.aligments.problem.NState.StateMove.*;
-import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import es.usc.citius.aligments.problem.NStateLarge;
 import es.usc.citius.hipster.model.AbstractNode;
 import es.usc.citius.hipster.model.impl.ADStarNodeImpl;
 import es.usc.citius.hipster.model.impl.WeightedNode;
+
 import java.util.Iterator;
+
+import static es.usc.citius.aligments.problem.NState.StateMove.*;
 
 /**
  *
@@ -26,7 +28,7 @@ public class SalidaTerminalImpl implements InterfazSalida {
     public String estadisticasModelo(CMIndividual ind, double coste, long tiempo, double memoria) {
         String s = "";
         if (imprimir) {
-            s = s + "\n\n********** ESTADÍSTICAS DEL MODELO **************";
+            s = s + "\n\n************** ESTADÍSTICAS DEL MODELO **************";
             int cI = (int) coste;
             s = s + "\nCoste del modelo: " + cI;
             s = s + "\nTiempo total de cálculo = " + tiempo + " ms";
@@ -86,6 +88,88 @@ public class SalidaTerminalImpl implements InterfazSalida {
             salida = salida + "\nCoste del alineamiento con repeticiones = " + trace.getScoreRepetido();
             salida = salida + "\nTiempo de cálculo del alineamiento = " + trace.getTiempoC() + " ms";
             salida = salida + "\nMemoria consuminda por el alineamiento = " + trace.getMemoriaC();
+        }
+
+        return salida;
+    }
+
+    @Override
+    public String ActualizarTrazasOld(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind) {
+        String salida = "";
+        if (imprimir) {
+            Iterator it2 = nodo.path().iterator();
+            //La primera iteración corresponde con el Estado Inicial, que no imprimimos
+            it2.next();
+            salida = salida + "\n***************************";
+//            System.out.println(nodosSalida.get(i).path());
+            salida = salida + "\n\n---------SALIDA VISUAL----------";
+            salida = salida + "\n\tTRAZA\tMODELO";
+            while (it2.hasNext()) {
+                AbstractNode node;
+                if (ad) {
+                    node = (WeightedNode) it2.next();
+                } else {
+                    node = (ADStarNodeImpl) it2.next();
+                }
+                NStateLarge.StateLarge s = (NStateLarge.StateLarge) node.state();
+                if (node.action().equals(SINCRONO)) {
+                    countS++;
+                    salida = salida + "\n\t" + ind.getTask(trace.leerTarea(s.getPos() - 1)).getTask().getId() + "\t" + ind.getTask(s.getTarea()).getTask().getId();
+                } else if (node.action().equals(MODELO)) {
+                    countM++;
+                    salida = salida + "\n\t>>\t" + ind.getTask(s.getTarea()).getTask().getId();
+                } else if (node.action().equals(MODELO_FORZADO)) {
+                    countMF++;
+                    salida = salida + "\n\t>>'\t" + ind.getTask(s.getTarea()).getTask().getId();
+                } else {
+                    countT++;
+                    salida = salida + "\n\t" + ind.getTask(trace.leerTarea(s.getPos() - 1)).getTask().getId() + "\t>>";
+                }
+            }
+            salida = salida + "\n\nCoste del alineamiento = " + trace.getScore();
+            salida = salida + "\nCoste del alineamiento con repeticiones = " + trace.getScoreRepetido();
+            salida = salida + "\nTiempo de cálculo del alineamiento = " + trace.getTiempoC() + " ms";
+            salida = salida + "\nMemoria consuminda por el alineamiento = " + trace.getMemoriaC();
+        }
+
+        return salida;
+    }
+
+    @Override
+    public String ActualizarTrazasReduced(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind) {
+        String salida = "";
+        if (imprimir) {
+            Iterator it2 = nodo.path().iterator();
+            //La primera iteración corresponde con el Estado Inicial, que no imprimimos
+            it2.next();
+            salida = salida + "\n***************************";
+//            System.out.println(nodosSalida.get(i).path());
+            salida = salida + "\n\n---------SALIDA VISUAL----------";
+            salida = salida + "\n\tTRAZA\tMODELO";
+            while (it2.hasNext()) {
+                AbstractNode node;
+                if (ad) {
+                    node = (WeightedNode) it2.next();
+                } else {
+                    node = (ADStarNodeImpl) it2.next();
+                }
+                NState.State s = (NState.State) node.state();
+                if (node.action().equals(SINCRONO)) {
+                    countS++;
+                    salida = salida + "\n\t" + ind.getTask(trace.leerTarea(s.getPos() - 1)).getTask().getId() + "\t" + ind.getTask(s.getTarea()).getTask().getId();
+                } else if (node.action().equals(MODELO)) {
+                    countM++;
+                    salida = salida + "\n\t>>\t" + ind.getTask(s.getTarea()).getTask().getId();
+                } else if (node.action().equals(MODELO_FORZADO)) {
+                    countMF++;
+                    salida = salida + "\n\t>>'\t" + ind.getTask(s.getTarea()).getTask().getId();
+                } else {
+                    countT++;
+                    salida = salida + "\n\t" + ind.getTask(trace.leerTarea(s.getPos() - 1)).getTask().getId() + "\t>>";
+                }
+            }
+            salida = salida + "\n\nCoste del alineamiento = " + trace.getScore();
+            salida = salida + "\nCoste del alineamiento con repeticiones = " + trace.getScoreRepetido();
         }
 
         return salida;

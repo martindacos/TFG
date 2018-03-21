@@ -1,13 +1,12 @@
 package es.usc.citius.aligments.mains;
 
+import domainLogic.exceptions.*;
 import domainLogic.workflow.algorithms.geneticMining.fitness.parser.CMParserImpl;
 import domainLogic.workflow.algorithms.geneticMining.fitness.parser.ParserInterface;
 import domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
 import domainLogic.workflow.algorithms.geneticMining.population.initial.dependencies.GeneticDependenciesBuilder;
-import es.usc.citius.aligments.algoritmos.AlgoritmoA;
 import es.usc.citius.aligments.algoritmos.AlgoritmoAReduced;
 import es.usc.citius.aligments.problem.Readers;
-import domainLogic.exceptions.*;
 import es.usc.citius.aligments.salida.InterfazSalida;
 import es.usc.citius.aligments.salida.SalidaTerminalImpl;
 
@@ -26,6 +25,8 @@ public class MainA {
         ///home/martin/Descargas/PLG_Logs/10_Actividades/1000.xes /home/martin/Descargas/PLG_Logs/10_Actividades/BadIndividual.hn
         ///home/martin/Descargas/PLG_Logs/49_Actividades/1000.xes /home/martin/Descargas/PLG_Logs/49_Actividades/Individual.hn
         ///home/martin/Descargas/PLG_Logs/123_Actividades/5000.xes /home/martin/Descargas/PLG_Logs/123_Actividades/Individual.hn
+        ///home/martin/Descargas/PLG_Logs/49_Actividades/1000BigNoise.xes /home/martin/Descargas/PLG_Logs/49_Actividades/Individual.hn
+        ///home/martin/Descargas/PLG_Logs/SPL03-raw.xes /home/martin/Descargas/PLG_Logs/upper.hn
         Readers miReader;
         switch (args.length) {
             case 2:
@@ -34,6 +35,7 @@ public class MainA {
                 miReader.getInd().print();
                 //AlgoritmoA.problem(miReader, false);
                 AlgoritmoAReduced.problem(miReader, false);
+                //AlgoritmoAReducedLarge.problem(miReader, true);
                 break;
             //Añadir un argumentos más para que entre en el default
             default:

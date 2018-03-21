@@ -1,41 +1,41 @@
 package es.usc.citius.aligments.algoritmos;
 
+import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
 import es.usc.citius.aligments.config.ParametrosImpl;
 import es.usc.citius.aligments.estadisticas.EstadisticasImpl;
 import es.usc.citius.aligments.estadisticas.InterfazEstadisticas;
 import es.usc.citius.aligments.problem.EjecTareas;
 import es.usc.citius.aligments.problem.InterfazTraza;
-import es.usc.citius.aligments.problem.NState;
-import es.usc.citius.aligments.problem.NState.State;
 import es.usc.citius.aligments.problem.NState.StateMove;
-
-import static es.usc.citius.aligments.config.Parametros.*;
-import static es.usc.citius.aligments.problem.NState.StateMove.*;
-
+import es.usc.citius.aligments.problem.NStateLarge;
 import es.usc.citius.aligments.problem.Readers;
 import es.usc.citius.aligments.salida.InterfazSalida;
 import es.usc.citius.aligments.salida.SalidaTerminalImpl;
-import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
-import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
-import domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
 import es.usc.citius.hipster.algorithm.AStar;
 import es.usc.citius.hipster.algorithm.Hipster;
-import es.usc.citius.hipster.model.AbstractNode;
 import es.usc.citius.hipster.model.Transition;
 import es.usc.citius.hipster.model.function.ActionFunction;
 import es.usc.citius.hipster.model.function.ActionStateTransitionFunction;
 import es.usc.citius.hipster.model.function.CostFunction;
 import es.usc.citius.hipster.model.function.HeuristicFunction;
 import es.usc.citius.hipster.model.impl.WeightedNode;
-import es.usc.citius.hipster.model.problem.*;
+import es.usc.citius.hipster.model.problem.ProblemBuilder;
+import es.usc.citius.hipster.model.problem.SearchProblem;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.logging.*;
 
-public class AlgoritmoA {
+import static es.usc.citius.aligments.config.Parametros.PENALIZACION_FORZADO;
+import static es.usc.citius.aligments.problem.NState.StateMove.*;
+
+public class AlgoritmoAReducedLarge {
 
     private final static Logger LOGGER = Logger.getLogger("aligments");
     private static boolean print;
@@ -46,8 +46,10 @@ public class AlgoritmoA {
     private static es.usc.citius.aligments.utils.Timer timerClonarTokens = new es.usc.citius.aligments.utils.Timer();
     private static es.usc.citius.aligments.utils.Timer timerClonarPosiblesActivas = new es.usc.citius.aligments.utils.Timer();
 
+    private static int contadorInstanciasMarcado = 0;
+
     public static void problem(Readers miReader, boolean logging) {
-        /*es.usc.citius.aligments.utils.Timer timer = new es.usc.citius.aligments.utils.Timer();
+        es.usc.citius.aligments.utils.Timer timer = new es.usc.citius.aligments.utils.Timer();
         es.usc.citius.aligments.utils.Timer timerTotal = new es.usc.citius.aligments.utils.Timer();
 
         print = logging;
@@ -71,8 +73,9 @@ public class AlgoritmoA {
 
         parametrosImpl = ParametrosImpl.getParametrosImpl();
 
-        final NState.State initialState = new NState.State(miReader.getInd());
+        final NStateLarge.StateLarge initialState = new NStateLarge.StateLarge(miReader.getInd());
         initialState.getMarcado().restartMarking();
+        initialState.restartState();
         if (print) {
             LOGGER.log(Level.INFO, initialState.getMarcado().toString());
             LOGGER.log(Level.INFO, "Tareas que se pueden ejecutar: " + initialState.getMarcado().getEnabledElements());
@@ -85,37 +88,38 @@ public class AlgoritmoA {
         InterfazSalida salida = new SalidaTerminalImpl();
 
         /*Funciones para el algoritmo A* */
-       /* ActionFunction<StateMove, State> af = new ActionFunction<NState.StateMove, NState.State>() {
+        ActionFunction<StateMove, NStateLarge.StateLarge> af = new ActionFunction<StateMove, NStateLarge.StateLarge>() {
             @Override
-            public Iterable<NState.StateMove> actionsFor(NState.State state) {
-                return AlgoritmoA.validMovementsFor(state, miReader.getTrazaActual(), ejec);
+            public Iterable<StateMove> actionsFor(NStateLarge.StateLarge state) {
+                return AlgoritmoAReducedLarge.validMovementsFor(state, miReader.getTrazaActual(), ejec, miReader.getInd());
             }
         };
 
-        ActionStateTransitionFunction<StateMove, State> atf;
-        atf = new ActionStateTransitionFunction<NState.StateMove, NState.State>() {
+        ActionStateTransitionFunction<StateMove, NStateLarge.StateLarge> atf;
+        atf = new ActionStateTransitionFunction<StateMove, NStateLarge.StateLarge>() {
             @Override
-            public NState.State apply(NState.StateMove action, NState.State state) {
-                return AlgoritmoA.applyActionToState(action, state, ejec, miReader.getInd(), e);
+            public NStateLarge.StateLarge apply(StateMove action, NStateLarge.StateLarge state) {
+                return AlgoritmoAReducedLarge.applyActionToState(action, state, ejec, miReader.getInd(), e);
             }
         };
 
         //Definición de la función de coste
-        CostFunction<StateMove, State, Double> cf = new CostFunction<NState.StateMove, NState.State, Double>() {
+        CostFunction<StateMove, NStateLarge.StateLarge, Double> cf = new CostFunction<StateMove, NStateLarge.StateLarge, Double>() {
             @Override
-            public Double evaluate(Transition<NState.StateMove, NState.State> transition) {
-                return AlgoritmoA.evaluateToState(transition, parametrosImpl, ejec);
+            public Double evaluate(Transition<StateMove, NStateLarge.StateLarge> transition) {
+                return AlgoritmoAReducedLarge.evaluateToState(transition, parametrosImpl, ejec);
             }
         };
 
         //Definición de la función heurística
-        HeuristicFunction<State, Double> hf = new HeuristicFunction<NState.State, Double>() {
+        HeuristicFunction<NStateLarge.StateLarge, Double> hf = new HeuristicFunction<NStateLarge.StateLarge, Double>() {
             @Override
-            public Double estimate(NState.State state) {
+            public Double estimate(NStateLarge.StateLarge state) {
                 timer.resume();
                 //Sólo Poñemos a Heurística. Da g() xa se encarga Hipster.
                 //Heurística. Número de elementos que faltan por procesar da traza
-                Double heuristicaPrecise = miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea()) * parametrosImpl.getC_SINCRONO();
+                Double heuristicaPrecise = miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea());
+                //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaCajas(state.getPos(), miReader.getInd(), state.getTarea(), state.getTrazaMovs(), state.getSincroMovs());
                 //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaTokenReplay(state.getPos(), miReader.getInd(), state.getMarcado(), state.getTarea(), state);
                 //Nueva heurística que tiene en cuenta tanto las tareas restantes por procesar del modelo como de la traza
                 //TODO Refinar cas combinación dos elementos ou buscar unha nova solución (estima de máis)
@@ -126,7 +130,6 @@ public class AlgoritmoA {
             }
         };
 
-        ArrayList<AbstractNode> nodosSalida = new ArrayList<>();
         //Tiempo total del cálculo del algoritmo
         long total_time = 0;
         //Total de memoria consumida por el algoritmo
@@ -135,10 +138,14 @@ public class AlgoritmoA {
         //Iteramos sobre el problema de búsqueda
         //Si queremos explorar una traza en concreto debemos avanzar llamando a miReader.avanzarPos();
         timerTotal.start();
+
+        //miReader.setPos(114);
         for (int i = 0; i < miReader.getTraces().size(); i++) {
             initialState.getMarcado().restartMarking();
+            initialState.restartState();
+
             //Definimos el problema de búsqueda
-            SearchProblem<StateMove, State, WeightedNode<StateMove, State, Double>> p
+            SearchProblem<StateMove, NStateLarge.StateLarge, WeightedNode<StateMove, NStateLarge.StateLarge, Double>> p
                     = ProblemBuilder.create()
                     .initialState(initialState)
                     .defineProblemWithExplicitActions()
@@ -156,49 +163,28 @@ public class AlgoritmoA {
             //Empezamos a tomar la medida del tiempo
             time_start = System.currentTimeMillis();
 
-            //miReader.avanzarPos();
-            //miReader.avanzarPos();
-            //miReader.avanzarPos();
             miReader.getTrazaActual().clear();
 
             if (print) {
                 LOGGER.log(Level.INFO, "Traza nº " + i + " -> " + miReader.getTrazaActual().toString());
             }
 
-            AStar<StateMove, State, Double, WeightedNode<StateMove, State, Double>> astar = Hipster.createAStar(p);
+            AStar<StateMove, NStateLarge.StateLarge, Double, WeightedNode<StateMove, NStateLarge.StateLarge, Double>> astar = Hipster.createAStar(p);
             AStar.Iterator it = astar.iterator();
 
-            int count = 0;
             while (it.hasNext()) {
-                count++;
                 WeightedNode n1 = (WeightedNode) it.next();
-                /*if (print) {
-                    Map<State, WeightedNode<StateMove, State, Double>> listaAbiertos = it.getOpen();
-                    LOGGER.log(Level.FINE, "Iteración " + count + " -> Tamaño lista abiertos: " + listaAbiertos.size());
-                    //Debug cuando falla el programa
-                    if (count == 106000) {
-                        LOGGER.log(Level.INFO, e.getStatMovs(miReader.getTrazaActual().tamTrace()));
-                        if (n != null) {
-                            LOGGER.log(Level.INFO, "Tenemos un nodo final");
-                            String s = salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd());
-                            LOGGER.log(Level.INFO, s);
-                        } else {
-                            LOGGER.log(Level.INFO, "NO tenemos un nodo final");
-                        }
-                        LOGGER.log(Level.INFO, "Estimación del nodo candidato :" + (double) n1.getScore());
-                        LOGGER.log(Level.INFO, n1.path().toString());
-                        System.exit(1);
-                    }
-                }*/
-                /*NState.State s = (NState.State) n1.state();
-                double estimacion = (double) n1.getScore();
+                NStateLarge.StateLarge s = (NStateLarge.StateLarge) n1.state();
+
+                double score = (double) n1.getScore();
 
                 if (print) {
                     String sa = "";
-                    sa = sa + "\n---------MARCADO--------------";
-                    sa = sa + "\n" + s.getMarcado().toString();
+                    //sa = sa + "\n---------MARCADO--------------";
+                    //sa = sa + "\n" + s.getMarcado().toString();
                     sa = sa + "\nTareas que se pueden ejecutar: " + s.getMarcado().getEnabledElements();
-                    sa = sa + "\nEstimacion coste estado seleccionado: " + estimacion;
+                    sa = sa + "\nEstimación estado seleccionado: " + n1.getEstimation();
+                    sa = sa + "\nScore estado seleccionado: " + score;
                     sa = sa + "\n-----------------------";
                     LOGGER.log(Level.FINEST, sa);
                 }
@@ -207,7 +193,7 @@ public class AlgoritmoA {
                 if (parar) {
                     //System.out.println("------------------SIGO------------------");
                     //System.out.println("ESTIMACION " + estimacion + " MEJOR SCORE " + mejorScore);
-                    if (estimacion > mejorScore) {
+                    if (score > mejorScore) {
                         break;
                     }
                 }
@@ -224,6 +210,7 @@ public class AlgoritmoA {
                             n = n1;
                         }
                     }
+                //Para modelos que no tiene tarea final
                 } else if (miReader.getTrazaActual().procesadoTraza(s.getPos()) && s.finalModelo(miReader.getInd())) {
                     parar = true;
                     if (mejorScore == 0) {
@@ -238,23 +225,27 @@ public class AlgoritmoA {
                     }
                 }
             }
+            if (parar == false) {
+                System.err.print("Error. No se encontró ningún aligment para la traza nº " + i);
+                System.exit(2);
+            }
             time_end = System.currentTimeMillis();
             total_time = total_time + (time_end - time_start);
             total_memoria = total_memoria + miReader.getTrazaActual().getMemoriaC();
-            //Guardamos el nodo con los estados soluciones de la traza
-            //nodosSalida.add(n);
             //Guardamos el coste obtenido en el alineamiento
             double j = 0d;
             Iterator it2 = n.path().iterator();
             //La primera iteración corresponde con el Estado Inicial, que no imprimimos
-            AbstractNode node2 = (AbstractNode) it2.next();
-            NState.State s2 = (NState.State) node2.state();
-            miReader.getTrazaActual().anadirTareasActivas(s2.getMarcado().getEnabledElements().size());
+            WeightedNode node2 = (WeightedNode) it2.next();
+            double estimationInicial = (double) node2.getEstimation();
+            NStateLarge.StateLarge s2 = (NStateLarge.StateLarge) node2.state();
+            //miReader.getTrazaActual().anadirTareasActivas(s2.getMarcado().getEnabledElements().size());
+            miReader.getTrazaActual().anadirTareasActivas(s2.getPossibleEnabledTasks().size());
             //Contador donde se almacena el "menor camino" (para fitness)
             int aux = 0;
             while (it2.hasNext()) {
                 WeightedNode node = (WeightedNode) it2.next();
-                NState.State s = (NState.State) node.state();
+                NStateLarge.StateLarge s = (NStateLarge.StateLarge) node.state();
                 if (node.action().equals(SINCRONO)) {
                     j++;
                 }
@@ -262,30 +253,37 @@ public class AlgoritmoA {
                     aux++;
                 }
                 //Almacenamos el nº de tareas activas en el modelo durante el alineamiento por cada tarea de la traza (necesario en precission)
-                miReader.getTrazaActual().anadirTareasActivas(s.getMarcado().getEnabledElements().size());
+                //miReader.getTrazaActual().anadirTareasActivas(s.getMarcado().getEnabledElements().size());
+                //System.out.println("Traza " + i + " Tarea "+ j + " " + s.getMarcado().getEnabledElements().size());
+                miReader.getTrazaActual().anadirTareasActivas(s.getPossibleEnabledTasks().size());
             }
             e.menorCamino(aux);
-//            System.out.println(mejorScore);
             double sobrante = parametrosImpl.getC_SINCRONO() * j;
             double nuevoScore = mejorScore - sobrante;
             double nuevoScoreR = Math.rint(nuevoScore * 100000) / 100000;
 
+            if (estimationInicial > (mejorScore + 0.001)) {
+                System.err.print("Error en la estimación inicial (es más alta que el coste obtenido por el alineamiento) en la traza nº " + i);
+                System.exit(1);
+            }
             miReader.getTrazaActual().setScore(nuevoScoreR);
             //Guardamos el tiempo de cálculo del alineamiento
             miReader.getTrazaActual().setTiempoC(time_end - time_start);
             if (print) {
-                LOGGER.log(Level.INFO, salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd()));
+                //System.out.println(salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd()));
+                //System.out.println(n.path().toString());
+                LOGGER.log(Level.INFO, salida.ActualizarTrazasOld(miReader.getTrazaActual(), n, true, miReader.getInd()));
                 LOGGER.log(Level.INFO, n.path().toString());
             }
 
             if (print) {
+                //System.out.println(e.getStatMovs());
                 LOGGER.log(Level.INFO, e.getStatMovs());
             }
             e.resetMovs();
 
             //Pasamos a la siguientes traza del procesado
             miReader.avanzarPos();
-            //System.out.println(i);
         }
 
         timerTotal.stop();
@@ -301,12 +299,6 @@ public class AlgoritmoA {
 
         String s = salida.estadisticasModelo(miReader.getInd(), e.getCoste(), total_time, e.getMemoriaConsumida());
         LOGGER.log(Level.INFO, s);
-        //timer.resume();
-        //timer.stop();
-        //timerMovs.resume();
-        //timerMovs.stop();
-        //timerAct.resume();
-        //timerAct.stop();
         LOGGER.log(Level.INFO, "\n " +
                 "Tiempo cálculo función heurística : " + timer.getReadableElapsedTime() + "\n " +
                 "Tiempo cálculo movimientos : " + timerMovs.getReadableElapsedTime() + "\n " +
@@ -316,7 +308,9 @@ public class AlgoritmoA {
                 "Tiempo clonar tokens : " + timerClonarTokens.getReadableElapsedTime() + "\n " +
                 "Tiempo clonar posibles activas : " + timerClonarPosiblesActivas.getReadableElapsedTime() + "\n " +
                 "\n " +
-                "Tiempo cálculo total : " + timerTotal.getReadableElapsedTime());
+                "Tiempo cálculo total : " + timerTotal.getReadableElapsedTime() +
+                "\n " +
+                "Nº Instancias marcado : " + contadorInstanciasMarcado);
 
         if (print) {
             LOGGER.log(Level.INFO, "\nMovimientos ejecutados" + salida.getStatMovs());
@@ -329,8 +323,12 @@ public class AlgoritmoA {
     }
 
     //Devolvemos todos los movimientos posibles en función de la traza y el modelo actual
-    private static Iterable<StateMove> validMovementsFor(State state, InterfazTraza trace, EjecTareas ejec) {
+    private static Iterable<StateMove> validMovementsFor(NStateLarge.StateLarge state, InterfazTraza trace, EjecTareas ejec, CMIndividual individual) {
         timerMovs.resume();
+        //TODO Importante: se actualiza el marcado del estado
+        if (state.getMov() != null) {
+            applyMovs(state, individual);
+        }
         //boolean anadirForzadas = false;
         //boolean anadirForzadasTraza = false;
         //Creamos una lista con los movimientos posibles
@@ -339,16 +337,6 @@ public class AlgoritmoA {
         ejec.clear();
         //Leemos la tarea actual de la traza
         Integer e = trace.leerTarea(state.getPos());
-
-        //Almacenamos el marcado en una clase auxiliar para su posterior copia
-        ArrayList<HashMap<TIntHashSet, Integer>> tokensA = state.getMarcado().getTokens();
-        ejec.setTokens(tokensA);
-        ejec.setEndPlace(state.getMarcado().getEndPlace());
-        ejec.setNumOfTokens(state.getMarcado().getNumberTokens());
-        ejec.setStartPlace(state.getMarcado().getStartPlace());
-        //TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
-        //possibleEnabledTasksClone.addAll(state.getMarcado().getEnabledElements());
-        ejec.setPossibleEnabledTasks(state.getMarcado().getEnabledElements());
 
         if (print) {
             String salida = "";
@@ -373,7 +361,7 @@ public class AlgoritmoA {
             }*/
 
             //Tareas activas del modelo
-            /*TIntHashSet posiblesTareas = state.getTareas();
+            TIntHashSet posiblesTareas = state.getTareas();
             TIntIterator tasks = posiblesTareas.iterator();
             //Anadimos un movimiento por cada tarea
             while (tasks.hasNext()) {
@@ -430,7 +418,7 @@ public class AlgoritmoA {
             }
         }*/
 
-        /*if (print) {
+        if (print) {
             LOGGER.log(Level.FINE, "Posible movimientos del estado : " + movements);
         }
         trace.addMemoriaC(movements.size());
@@ -440,39 +428,9 @@ public class AlgoritmoA {
     }
 
     //Realizamos la acción correspondiente en función del movimiento
-    private static State applyActionToState(StateMove action, State state, EjecTareas ejec, CMIndividual m, InterfazEstadisticas stats) {
+    private static NStateLarge.StateLarge applyActionToState(StateMove action, NStateLarge.StateLarge state, EjecTareas ejec, CMIndividual m, InterfazEstadisticas stats) {
         timerAct.resume();
-        State successor = new State(state);
-
-        //Recuperamos los datos copiados para el marcado (tenemos que clonarlos para evitar "aliasing" con otros estados)
-        timerInicializarMarcado.resume();
-        CMMarking marking = new CMMarking(m, new Random(666));
-        //marking.restartMarking();
-        marking.setEndPlace(ejec.getEndPlace());
-        marking.setNumOfTokens(ejec.getNumOfTokens());
-        marking.setStartPlace(ejec.getStartPlace());
-        timerInicializarMarcado.pause();
-        timerClonarTokens.resume();
-        ArrayList<HashMap<TIntHashSet, Integer>> tokensN = (ArrayList<HashMap<TIntHashSet, Integer>>) ejec.cloneTokens();
-        marking.setTokens(tokensN);
-        timerClonarTokens.pause();
-        timerClonarPosiblesActivas.resume();
-        TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
-        possibleEnabledTasksClone.addAll(ejec.getPossibleEnabledTasks());
-        marking.setPossibleEnabledTasks(possibleEnabledTasksClone);
-        timerClonarPosiblesActivas.pause();
-
-        successor.setMarcado(marking);
-
-        //SIEMPRE necesario recalcular los elementos activos del modelo
-        TIntHashSet enabledElements = successor.getMarcado().getEnabledElements();
-        if (print) {
-            String salida = "";
-            salida = salida + "\nMARCADO ANTES";
-            salida = salida + "\n" + successor.getMarcado().toString();
-            salida = salida + "\nTareas que se pueden ejecutar: " + enabledElements;
-            LOGGER.log(Level.FINEST, salida);
-        }
+        NStateLarge.StateLarge successor = new NStateLarge.StateLarge(state);
 
         //Count all movs
         stats.countTypeMovs(action);
@@ -480,11 +438,6 @@ public class AlgoritmoA {
         switch (action) {
             case SINCRONO:
                 //Avanzamos el modelo con la tarea que podemos ejecutar
-                successor.avanzarMarcado(ejec.getTareaSINCRONA());
-                if (print) {
-                    LOGGER.log(Level.FINEST, "Tarea del movimiento SINCRONO ----------------> " + ejec.getTareaSINCRONA());
-                }
-                //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(SINCRONO);
                 successor.setTarea(ejec.getTareaSINCRONA());
@@ -493,39 +446,20 @@ public class AlgoritmoA {
                 //Avanzamos el modelo con una tarea que no tenemos en la traza en la posición actual
                 Integer t = ejec.leerTareaModelo();
                 successor.setTarea(t);
-                if (print) {
-                    LOGGER.log(Level.FINEST, "Tarea del movimiento MODELO ----------------> " + t);
-                }
-                successor.avanzarMarcado(t);
                 successor.setMov(MODELO);
                 break;
             case TRAZA:
                 //Avanzamos la traza
                 successor.avanzarTarea();
                 successor.setMov(TRAZA);
-                if (print) {
-                    LOGGER.log(Level.FINEST, "Tarea del movimiento TRAZA ----------------> " + ejec.getTareaTRAZA());
-                }
                 successor.setTarea(ejec.getTareaTRAZA());
                 break;
             case MODELO_FORZADO:
                 //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
                 t = ejec.leerTareaModeloForzado();
                 successor.setTarea(t);
-                if (print) {
-                    LOGGER.log(Level.FINEST, "Tarea del movimiento MODELO_FORZADO ----------------> " + t);
-                }
-                successor.avanzarMarcado(t);
                 successor.setMov(MODELO_FORZADO);
                 break;
-        }
-        if (print) {
-            String salida = "";
-            salida = salida + "\nPos traza " + successor.getPos();
-            salida = salida + "\nMARCADO DESPUES";
-            salida = salida + "\n" + successor.getMarcado().toString();
-            salida = salida + "\nEnabledTasks " + successor.getMarcado().getEnabledElements();
-            LOGGER.log(Level.FINEST, salida);
         }
 
         timerAct.pause();
@@ -533,7 +467,7 @@ public class AlgoritmoA {
     }
 
     //La función de coste depende del movimiento ejecutado
-    private static Double evaluateToState(Transition<StateMove, State> transition, ParametrosImpl parametrosImpl, EjecTareas ejec) {
+    private static Double evaluateToState(Transition<StateMove, NStateLarge.StateLarge> transition, ParametrosImpl parametrosImpl, EjecTareas ejec) {
         StateMove action = transition.getAction();
         Double cost = null;
         switch (action) {
@@ -550,6 +484,82 @@ public class AlgoritmoA {
                 cost = parametrosImpl.getC_MODELO_FORZADO() + ejec.tokenUsados(transition.getState().getTarea()) + PENALIZACION_FORZADO;
                 break;
         }
-        return cost;*/
+        return cost;
+    }
+
+    private static void applyMovs(NStateLarge.StateLarge state, CMIndividual individual) {
+        contadorInstanciasMarcado++;
+
+        //Recuperamos los datos copiados para el marcado (tenemos que clonarlos para evitar "aliasing" con otros estados)
+        timerInicializarMarcado.resume();
+        ArrayList<HashMap<TIntHashSet, Integer>> tokensN2 = cloneTokens(state.getTokens());
+        state.setTokens(tokensN2);
+        state.getMarcado().setTokens(tokensN2);
+        TIntHashSet possibleEnabledTasksClone2 = new TIntHashSet(state.getPossibleEnabledTasks());
+        state.setPossibleEnabledTasks(possibleEnabledTasksClone2);
+        state.getMarcado().setPossibleEnabledTasks(possibleEnabledTasksClone2);
+        timerInicializarMarcado.pause();
+        /*CMMarking marking = new CMMarking(individual, new Random(666));
+        marking.setEndPlace(state.getMarcado().getEndPlace());
+        marking.setNumOfTokens(state.getMarcado().getNumberTokens());
+        marking.setStartPlace(state.getMarcado().getStartPlace());
+        timerInicializarMarcado.pause();
+        timerClonarTokens.resume();
+        ArrayList<HashMap<TIntHashSet, Integer>> tokensN = cloneTokens(state.getMarcado().getTokens());
+        marking.setTokens(tokensN);
+        timerClonarTokens.pause();
+        timerClonarPosiblesActivas.resume();
+        TIntHashSet possibleEnabledTasksClone = new TIntHashSet();
+        possibleEnabledTasksClone.addAll(state.getMarcado().getEnabledElements());
+        marking.setPossibleEnabledTasks(possibleEnabledTasksClone);
+        marking.getEnabledElements();
+        timerClonarPosiblesActivas.pause();
+
+        state.setMarcado(marking);*/
+
+        switch (state.getMov()) {
+            case SINCRONO:
+                //Avanzamos el modelo con la tarea que podemos ejecutar
+                state.avanzarMarcado(state.getTarea());
+                if (print) {
+                    LOGGER.log(Level.FINEST, "Tarea del movimiento SINCRONO ----------------> " + state.getTarea());
+                }
+                break;
+            case MODELO:
+                //Avanzamos el modelo con una tarea que no tenemos en la traza en la posición actual
+                if (print) {
+                    LOGGER.log(Level.FINEST, "Tarea del movimiento MODELO ----------------> " + state.getTarea());
+                }
+                state.avanzarMarcado(state.getTarea());
+                break;
+            case TRAZA:
+                if (print) {
+                    LOGGER.log(Level.FINEST, "Tarea del movimiento TRAZA ----------------> " + state.getTarea());
+                }
+                break;
+            case MODELO_FORZADO:
+                //Avanzamos el modelo con una tarea que tenemos en la traza en la posición actual
+                if (print) {
+                    LOGGER.log(Level.FINEST, "Tarea del movimiento MODELO_FORZADO ----------------> " + state.getTarea());
+                }
+                state.avanzarMarcado(state.getTarea());
+                break;
+        }
+    }
+
+    public static ArrayList<HashMap<TIntHashSet, Integer>> cloneTokens(ArrayList<HashMap<TIntHashSet, Integer>> tokens) {
+        ArrayList<HashMap<TIntHashSet, Integer>> clone = new ArrayList<>();
+
+        for (HashMap<TIntHashSet, Integer> token : tokens) {
+            HashMap<TIntHashSet, Integer> tokenClone = new HashMap<>();
+            for (TIntHashSet tokenKey : token.keySet()) {
+                TIntHashSet tokenKeyClone = new TIntHashSet();
+                tokenKeyClone.addAll(tokenKey);
+                tokenClone.put(tokenKeyClone, token.get(tokenKey));
+            }
+            clone.add(tokenClone);
+        }
+
+        return clone;
     }
 }

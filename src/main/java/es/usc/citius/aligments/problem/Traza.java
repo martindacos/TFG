@@ -1,14 +1,11 @@
 package es.usc.citius.aligments.problem;
 
-import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
 import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import es.usc.citius.aligments.config.ParametrosImpl;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.*;
-
-import static es.usc.citius.aligments.problem.NState.StateMove.SINCRONO;
 
 /**
  *
@@ -35,6 +32,8 @@ public class Traza implements InterfazTraza {
     private ArrayList<Integer> tareasModeloActivas;
     //Hash con la tarea y el coste estimado con TR
     private HashMap<Integer, Double> estimacionTR;
+    private int hTraza;
+    private int hSincrono;
 
     public Traza() {
         this.tareas = new ArrayList<>();
@@ -45,6 +44,8 @@ public class Traza implements InterfazTraza {
         caminosToFin = new HashMap<>();
         tareasModeloActivas = new ArrayList<>();
         estimacionTR = new HashMap<>();
+        hTraza = -1;
+        hSincrono = -1;
     }
 
     public ArrayList<Integer> getTareasModeloActivas() {
@@ -131,7 +132,16 @@ public class Traza implements InterfazTraza {
         r = tareas.size() - pos;
         //System.out.println("Tarea " + tarea + " Maximo entre (tareas restantes modelo) " + tareasFin + " y (tareas restantes traza) " + r);
         resultado = Math.max(tareasFin, r);
-        return resultado;
+
+        //Si el camino del modelo es mayor que el de la traza contamos las tareas a mayores del modelo como movimientos en él
+        if (resultado != 0 && tareasFin!=r && resultado == tareasFin) {
+            double v = (tareasFin - r) * ParametrosImpl.getC_MODELO();
+            r *= ParametrosImpl.getC_SINCRONO();
+            resultado = v + r;
+            return resultado;
+        }
+
+        return resultado * ParametrosImpl.getC_SINCRONO();
     }
 
     @Override
@@ -188,6 +198,218 @@ public class Traza implements InterfazTraza {
         }
     }
 
+    private double costToFinCajas(Integer task, CMIndividual m, ArrayList<Integer> tareasNoProcesadas,
+                                  ArrayList<Integer> tareasProcesadas, int pos) {
+        double v;
+        //Obtenemos la tarea final del modelo si no la tenemos almacenada ya
+        if (this.tareaFinalModelo == -1) {
+            TIntIterator it = m.getEndTasks().iterator();
+            if (it.hasNext()) {
+                tareaFinalModelo = it.next();
+            } else {
+                //En caso de que no podamos devolver la tarea final devolvemos un error
+                return -1;
+            }
+            //Si la tarea ya es la final
+        } else if (task == tareaFinalModelo) {
+            v = tareasNoProcesadas.size() * ParametrosImpl.getC_TRAZA();
+            return v;
+        }
+
+        //Creamos una lista con todas las salidas de las tareas hasta llegar al final
+        Set<Integer> tareasRestantes = new HashSet<>();
+        //Lista con las tareas a explorar sus salidas
+        Set<Integer> nuevasTareas = new HashSet<>();
+        //Lista con las tareas ya procesadas de la traza
+        Set<Integer> restanteTraza = new HashSet<>(tareasProcesadas);
+
+        //Contadores de movimientos
+        int movimientosTraza = 0;
+        int movimientosSincronos = 0;
+
+        //Añadimos las salidas desde la tarea inicial del modelo hasta la actual de la traza
+        TIntIterator it2 = m.getStartTasks().iterator();
+        while (it2.hasNext()) {
+            int next = it2.next();
+            if (next != task) {
+                Iterator<TIntHashSet> set = m.getTask(next).getOutputs().iterator();
+                while (set.hasNext()) {
+                    TIntIterator it = set.next().iterator();
+                    while (it.hasNext()) {
+                        int tarea = it.next();
+                        nuevasTareas.add(tarea);
+                        //Tareas que se pueden ejecutar por "estados" anteriores
+                        tareasRestantes.add(tarea);
+                    }
+                }
+                if (pos == 0) {
+                    movimientosTraza++;
+                }
+                //No tenemos que explorar sus salidas en la traza
+                restanteTraza.remove(next);
+            } else {
+                nuevasTareas.add(task);
+            }
+        }
+
+        int oldSize = Integer.MIN_VALUE;
+        while (!nuevasTareas.contains(task)) {
+            if (tareasRestantes.size() == oldSize) {
+                break;
+            }
+            oldSize = tareasRestantes.size();
+            ArrayList<Integer> nuevasTareasList = new ArrayList<>(nuevasTareas);
+            nuevasTareas = new HashSet<>();
+            //Calculamos las salidas de las nuevas tareas añadidas
+            for (int i = 0; i < nuevasTareasList.size(); i++) {
+                Iterator<TIntHashSet> set = m.getTask(nuevasTareasList.get(i)).getOutputs().iterator();
+                while (set.hasNext()) {
+                    TIntIterator it = set.next().iterator();
+                    while (it.hasNext()) {
+                        int tarea = it.next();
+                        nuevasTareas.add(tarea);
+                        //Tareas que se pueden ejecutar por "estados" anteriores
+                        tareasRestantes.add(tarea);
+                    }
+                }
+                if (pos == 0) {
+                    movimientosTraza++;
+                }
+                //No tenemos que explorar sus salidas en la traza
+                restanteTraza.remove(nuevasTareasList.get(i));
+            }
+        }
+
+        //Añadimos las salidas de las tareas ejecutadas anteriormente
+        Iterator<Integer> iterator = restanteTraza.iterator();
+        while (iterator.hasNext()) {
+            Integer integer = iterator.next();
+            Iterator<TIntHashSet> set = m.getTask(integer).getOutputs().iterator();
+            while (set.hasNext()) {
+                TIntIterator it = set.next().iterator();
+                while (it.hasNext()) {
+                    int tarea = it.next();
+                    nuevasTareas.add(tarea);
+                    //Tareas que se pueden ejecutar por "estados" anteriores
+                    tareasRestantes.add(tarea);
+                }
+            }
+        }
+
+        if (tareasNoProcesadas.size() > 0) {
+            tareasNoProcesadas.remove(0);
+        }
+
+        boolean Break = false;
+        int size1;
+        int size2;
+        label1:
+        while (true) {
+            ArrayList<Integer> nuevasTareasList = new ArrayList<>(nuevasTareas);
+            nuevasTareas = new HashSet<>();
+            //Calculamos las salidas de las nuevas tareas añadidas
+            for (int i = 0; i < nuevasTareasList.size(); i++) {
+                Iterator<TIntHashSet> set = m.getTask(nuevasTareasList.get(i)).getOutputs().iterator();
+                while (set.hasNext()) {
+                    TIntIterator it = set.next().iterator();
+                    while (it.hasNext()) {
+                        int tarea = it.next();
+                        if (tarea == tareaFinalModelo) {
+                            nuevasTareas.add(tarea);
+                            Break = true;
+                        } else {
+                            nuevasTareas.add(tarea);
+                        }
+                    }
+                }
+            }
+            size1 = tareasRestantes.size();
+            tareasRestantes.addAll(nuevasTareas);
+            size2 = tareasRestantes.size();
+
+
+            if (tareasNoProcesadas.size() > 0) {
+                Integer t = tareasNoProcesadas.get(0);
+                if (tareasRestantes.contains(t)) {
+                    tareasRestantes.remove(t);
+                    movimientosSincronos++;
+                } else {
+                    movimientosTraza++;
+                }
+                //Añadimos la tarea para procesar sus salidas
+                nuevasTareas.add(t);
+                tareasNoProcesadas.remove(0);
+            }
+
+            if (Break && tareasNoProcesadas.size()==0 ) {
+                //Alcanzamos la tarea final del modelo y no quedan elementos por procesar en la traza
+                break label1;
+            } else if (!Break && tareasNoProcesadas.size()==0) {
+                //Faltan tareas por ejecutar en el modelo
+                movimientosTraza++;
+            } else if (!Break && size1==size2 && tareasNoProcesadas.size()==0) {
+                //TODO Si no se puede alcanzar el final del modelo????
+                System.err.print("La heurística no puede alcanzar la tarea final de modelo");
+                System.exit(4);
+            }
+        }
+
+        v = movimientosTraza * ParametrosImpl.getC_TRAZA() + tareasNoProcesadas.size() * ParametrosImpl.getC_TRAZA()
+                + movimientosSincronos * ParametrosImpl.getC_SINCRONO();
+
+        hTraza = movimientosTraza;
+        hSincrono = movimientosSincronos;
+        return v;
+    }
+
+    @Override
+    public Double getHeuristicaCajas(int pos, CMIndividual m, Integer lastEjecuted, Integer trazaMovs, Integer sincroMovs) {
+        double r;
+
+        if (hTraza != -1) {
+            int i = hTraza - trazaMovs;
+            if (i > 0) {
+                r = i * ParametrosImpl.getC_TRAZA();
+            } else {
+                i = trazaMovs - hTraza;
+                r = i * ParametrosImpl.getC_MODELO();
+            }
+
+            int j = hSincrono - sincroMovs;
+            if (j > 0) {
+                r += j * ParametrosImpl.getC_SINCRONO();
+            }
+
+            return r;
+        } else {
+            Integer tarea = leerTarea(pos);
+            if (tarea == null) {
+                if (lastEjecuted == null) {
+                    //Solo podemos realizar movimientos en la traza
+                    r = (tareas.size() - pos) * ParametrosImpl.getC_TRAZA();
+                    return r;
+                } else {
+                    tarea = lastEjecuted;
+                }
+            }
+
+            //Recuperamos las tareas no procesadas en la traza
+            ArrayList<Integer> tareasNoProcesadas = new ArrayList<>();
+            ArrayList<Integer> tareasProcesadas = new ArrayList<>();
+            for (int i = 0; i <= tareas.size() - 1; i++) {
+                if (i >= pos) {
+                    tareasNoProcesadas.add(tareas.get(i));
+                } else {
+                    tareasProcesadas.add(tareas.get(i));
+                }
+            }
+
+            r = costToFinCajas(tarea, m, tareasNoProcesadas, tareasProcesadas, pos);
+            estimacionTR.put(pos, r);
+            return r;
+        }
+    }
+
     @Override
     public Double getHeuristicaPrecise2(int pos, CMIndividual m, Integer lastEjecuted) {
         double r;
@@ -215,8 +437,8 @@ public class Traza implements InterfazTraza {
         return costeCaminosFin;
     }
 
-    @Override
-    public Double getHeuristicaTokenReplay(int pos, CMIndividual m, CMMarking oldMarking, Integer lastEjecuted, NState.State state) {
+
+    /*public Double getHeuristicaTokenReplay(int pos, CMIndividual m, CMMarking oldMarking, Integer lastEjecuted, NState.State state) {
         //Si ya calculamos la heurística en un estado anterior
         if (state.getMov() != null && state.getHeuristica() != Double.MAX_VALUE) {
             //Recuperamos la heurística calculada
@@ -282,7 +504,7 @@ public class Traza implements InterfazTraza {
         //Guardamos la heurística en el estado
         state.setHeuristica(newHeuristic);
         return newHeuristic;
-    }
+    }*/
 
     public double newHeuristic(List<List<Integer>> caminosFin, int size, ArrayList<Integer> tareasNoProcesadas) {
         double coste = Double.MAX_VALUE;

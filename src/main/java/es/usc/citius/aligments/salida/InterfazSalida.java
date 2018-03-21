@@ -22,6 +22,12 @@ public interface InterfazSalida {
     //Función que imprime las trazas y su nodo solución (alineamiento)
     String ActualizarTrazas(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind);
 
+    //Función que imprime las trazas y su nodo solución (alineamiento)
+    String ActualizarTrazasOld(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind);
+
+    //Función que imprime las trazas y su nodo solución (alineamiento)
+    String ActualizarTrazasReduced(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind);
+
     //Función que imprime el número total de trazas a alinear
     void setTotalTrazas(int size);
 

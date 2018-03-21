@@ -35,7 +35,7 @@ import java.util.*;
 public class AlgoritmoAD {
 
     public static void problem(Readers miReader, boolean print) {
-        ParametrosImpl parametrosImpl;
+        /*ParametrosImpl parametrosImpl;
         parametrosImpl = ParametrosImpl.getParametrosImpl();
 
         final State initialState = new State(miReader.getInd());
@@ -50,7 +50,7 @@ public class AlgoritmoAD {
         //Mapa coon el sucesor y el predecesor
         Map<State, Transition<StateMove, State>> pre = new HashMap();
 
-        /*Funciones para el algoritmo AD* */
+        //Funciones para el algoritmo AD*
         TransitionFunction<StateMove, State> tf = new TransitionFunction<StateMove, State>() {
             @Override
             public Iterable<Transition<StateMove, State>> transitionsFrom(State state) {
@@ -456,5 +456,5 @@ public class AlgoritmoAD {
         List<Transition<StateMove, State>> predecessor = new ArrayList();
         predecessor.add(pre.get(state));
         return predecessor;
-    }
+    */}
 }

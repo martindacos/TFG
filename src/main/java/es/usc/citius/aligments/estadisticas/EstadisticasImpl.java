@@ -5,12 +5,15 @@ import es.usc.citius.aligments.problem.InterfazTraza;
 import es.usc.citius.aligments.problem.NState;
 import es.usc.citius.aligments.problem.NState.State;
 import es.usc.citius.aligments.problem.Traza;
-import static es.usc.citius.aligments.problem.NState.StateMove.*;
 import es.usc.citius.hipster.model.AbstractNode;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+
+import static es.usc.citius.aligments.problem.NState.StateMove.SINCRONO;
+import static es.usc.citius.aligments.problem.NState.StateMove.TRAZA;
 
 /**
  *
@@ -269,8 +272,8 @@ public class EstadisticasImpl implements InterfazEstadisticas {
                     double enL = this.tareasPrefijo(t, prefijo);
                     //System.out.println("Subprecision = "+ subPrecission + " + " + t.get(i).getNumRepeticiones() +" * ("+ enL + " / " + tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size() +" )");
                     //Realizamos el sumatorio controlando que el número de tareas activas sea mayor que 1
-                    if (tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size() > 0) {
-                        int divisor = tareasActivasEstado.get(i).get(j).getMarcado().getEnabledElements().size();
+                    int divisor = tareasActivasEstado.get(i).get(j).getEnabledElements().size();
+                    if (divisor > 0) {
 //                        if (enL > 1) {
 //                            enL = 1;
 //                        }
