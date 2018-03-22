@@ -34,7 +34,7 @@ public class MainA {
                 miReader = Readers.getReader(args[0], args[1]);
                 miReader.getInd().print();
                 //AlgoritmoA.problem(miReader, false);
-                AlgoritmoAReduced.problem(miReader, false);
+                AlgoritmoAReduced.problem(miReader, true);
                 //AlgoritmoAReducedLarge.problem(miReader, true);
                 break;
             //Añadir un argumentos más para que entre en el default
