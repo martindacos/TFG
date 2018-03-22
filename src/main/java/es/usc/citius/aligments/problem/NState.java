@@ -11,7 +11,6 @@ import gnu.trove.iterator.TIntIterator;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.set.hash.TIntHashSet;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -52,17 +51,16 @@ public final class NState {
         private FiringCombination bestCombination;
 
         //Matrix with tokens
-        private int[][] matrix;
-        private final HashMap<Integer, Integer> orderTasks;
+        private HashMap<Integer, HashMap<TIntHashSet, Integer>> activeTokens;
 
         public State(CMIndividual ind) {
             pos = 0;
             tarea = -1;
             this.numOfTasks = ind.getNumOfTasks();
             this.numOfPosibleTasks = posibleTask(ind);
-            this.matrix = new int[numOfPosibleTasks][numOfPosibleTasks];
+            this.activeTokens = new HashMap<>();
             this.tokens = new HashMap<>(numOfPosibleTasks);
-            this.orderTasks = initializateTokens(ind);
+            initializateTokens(ind);
             TIntIterator it = ind.getEndTasks().iterator();
             if (it.hasNext()) {
                 tareaFinalModelo = it.next();
@@ -105,13 +103,18 @@ public final class NState {
             //Se realiza la copia "bien" cuando se ejecute el movimiento del estado
             possibleEnabledTasks = a.getPossibleEnabledTasks();
 
-            matrix = new int[numOfPosibleTasks][numOfPosibleTasks];
-            for (int i = 0; i < a.getMatrix().length; i++) {
-                for (int j = 0; j < a.getMatrix().length; j++) {
-                    matrix[i][j] = a.getMatrix()[i][j];
+            activeTokens = new HashMap<>();
+            for (Integer key : a.getActiveTokens().keySet()) {
+                HashMap<TIntHashSet, Integer> set = a.getActiveTokens().get(key);
+                HashMap<TIntHashSet, Integer> tokenClone = new HashMap<>();
+                for (TIntHashSet tokenKey : set.keySet()) {
+                    TIntHashSet tokenKeyClone = new TIntHashSet(tokenKey.size());
+                    tokenKeyClone.addAll(tokenKey);
+
+                    tokenClone.put(tokenKeyClone, set.get(tokenKey));
                 }
+                activeTokens.put(key, tokenClone);
             }
-            orderTasks = a.getOrderTasks();
         }
 
         public void restartState() {
@@ -124,6 +127,7 @@ public final class NState {
             this.endPlace = 0;
             this.possibleEnabledTasks = new TIntHashSet(numOfPosibleTasks);
             this.possibleEnabledTasks.add(startTask);
+            this.activeTokens = new HashMap<>();
             restartTokens();
         }
 
@@ -141,9 +145,7 @@ public final class NState {
             return localPosibleTasks;
         }
 
-        private HashMap<Integer, Integer> initializateTokens(CMIndividual ind) {
-            HashMap<Integer, Integer> orderTasksLocal = new HashMap<>(numOfPosibleTasks);
-            int matrixIndex=0;
+        private void initializateTokens(CMIndividual ind) {
             for (int indexTask = 0; indexTask < numOfTasks; indexTask++) {
                 HashMap<TIntHashSet, Integer> outputs = new HashMap<>();
                 CMSet taskOutputs = ind.getTask(indexTask).getOutputs();
@@ -152,12 +154,8 @@ public final class NState {
                         outputs.put(subset, 0);
                     }
                     this.tokens.put(indexTask,outputs);
-                    orderTasksLocal.put(indexTask, matrixIndex);
-                    matrixIndex++;
                 }
             }
-
-            return orderTasksLocal;
         }
 
         private void restartTokens() {
@@ -212,12 +210,8 @@ public final class NState {
             return endPlace;
         }
 
-        public int[][] getMatrix() {
-            return matrix;
-        }
-
-        public HashMap<Integer, Integer> getOrderTasks() {
-            return orderTasks;
+        public HashMap<Integer, HashMap<TIntHashSet, Integer>> getActiveTokens() {
+            return activeTokens;
         }
 
         public TIntHashSet getPossibleEnabledTasks() {
@@ -327,15 +321,13 @@ public final class NState {
                             if (currentTokens > 0) {
                                 this.numOfTokens--;
                                 //this.tokens.get(task).put(subset, --currentTokens);
-
-                                TIntIterator iterator = subset.iterator();
-                                while (iterator.hasNext()) {
-                                    int next = iterator.next();
-                                    Integer row = orderTasks.get(task);
-                                    Integer col = orderTasks.get(next);
-                                    if (row != null && col != null) {
-                                        matrix[row][col]--;
+                                if (this.activeTokens.get(task) != null && (currentTokens - 1) == 0) {
+                                    this.activeTokens.get(task).remove(subset);
+                                    if (this.activeTokens.get(task).size() == 0) {
+                                        this.activeTokens.remove(task);
                                     }
+                                } else if (this.activeTokens.get(task) != null) {
+                                    this.activeTokens.get(task).put(subset, --currentTokens);
                                 }
                             }
                         }
@@ -509,17 +501,14 @@ public final class NState {
         }
 
         private void increaseTokens(int currentTask, TIntHashSet subset) {
-            //int currentTokens = this.tokens.get(currentTask).get(subset);
+            int currentTokens = this.tokens.get(currentTask).get(subset);
             //this.tokens.get(currentTask).put(subset, ++currentTokens);
-
-            TIntIterator iterator = subset.iterator();
-            while (iterator.hasNext()) {
-                int next = iterator.next();
-                Integer row = orderTasks.get(currentTask);
-                Integer col = orderTasks.get(next);
-                if (row != null && col != null) {
-                    matrix[row][col]++;
-                }
+            if (this.activeTokens.get(currentTask) != null) {
+                this.activeTokens.get(currentTask).put(subset, ++currentTokens);
+            } else {
+                HashMap<TIntHashSet, Integer> outputs = new HashMap<>();
+                outputs.put(subset, ++currentTokens);
+                this.activeTokens.put(currentTask, outputs);
             }
         }
 
@@ -530,7 +519,7 @@ public final class NState {
 
             State state = (State) o;
 
-            if (pos != state.pos) return false;
+            if (!activeTokens.equals(state.activeTokens)) return false;
             if (tareaFinalModelo != state.tareaFinalModelo) return false;
             if (numOfTasks != state.numOfTasks) return false;
             if (numOfPosibleTasks != state.numOfPosibleTasks) return false;
@@ -540,8 +529,7 @@ public final class NState {
             if (startTask != state.startTask) return false;
             if (!tasks.equals(state.tasks)) return false;
             if (!subsetsMapped.equals(state.subsetsMapped)) return false;
-            if (!Arrays.deepEquals(matrix, state.matrix)) return false;
-            return orderTasks.equals(state.orderTasks);
+            return pos == state.pos;
         }
 
         @Override
@@ -556,8 +544,7 @@ public final class NState {
             result = 31 * result + numOfTokens;
             result = 31 * result + endPlace;
             result = 31 * result + startTask;
-            result = 31 * result + Arrays.deepHashCode(matrix);
-            result = 31 * result + orderTasks.hashCode();
+            result = 31 * result + activeTokens.hashCode();
             return result;
         }
     }
