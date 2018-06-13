@@ -1,7 +1,7 @@
 package es.usc.citius.aligments.salida;
 
 import es.usc.citius.aligments.problem.InterfazTraza;
-import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import es.usc.citius.hipster.model.AbstractNode;
 
 /**

@@ -1,7 +1,7 @@
 package es.usc.citius.aligments.algoritmos;
 
-import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
-import domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
 import es.usc.citius.aligments.config.ParametrosImpl;
 import es.usc.citius.aligments.estadisticas.EstadisticasImpl;
 import es.usc.citius.aligments.estadisticas.InterfazEstadisticas;
@@ -61,7 +61,7 @@ public class AlgoritmoAReduced {
             //Evitar que el log salga por pantalla
             //LOGGER.setUseParentHandlers(false);
             //Definimos el nivel del log
-            LOGGER.setLevel(Level.INFO);
+            LOGGER.setLevel(Level.FINEST);
         }
 
         ParametrosImpl parametrosImpl;
@@ -284,7 +284,7 @@ public class AlgoritmoAReduced {
         //Calculamos el Conformance Checking del modelo
         double fitnessNuevo = e.fitnessNuevo(miReader.getTraces());
         double precission = e.precission(miReader.getTraces());
-        IndividualFitness individualFitness = new IndividualFitness();
+        IndividualFitness individualFitness = new IndividualFitness(miReader.getInd().getNumOfTasks());
         individualFitness.setCompleteness(fitnessNuevo);
         individualFitness.setPreciseness(precission);
         miReader.getInd().setFitness(individualFitness);
@@ -501,7 +501,22 @@ public class AlgoritmoAReduced {
         state.setPossibleEnabledTasks(possibleEnabledTasksClone2);
         timerClonarPosiblesActivas.pause();
 
+        HashMap<Integer, HashMap<TIntHashSet, Integer>> newactiveTokens = new HashMap<>();
+        for (Integer key : state.getActiveTokens().keySet()) {
+            HashMap<TIntHashSet, Integer> set = state.getActiveTokens().get(key);
+            HashMap<TIntHashSet, Integer> tokenClone = new HashMap<>();
+            for (TIntHashSet tokenKey : set.keySet()) {
+                TIntHashSet tokenKeyClone = new TIntHashSet(tokenKey.size());
+                tokenKeyClone.addAll(tokenKey);
+
+                tokenClone.put(tokenKeyClone, set.get(tokenKey));
+            }
+            newactiveTokens.put(key, tokenClone);
+        }
+        state.setActiveTokens(newactiveTokens);
+
         if (state.getMov() != TRAZA) {
+            state.executeTokens();
             state.updatePossibleEnabledTasks();
         }
     }

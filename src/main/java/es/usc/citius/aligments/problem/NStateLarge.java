@@ -1,7 +1,7 @@
 package es.usc.citius.aligments.problem;
 
-import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
-import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import es.usc.citius.aligments.algoritmos.AlgoritmoAReducedLarge;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;

@@ -2,7 +2,7 @@ package es.usc.citius.aligments.mains;
 
 import es.usc.citius.aligments.algoritmos.AlgoritmoAD;
 import es.usc.citius.aligments.problem.Readers;
-import domainLogic.exceptions.*;
+import es.usc.citius.prodigen.domainLogic.exceptions.*;
 
 import java.io.IOException;
 

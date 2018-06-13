@@ -1,39 +1,8 @@
 package es.usc.citius.aligments.algoritmos;
 
-import es.usc.citius.aligments.config.ParametrosImpl;
-import es.usc.citius.aligments.estadisticas.EstadisticasImpl;
-import es.usc.citius.aligments.estadisticas.InterfazEstadisticas;
-import es.usc.citius.aligments.problem.EjecTareas;
-import es.usc.citius.aligments.problem.InterfazTraza;
-import es.usc.citius.aligments.problem.NState;
-import es.usc.citius.aligments.problem.NState.State;
-import es.usc.citius.aligments.problem.NState.StateMove;
-
-import static es.usc.citius.aligments.config.Parametros.*;
-import static es.usc.citius.aligments.problem.NState.StateMove.*;
-
 import es.usc.citius.aligments.problem.Readers;
-import es.usc.citius.aligments.salida.InterfazSalida;
-import es.usc.citius.aligments.salida.SalidaTerminalImpl;
-import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMMarking;
-import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
-import domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
-import es.usc.citius.hipster.algorithm.AStar;
-import es.usc.citius.hipster.algorithm.Hipster;
-import es.usc.citius.hipster.model.AbstractNode;
-import es.usc.citius.hipster.model.Transition;
-import es.usc.citius.hipster.model.function.ActionFunction;
-import es.usc.citius.hipster.model.function.ActionStateTransitionFunction;
-import es.usc.citius.hipster.model.function.CostFunction;
-import es.usc.citius.hipster.model.function.HeuristicFunction;
-import es.usc.citius.hipster.model.impl.WeightedNode;
-import es.usc.citius.hipster.model.problem.*;
-import gnu.trove.iterator.TIntIterator;
-import gnu.trove.set.hash.TIntHashSet;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.logging.*;
+import java.util.logging.Logger;
 
 public class AlgoritmoA {
 

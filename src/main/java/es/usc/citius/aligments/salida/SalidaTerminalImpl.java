@@ -1,6 +1,6 @@
 package es.usc.citius.aligments.salida;
 
-import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import es.usc.citius.aligments.problem.InterfazTraza;
 import es.usc.citius.aligments.problem.NState;
 import es.usc.citius.aligments.problem.NStateLarge;

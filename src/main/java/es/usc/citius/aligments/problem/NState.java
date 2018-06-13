@@ -1,12 +1,12 @@
 package es.usc.citius.aligments.problem;
 
-import domainLogic.workflow.Task.Task;
-import domainLogic.workflow.algorithms.geneticMining.CMTask.CMSet;
-import domainLogic.workflow.algorithms.geneticMining.CMTask.CMTask;
-import domainLogic.workflow.algorithms.geneticMining.CMTask.SubsetsUtil;
-import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMSubsetsMapped;
-import domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.FiringCombination;
-import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import es.usc.citius.prodigen.domainLogic.workflow.Task.Task;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMSet;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMTask;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.SubsetsUtil;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.CMSubsetsMapped;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.fitness.parser.marking.FiringCombination;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.set.hash.TIntHashSet;
@@ -49,6 +49,8 @@ public final class NState {
 
         //Matrix with tokens
         private HashMap<Integer, HashMap<TIntHashSet, Integer>> activeTokens;
+        private HashMap<Integer, HashMap<TIntHashSet, Integer>> activeTokensH;
+        private int activeTokensHashCode;
 
         public State(CMIndividual ind) {
             pos = 0;
@@ -56,6 +58,7 @@ public final class NState {
             this.numOfTasks = ind.getNumOfTasks();
             this.numOfPosibleTasks = posibleTask(ind);
             this.activeTokens = new HashMap<>();
+            activeTokensHashCode = activeTokens.hashCode();
             TIntIterator it = ind.getEndTasks().iterator();
             if (it.hasNext()) {
                 tareaFinalModelo = it.next();
@@ -95,8 +98,11 @@ public final class NState {
             startTask = a.getStartTask();
             //Se realiza la copia "bien" cuando se ejecute el movimiento del estado
             possibleEnabledTasks = a.getPossibleEnabledTasks();
+            bestCombination = a.getBestCombination();
+            activeTokensHashCode = a.getActiveTokensHashCode();
 
-            activeTokens = new HashMap<>();
+            activeTokens = a.getActiveTokens();
+            /*activeTokens = new HashMap<>();
             for (Integer key : a.getActiveTokens().keySet()) {
                 HashMap<TIntHashSet, Integer> set = a.getActiveTokens().get(key);
                 HashMap<TIntHashSet, Integer> tokenClone = new HashMap<>();
@@ -107,7 +113,7 @@ public final class NState {
                     tokenClone.put(tokenKeyClone, set.get(tokenKey));
                 }
                 activeTokens.put(key, tokenClone);
-            }
+            }*/
         }
 
         public void restartState() {
@@ -121,6 +127,7 @@ public final class NState {
             this.possibleEnabledTasks = new TIntHashSet();
             this.possibleEnabledTasks.add(startTask);
             this.activeTokens = new HashMap<>();
+            this.activeTokensHashCode = activeTokens.hashCode();
         }
 
         //Reservamos espacio solo para las tareas posibles
@@ -205,6 +212,18 @@ public final class NState {
             return this.getEnabledElements();
         }
 
+        public int getActiveTokensHashCode() {
+            return activeTokensHashCode;
+        }
+
+        public FiringCombination getBestCombination() {
+            return bestCombination;
+        }
+
+        public void setActiveTokens(HashMap<Integer, HashMap<TIntHashSet, Integer>> activeTokens) {
+            this.activeTokens = activeTokens;
+        }
+
         public void setTarea(Integer tarea) {
             this.tarea = tarea;
         }
@@ -235,11 +254,30 @@ public final class NState {
 
         //Operaciones del marcado
         public int execute(int currentTaskID) {
+            activeTokensH = new HashMap<>();
+            for (Integer key : this.activeTokens.keySet()) {
+                HashMap<TIntHashSet, Integer> set = this.activeTokens.get(key);
+                HashMap<TIntHashSet, Integer> tokenClone = new HashMap<>();
+                for (TIntHashSet tokenKey : set.keySet()) {
+                    TIntHashSet tokenKeyClone = new TIntHashSet(tokenKey.size());
+                    tokenKeyClone.addAll(tokenKey);
+
+                    tokenClone.put(tokenKeyClone, set.get(tokenKey));
+                }
+                activeTokensH.put(key, tokenClone);
+            }
             final CMTask currentTask = this.tasks.get(currentTaskID);
             this.bestCombination = getBestCombination(currentTask, currentTaskID);
-            consumeInputs(currentTask, currentTaskID, this.bestCombination.getTasks());
+            consumeInputs2(currentTask, currentTaskID, this.bestCombination.getTasks());
             enableOutputs(currentTask, currentTaskID);
+            this.activeTokensHashCode = activeTokensH.hashCode();
             return this.bestCombination.getNumMissingTokens();
+        }
+
+        public void executeTokens() {
+            final CMTask currentTask = this.tasks.get(tarea);
+            consumeInputsTokens(currentTask, tarea, this.bestCombination.getTasks());
+            enableOutputsTokens(currentTask, tarea);
         }
 
         public void updatePossibleEnabledTasks() {
@@ -258,12 +296,23 @@ public final class NState {
             } else {
                 this.numOfTokens += outputsSize;
                 for (TIntHashSet subset : outputs) {
+                    increaseTokens2(currentTaskID, subset);
+                }
+            }
+        }
+
+        private void enableOutputsTokens(CMTask currentTask, int currentTaskID) {
+            final CMSet outputs = currentTask.getOutputs();
+            final int outputsSize = outputs.size();
+            // is an end element?
+            if (outputsSize != 0) {
+                for (TIntHashSet subset : outputs) {
                     increaseTokens(currentTaskID, subset);
                 }
             }
         }
 
-        private void consumeInputs(CMTask currentTask, int currentTaskID, TIntHashSet activities) {
+        private void consumeInputs2(CMTask currentTask, int currentTaskID, TIntHashSet activities) {
             // is start element?
             if (currentTask.getInputs().isEmpty()) {
                 if (this.startPlace > 0) {
@@ -279,11 +328,39 @@ public final class NState {
                     if (subsets != null) {
                         for (TIntHashSet subset : subsets) {
                             int currentTokens = 0;
+                            if (activeTokensH.get(task).get(subset) != null) {
+                                currentTokens = activeTokensH.get(task).get(subset);
+                            }
+                            if (currentTokens > 0) {
+                                this.numOfTokens--;
+                                if ((currentTokens - 1) == 0) {
+                                    activeTokensH.get(task).remove(subset);
+                                    if (activeTokensH.get(task).size() == 0) {
+                                        activeTokensH.remove(task);
+                                    }
+                                } else {
+                                    activeTokensH.get(task).put(subset, --currentTokens);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void consumeInputsTokens(CMTask currentTask, int currentTaskID, TIntHashSet activities) {
+            if (!currentTask.getInputs().isEmpty()){
+                TIntIterator iter = activities.iterator();
+                while (iter.hasNext()) {
+                    final int task = iter.next();
+                    final CMSet subsets = this.subsetsMapped.getRelatedElemens(currentTaskID, task);
+                    if (subsets != null) {
+                        for (TIntHashSet subset : subsets) {
+                            int currentTokens = 0;
                             if (this.activeTokens.get(task).get(subset) != null) {
                                 currentTokens = this.activeTokens.get(task).get(subset);
                             }
                             if (currentTokens > 0) {
-                                this.numOfTokens--;
                                 if ((currentTokens - 1) == 0) {
                                     this.activeTokens.get(task).remove(subset);
                                     if (this.activeTokens.get(task).size() == 0) {
@@ -445,40 +522,20 @@ public final class NState {
             }
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            State state = (State) o;
-
-            if (!activeTokens.equals(state.activeTokens)) return false;
-            if (tareaFinalModelo != state.tareaFinalModelo) return false;
-            if (numOfTasks != state.numOfTasks) return false;
-            if (numOfPosibleTasks != state.numOfPosibleTasks) return false;
-            if (startPlace != state.startPlace) return false;
-            if (numOfTokens != state.numOfTokens) return false;
-            if (endPlace != state.endPlace) return false;
-            if (startTask != state.startTask) return false;
-            if (!tasks.equals(state.tasks)) return false;
-            if (!subsetsMapped.equals(state.subsetsMapped)) return false;
-            return pos == state.pos;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = pos;
-            result = 31 * result + tareaFinalModelo;
-            result = 31 * result + numOfTasks;
-            result = 31 * result + numOfPosibleTasks;
-            result = 31 * result + tasks.hashCode();
-            result = 31 * result + subsetsMapped.hashCode();
-            result = 31 * result + startPlace;
-            result = 31 * result + numOfTokens;
-            result = 31 * result + endPlace;
-            result = 31 * result + startTask;
-            result = 31 * result + activeTokens.hashCode();
-            return result;
+        private void increaseTokens2(int currentTask, TIntHashSet subset) {
+            int currentTokens = 0;
+            if (activeTokensH.get(currentTask) != null && activeTokensH.get(currentTask).get(subset) != null) {
+                currentTokens = activeTokensH.get(currentTask).get(subset);
+                activeTokensH.get(currentTask).put(subset, ++currentTokens);
+            } else if (activeTokensH.get(currentTask) != null && activeTokensH.get(currentTask).get(subset) == null) {
+                HashMap<TIntHashSet, Integer> tIntHashSetIntegerHashMap = activeTokensH.get(currentTask);
+                tIntHashSetIntegerHashMap.put(subset, ++currentTokens);
+                activeTokensH.put(currentTask, tIntHashSetIntegerHashMap);
+            } else {
+                HashMap<TIntHashSet, Integer> outputs = new HashMap<>();
+                outputs.put(subset, ++currentTokens);
+                activeTokensH.put(currentTask, outputs);
+            }
         }
     }
 }

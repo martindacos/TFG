@@ -1,24 +1,21 @@
 package es.usc.citius.aligments.problem;
 
-import domainLogic.exceptions.EmptyLogException;
-import domainLogic.exceptions.InvalidFileExtensionException;
-import domainLogic.exceptions.MalformedFileException;
-import domainLogic.exceptions.NonFinishedWorkflowException;
-import domainLogic.exceptions.WrongLogEntryException;
-import domainLogic.workflow.CaseInstance;
-import domainLogic.workflow.Log;
-import domainLogic.workflow.LogEntryInterface;
-import domainLogic.workflow.Task.Task;
-import domainLogic.workflow.algorithms.geneticMining.CMTask.CMSet;
-import domainLogic.workflow.algorithms.geneticMining.CMTask.CMTask;
-import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
-import domainLogic.workflow.algorithms.geneticMining.individual.reader.IndividualReaderHN;
-import domainLogic.workflow.algorithms.geneticMining.individual.reader.IndividualReaderInterface;
-import domainLogic.workflow.logReader.LogReaderInterface;
-import domainLogic.workflow.logReader.LogReaderXES;
+import es.usc.citius.prodigen.domainLogic.exceptions.*;
+import es.usc.citius.prodigen.domainLogic.workflow.CaseInstance;
+import es.usc.citius.prodigen.domainLogic.workflow.Log;
+import es.usc.citius.prodigen.domainLogic.workflow.LogEntryInterface;
+import es.usc.citius.prodigen.domainLogic.workflow.Task.Task;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMSet;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMTask;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.reader.IndividualReaderHN;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.reader.IndividualReaderInterface;
+import es.usc.citius.prodigen.domainLogic.workflow.logReader.LogReaderCSV;
+import es.usc.citius.prodigen.domainLogic.workflow.logReader.LogReaderInterface;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
@@ -76,7 +73,8 @@ public class Readers {
     private Readers(String logPath, String indPath) throws EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
         traces = new ArrayList<>();
         // Read the log.
-        LogReaderInterface reader = new LogReaderXES();
+        LogReaderInterface reader = new LogReaderCSV();
+        //LogReaderInterface reader = new LogReaderXES();
         ArrayList<LogEntryInterface> entries = reader.read(null, null, new File(logPath));
         log = new Log("test","log.txt",entries);
 
@@ -85,10 +83,10 @@ public class Readers {
 
         try {
             log.simplifyAndAddDummies(true, false);
-            ind = readerInd.read(indPath, log);
+            ind = readerInd.read(indPath);
             //ind = ModelFormatConversor.HNtoCN(ind);
-        } catch (NullPointerException ex) {
-            log.simplifyAndAddDummies(true, true);
+        } catch (Exception ex) {
+            log.simplifyAndAddDummies(true, false);
             ind = readerInd.read(indPath, log);
             //ind = ModelFormatConversor.HNtoCN(ind);
         }

@@ -1,7 +1,7 @@
 package es.usc.citius.aligments.algoritmos;
 
-import domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
-import domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
 import es.usc.citius.aligments.config.ParametrosImpl;
 import es.usc.citius.aligments.estadisticas.EstadisticasImpl;
 import es.usc.citius.aligments.estadisticas.InterfazEstadisticas;
@@ -290,7 +290,7 @@ public class AlgoritmoAReducedLarge {
         //Calculamos el Conformance Checking del modelo
         double fitnessNuevo = e.fitnessNuevo(miReader.getTraces());
         double precission = e.precission(miReader.getTraces());
-        IndividualFitness individualFitness = new IndividualFitness();
+        IndividualFitness individualFitness = new IndividualFitness(miReader.getInd().getNumOfTasks());
         individualFitness.setCompleteness(fitnessNuevo);
         individualFitness.setPreciseness(precission);
         miReader.getInd().setFitness(individualFitness);
