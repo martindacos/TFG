@@ -52,6 +52,9 @@ public final class NState {
         private HashMap<Integer, HashMap<TIntHashSet, Integer>> activeTokensH;
         private int activeTokensHashCode;
 
+        //Tareas que ya fueron ejecutadas en el modelo
+        private TIntHashSet tareasEjecutadasModelo;
+
         public State(CMIndividual ind) {
             pos = 0;
             tarea = -1;
@@ -81,6 +84,8 @@ public final class NState {
                 System.err.print("No tenemos tarea inicial del modelo");
                 System.exit(5);
             }
+
+            tareasEjecutadasModelo = new TIntHashSet();
         }
 
         //Copias para la exploración del A*
@@ -102,6 +107,7 @@ public final class NState {
             activeTokensHashCode = a.getActiveTokensHashCode();
 
             activeTokens = a.getActiveTokens();
+            tareasEjecutadasModelo = new TIntHashSet(a.getTareasEjecutadasModelo());
             /*activeTokens = new HashMap<>();
             for (Integer key : a.getActiveTokens().keySet()) {
                 HashMap<TIntHashSet, Integer> set = a.getActiveTokens().get(key);
@@ -114,6 +120,10 @@ public final class NState {
                 }
                 activeTokens.put(key, tokenClone);
             }*/
+        }
+
+        public TIntHashSet getTareasEjecutadasModelo() {
+            return tareasEjecutadasModelo;
         }
 
         public void restartState() {
@@ -232,7 +242,7 @@ public final class NState {
             pos++;
         }
 
-        //La tarea final se ha ejecutado y no quedan tareas activas
+        //La tarea final se ha ejecutado
         public boolean finalModelo() {
             return endPlace > 0;
         }
@@ -254,6 +264,7 @@ public final class NState {
 
         //Operaciones del marcado
         public int execute(int currentTaskID) {
+            tareasEjecutadasModelo.add(currentTaskID);
             activeTokensH = new HashMap<>();
             for (Integer key : this.activeTokens.keySet()) {
                 HashMap<TIntHashSet, Integer> set = this.activeTokens.get(key);
@@ -283,6 +294,8 @@ public final class NState {
         public void updatePossibleEnabledTasks() {
             final CMTask currentTask = this.tasks.get(tarea);
             this.possibleEnabledTasks.addAll(currentTask.getOutputs().getUnionSubsets());
+            //Update enabled elements
+            getEnabledElements();
         }
 
         private void enableOutputs(CMTask currentTask, int currentTaskID) {
@@ -536,6 +549,39 @@ public final class NState {
                 outputs.put(subset, ++currentTokens);
                 activeTokensH.put(currentTask, outputs);
             }
+        }
+
+        public boolean isEjecutedTask(Integer t) {
+            return tareasEjecutadasModelo.contains(t);
+        }
+
+        @Override
+        public String toString() {
+            return "State{" +
+                    "pos=" + pos +
+                    ", tarea=" + tarea +
+                    ", mov=" + mov +
+                    '}';
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            State state = (State) o;
+
+            if (pos != state.pos) return false;
+            if (!possibleEnabledTasks.equals(state.possibleEnabledTasks)) return false;
+            return activeTokens.equals(state.activeTokens);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = pos;
+            result = 31 * result + possibleEnabledTasks.hashCode();
+            result = 31 * result + activeTokens.hashCode();
+            return result;
         }
     }
 }

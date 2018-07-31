@@ -66,7 +66,7 @@ public class AlgoritmoAReducedLarge {
             //Evitar que el log salga por pantalla
             //LOGGER.setUseParentHandlers(false);
             //Definimos el nivel del log
-            LOGGER.setLevel(Level.INFO);
+            LOGGER.setLevel(Level.FINEST);
         }
 
         ParametrosImpl parametrosImpl;
@@ -139,7 +139,7 @@ public class AlgoritmoAReducedLarge {
         //Si queremos explorar una traza en concreto debemos avanzar llamando a miReader.avanzarPos();
         timerTotal.start();
 
-        //miReader.setPos(114);
+        miReader.setPos(1);
         for (int i = 0; i < miReader.getTraces().size(); i++) {
             initialState.getMarcado().restartMarking();
             initialState.restartState();
@@ -329,8 +329,8 @@ public class AlgoritmoAReducedLarge {
         if (state.getMov() != null) {
             applyMovs(state, individual);
         }
-        //boolean anadirForzadas = false;
-        //boolean anadirForzadasTraza = false;
+        boolean anadirForzadas = false;
+        boolean anadirForzadasTraza = false;
         //Creamos una lista con los movimientos posibles
         LinkedList<StateMove> movements = new LinkedList<StateMove>();
         //Limpiamos la variables de la clase auxiliar
@@ -354,11 +354,11 @@ public class AlgoritmoAReducedLarge {
         //Si HAY tareas activas en el modelo
         if (state.Enabled()) {
             //La tarea de la traza ya habia sido ejecutada en el modelo o la acabamos de procesar
-            /*if (e == null) {
+            if (e == null) {
                 anadirForzadas = true;
             } else if (state.isEjecutedTask(e)) {
                 anadirForzadasTraza = true;
-            }*/
+            }
 
             //Tareas activas del modelo
             TIntHashSet posiblesTareas = state.getTareas();
@@ -371,8 +371,8 @@ public class AlgoritmoAReducedLarge {
                 ejec.anadirModelo(id);
             }
         } else {
-            //anadirForzadas = true;
-            //anadirForzadasTraza = true;
+            anadirForzadas = true;
+            anadirForzadasTraza = true;
         }
 
         //Si NO acabamos de procesar la traza
@@ -399,7 +399,7 @@ public class AlgoritmoAReducedLarge {
         }
 
         //Forzamos las tareas que tienen algún token en su entrada
-        /*if (anadirForzadas) {
+        if (anadirForzadas) {
             //Buscamos las tareas que tienen algún token en su entrada
             ejec.tareasTokensEntrada(state.getMarcado().getTokens());
         }
@@ -416,7 +416,7 @@ public class AlgoritmoAReducedLarge {
             for (int i = 0; i < numeroTareas; i++) {
                 movements.add(MODELO_FORZADO);
             }
-        }*/
+        }
 
         if (print) {
             LOGGER.log(Level.FINE, "Posible movimientos del estado : " + movements);

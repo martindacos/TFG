@@ -10,8 +10,8 @@ import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTa
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.reader.IndividualReaderHN;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.reader.IndividualReaderInterface;
-import es.usc.citius.prodigen.domainLogic.workflow.logReader.LogReaderCSV;
 import es.usc.citius.prodigen.domainLogic.workflow.logReader.LogReaderInterface;
+import es.usc.citius.prodigen.domainLogic.workflow.logReader.LogReaderXES;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
@@ -27,11 +27,19 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Readers {
 
     private static Readers miReader;
-    private Log log;
-    private CMIndividual ind;
+    private static Log log;
+    private static CMIndividual ind;
     //Posición del array de trazas que se está procesando
-    private int pos = 0;
-    private ArrayList<InterfazTraza> traces;
+    private static int pos = 0;
+    private static ArrayList<InterfazTraza> traces;
+
+    public static void reset() {
+        miReader = null;
+        log = null;
+        ind = null;
+        pos = 0;
+        traces = null;
+    }
 
     public Readers(Log miLog) {
         this.createLog(miLog);
@@ -62,7 +70,14 @@ public class Readers {
         }
         return miReader;
     }
-    
+
+    public static Readers getReader(ArrayList<InterfazTraza> traces, CMIndividual individual) {
+        if (miReader == null) {
+            miReader = new Readers(traces, individual);
+        }
+        return miReader;
+    }
+
     public static Readers getReader(String logPath, String indPath) throws EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
         if (miReader == null) {
             miReader = new Readers(logPath, indPath);
@@ -73,8 +88,8 @@ public class Readers {
     private Readers(String logPath, String indPath) throws EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
         traces = new ArrayList<>();
         // Read the log.
-        LogReaderInterface reader = new LogReaderCSV();
-        //LogReaderInterface reader = new LogReaderXES();
+        //LogReaderInterface reader = new LogReaderCSV();
+        LogReaderInterface reader = new LogReaderXES();
         ArrayList<LogEntryInterface> entries = reader.read(null, null, new File(logPath));
         log = new Log("test","log.txt",entries);
 
@@ -83,10 +98,10 @@ public class Readers {
 
         try {
             log.simplifyAndAddDummies(true, false);
-            ind = readerInd.read(indPath);
+            ind = readerInd.read(indPath, log);
             //ind = ModelFormatConversor.HNtoCN(ind);
         } catch (Exception ex) {
-            log.simplifyAndAddDummies(true, false);
+            log.simplifyAndAddDummies(true, true);
             ind = readerInd.read(indPath, log);
             //ind = ModelFormatConversor.HNtoCN(ind);
         }
@@ -121,6 +136,11 @@ public class Readers {
             }
         }
         ind = new CMIndividual(newTasks);*/
+    }
+
+    private Readers(ArrayList<InterfazTraza> traces, CMIndividual ind) {
+        this.traces = traces;
+        this.ind = ind;
     }
 
     private Readers(Log log, CMIndividual ind) {

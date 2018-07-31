@@ -36,6 +36,10 @@ public interface InterfazEstadisticas {
 
     void setMemoriaConsumida(double memoria);
 
+    void setDiferentStates(int v);
+
+    int getDiferentStates();
+
     double getMemoriaConsumida();
 
     Double getFitness();

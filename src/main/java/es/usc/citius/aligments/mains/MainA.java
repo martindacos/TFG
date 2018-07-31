@@ -1,14 +1,14 @@
 package es.usc.citius.aligments.mains;
 
+import es.usc.citius.aligments.algoritmos.AlgoritmoAReduced;
+import es.usc.citius.aligments.problem.Readers;
+import es.usc.citius.aligments.salida.InterfazSalida;
+import es.usc.citius.aligments.salida.SalidaTerminalImpl;
 import es.usc.citius.prodigen.domainLogic.exceptions.*;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.fitness.parser.CMParserImpl;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.fitness.parser.ParserInterface;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.population.initial.dependencies.GeneticDependenciesBuilder;
-import es.usc.citius.aligments.algoritmos.AlgoritmoAReduced;
-import es.usc.citius.aligments.problem.Readers;
-import es.usc.citius.aligments.salida.InterfazSalida;
-import es.usc.citius.aligments.salida.SalidaTerminalImpl;
 
 import java.io.IOException;
 import java.util.Random;
