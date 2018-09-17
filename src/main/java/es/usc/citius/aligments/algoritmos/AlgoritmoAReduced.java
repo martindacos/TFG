@@ -1,7 +1,5 @@
 package es.usc.citius.aligments.algoritmos;
 
-import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
-import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
 import es.usc.citius.aligments.config.ParametrosImpl;
 import es.usc.citius.aligments.estadisticas.EstadisticasImpl;
 import es.usc.citius.aligments.estadisticas.InterfazEstadisticas;
@@ -22,6 +20,8 @@ import es.usc.citius.hipster.model.function.HeuristicFunction;
 import es.usc.citius.hipster.model.impl.WeightedNode;
 import es.usc.citius.hipster.model.problem.ProblemBuilder;
 import es.usc.citius.hipster.model.problem.SearchProblem;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.properties.IndividualFitness;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
 
@@ -116,16 +116,16 @@ public class AlgoritmoAReduced {
                 timer.resume();
                 //Sólo Poñemos a Heurística. Da g() xa se encarga Hipster.
                 //Heurística. Número de elementos que faltan por procesar da traza
-                Double heuristicaPrecise = miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea());
+                //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea());
                 //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaCajas(state.getPos(), miReader.getInd(), state.getTarea(), state.getTrazaMovs(), state.getSincroMovs());
                 //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaTokenReplay(state.getPos(), miReader.getInd(), state.getMarcado(), state.getTarea(), state);
                 //Nueva heurística que tiene en cuenta tanto las tareas restantes por procesar del modelo como de la traza
                 //TODO Refinar cas combinación dos elementos ou buscar unha nova solución (estima de máis)
                 //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaPrecise(state.getPos(), miReader.getInd(), state.getTarea());
-                //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaModelo(state.getPos(), miReader.getInd(), state.getTarea());
+                Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaModelo(state.getPos(), miReader.getInd(), state.getTarea());
                 timer.pause();
-                return heuristicaPrecise;
-                //return 0d;
+                //return heuristicaPrecise;
+                return 0d;
             }
         };
 
@@ -138,6 +138,7 @@ public class AlgoritmoAReduced {
         //Si queremos explorar una traza en concreto debemos avanzar llamando a miReader.avanzarPos();
         timerTotal.start();
 
+        CMIndividual originalIndividual = miReader.getInd();
         //miReader.setPos(2);
         for (int i = 0; i < miReader.getTraces().size(); i++) {
             if (i > 0) {
@@ -164,6 +165,12 @@ public class AlgoritmoAReduced {
             time_start = System.currentTimeMillis();
 
             miReader.getTrazaActual().clear();
+
+            //Simplify the model as match is possible. Nedd test
+            //miReader.setInd(originalIndividual);
+            //CMIndividual individual = AuxiliarFunctions.simplifyModel(miReader.getInd(), miReader.getTrazaActual());
+            //miReader.setInd(individual);
+            //miReader.getInd().print();
 
             if (print) {
                 LOGGER.log(Level.INFO, "Traza nº " + i + " -> " + miReader.getTrazaActual().toString());
@@ -213,7 +220,7 @@ public class AlgoritmoAReduced {
                     //System.out.println("------------------SIGO------------------");
                     //System.out.println("ESTIMACION " + estimacion + " MEJOR SCORE " + mejorScore);
                     if (score > mejorScore) {
-                        //break;
+                        break;
                     }
                 }
 
@@ -329,6 +336,8 @@ public class AlgoritmoAReduced {
                 "Tiempo clonar posibles activas : " + timerClonarPosiblesActivas.getReadableElapsedTime() + "\n " +
                 "\n " +
                 "Tiempo cálculo total : " + timerTotal.getReadableElapsedTime() +
+                "\n " +
+                "Nº Instancias marcado (estados diferentes) : " + estados.size() +
                 "\n " +
                 "Nº Instancias marcado : " + contadorInstanciasMarcado);
 

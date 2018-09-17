@@ -1,9 +1,7 @@
 package es.usc.citius.aligments.problem;
 
-import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMSet;
-import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMTask;
-import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import es.usc.citius.aligments.config.ParametrosImpl;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
 
@@ -441,28 +439,9 @@ public class Traza implements InterfazTraza {
 
     @Override
     public Double getHeuristicaModelo(int pos, CMIndividual m, Integer lastEjecuted) {
-        List<CMSet> sets = new ArrayList<>();
-        int movs = 0;
-        while (leerTarea(pos) != null) {
-            Integer tarea = leerTarea(pos);
-            CMTask task = m.getTask(tarea);
-            CMSet inputs = task.getInputs();
-            if (inputs.isEmpty()) {
-                CMSet outputs = task.getOutputs();
-                sets.add(outputs);
-            } else {
-                if (sets.contains(inputs)) {
-                    sets.remove(inputs);
-                } else {
-                    movs++;
-                }
-            }
-            pos++;
-        }
-
-        return null;
+        double h = Readers.getReader().getPaths().checkTrace(tareas, pos);
+        return h;
     }
-
 
     /*public Double getHeuristicaTokenReplay(int pos, CMIndividual m, CMMarking oldMarking, Integer lastEjecuted, NState.State state) {
         //Si ya calculamos la heurística en un estado anterior

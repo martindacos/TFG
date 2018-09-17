@@ -32,6 +32,7 @@ public class Readers {
     //Posición del array de trazas que se está procesando
     private static int pos = 0;
     private static ArrayList<InterfazTraza> traces;
+    private static Paths paths;
 
     public static void reset() {
         miReader = null;
@@ -39,6 +40,7 @@ public class Readers {
         ind = null;
         pos = 0;
         traces = null;
+        paths = null;
     }
 
     public Readers(Log miLog) {
@@ -136,11 +138,13 @@ public class Readers {
             }
         }
         ind = new CMIndividual(newTasks);*/
+        this.paths = getAllPaths();
     }
 
     private Readers(ArrayList<InterfazTraza> traces, CMIndividual ind) {
         this.traces = traces;
         this.ind = ind;
+        this.paths = getAllPaths();
     }
 
     private Readers(Log log, CMIndividual ind) {
@@ -246,6 +250,7 @@ public class Readers {
         tasks.put(4, cmE);
 
         ind.setTasks(tasks);
+        this.paths = getAllPaths();
     }
 
     public CMIndividual getInd() {
@@ -433,5 +438,65 @@ public class Readers {
 
     public void setPos(int pos) {
         this.pos = pos;
+    }
+
+    public static Paths getPaths() {
+        return paths;
+    }
+
+    public Paths getAllPaths() {
+        Paths p = new Paths();
+        /*int actual_task = 0;
+        if (!ind.getStartTasks().isEmpty()) {
+            actual_task = ind.getStartTasks().iterator().next();
+        }
+        TIntHashSet exploredTasks = new TIntHashSet();
+        TIntHashSet notExploredTasks = new TIntHashSet();
+        CMTask task = ind.getTask(actual_task);
+        //Añadimos la tarea como obligatoria
+        p.addRequiredTask(actual_task);
+        exploredTasks.add(actual_task);
+        while (task != null) {
+            //Añadimos la tarea final
+            if (task.getOutputs().size() == 0) {
+                p.addRequiredTask(actual_task);
+            }
+            //Exploramos las salidas de la tarea
+            Iterator<TIntHashSet> it = task.getOutputs().iterator();
+            while (it.hasNext()) {
+                TIntHashSet next = it.next();
+                if (next.contains(actual_task)) {
+                    //Añadimos la tarea como bucle
+                    p.addLoopsTask(actual_task);
+                    p.removeRequiredTask(actual_task);
+                    next.remove(actual_task);
+                }
+                //Añadimos como tareas opcionales
+                if (task.getOutputs().size() > 1) {
+                    p.addRequiredOptionalTask(next);
+                }
+                TIntIterator iterator = next.iterator();
+                while (iterator.hasNext()) {
+                    int next1 = iterator.next();
+                    //Añadimos como tareas obligatorias
+                    if (task.getOutputs().size() == 1) {
+                        p.addRequiredTask(next1);
+                    }
+                    if (!exploredTasks.contains(next1)) {
+                        notExploredTasks.add(next1);
+                    }
+                }
+            }
+            //Seleccionamos la nueva tarea a explorar
+            if (notExploredTasks.iterator().hasNext()) {
+                actual_task = notExploredTasks.iterator().next();
+                task = ind.getTask(actual_task);
+                notExploredTasks.remove(actual_task);
+            } else {
+                task = null;
+            }
+        }*/
+
+        return p;
     }
 }

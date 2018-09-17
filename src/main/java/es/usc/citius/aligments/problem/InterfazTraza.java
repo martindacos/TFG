@@ -67,4 +67,6 @@ public interface InterfazTraza {
     void anadirTareasActivas(int n);
 
     ArrayList<Integer> getTareasModeloActivas();
+
+    ArrayList<Integer> getTareas();
 }

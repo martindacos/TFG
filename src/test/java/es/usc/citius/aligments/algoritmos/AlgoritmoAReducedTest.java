@@ -25,7 +25,8 @@ public class AlgoritmoAReducedTest {
         AlgoritmoAReduced.reset();
     }
 
-    //Test que verifican la correcta creación de todos los estados. Necesario eliminar break del bucle del algoritmo.
+    //Test que verifican la correcta creación de todos los estados. Necesario eliminar break del bucle del algoritmo y
+    // utilizar una h() igual a 0.
     @Test
     public void problem() throws Exception {
         //Modelo secuencial A y B
@@ -245,11 +246,20 @@ public class AlgoritmoAReducedTest {
 
         traces.add(t);
 
+        /*t = new Traza();
+        tareas = new ArrayList<>();
+        tareas.add(0);
+        tareas.add(2);
+        tareas.add(3);
+        t.setTareas(tareas);
+
+        traces.add(t);*/
+
         Readers miReader = Readers.getReader(traces, ind);
         InterfazEstadisticas problem = AlgoritmoAReduced.problem(miReader, true);
 
         Assert.assertEquals(0d, problem.getCoste(), 0);
-        Assert.assertEquals(21, problem.getDiferentStates(), 0);
+        Assert.assertEquals(21, problem.getDiferentStates(), 1);
     }
 
     @Test
