@@ -1,5 +1,7 @@
 package es.usc.citius.aligments.algoritmos;
 
+import es.usc.citius.aligments.config.Parametros;
+import es.usc.citius.aligments.config.ParametrosImpl;
 import es.usc.citius.aligments.estadisticas.InterfazEstadisticas;
 import es.usc.citius.aligments.problem.InterfazTraza;
 import es.usc.citius.aligments.problem.Readers;
@@ -343,5 +345,39 @@ public class AlgoritmoAReducedTest {
 
         Assert.assertEquals(0d, problem.getCoste(), 0);
         Assert.assertEquals(25, problem.getDiferentStates(), 0);
+    }
+
+    //Test que ejecutan ficheros
+    @Test
+    public void problem5() throws Exception {
+        String PATH = "/home/martin/Documentos/projects/Aligments/TFG/deMedeiros/";
+
+        for (int i=2; i<=10; i++) {
+            resetReader();
+            Readers miReader = Readers.getReader(PATH + "g" + i + "/grpd_g" + i + "pi300.xes", PATH + "g" + i + "/FHM.hn");
+            InterfazEstadisticas problem = AlgoritmoAReduced.problem(miReader, false);
+
+            resetReader();
+            miReader = Readers.getReader(PATH + "g" + i + "/grpd_g" + i + "pi300.xes", PATH + "g" + i + "/FHM.hn");
+            ParametrosImpl.setHEURISTIC(Parametros.HEURISTIC_MODEL);
+            InterfazEstadisticas problem2 = AlgoritmoAReduced.problem(miReader, false);
+
+            Assert.assertEquals(problem.getCoste(), problem2.getCoste(), 0);
+            System.out.println("Modelo G" + i);
+            System.out.println("\tTiempo de Cálculo \t Diferent States \t Memoria Consumida");
+            System.out.println("\t" + problem.getTiempoCalculo() + " \t" + problem.getDiferentStates() + " \t" + problem.getMemoriaConsumida());
+            System.out.println("\t" + problem2.getTiempoCalculo() + " \t" + problem2.getDiferentStates() + " \t" + problem2.getMemoriaConsumida());
+        }
+    }
+
+    @Test
+    public void problem6() throws Exception {
+        String PATH = "/home/martin/Documentos/projects/Aligments/TFG/deMedeiros/";
+        ParametrosImpl.setHEURISTIC(Parametros.HEURISTIC_MODEL);
+        Readers miReader = Readers.getReader(PATH + "g9/grpd_g9pi300.xes", PATH + "g9/FHM.hn");
+        InterfazEstadisticas problem = AlgoritmoAReduced.problem(miReader, true);
+
+        System.out.println();
+
     }
 }

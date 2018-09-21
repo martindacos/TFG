@@ -21,4 +21,7 @@ public interface Parametros {
     //El menor valor posible de Épsilon debería ser 1
     double EPSILON_FINAL = 100000d;
     //public static final double EPSILON_FINAL = 1d;
+
+    String HEURISTIC_TRACE = "HEURISTIC_TRACE";
+    String HEURISTIC_MODEL = "HEURISTIC_MODEL";
 }

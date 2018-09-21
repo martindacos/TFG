@@ -1,6 +1,7 @@
 package es.usc.citius.aligments.problem;
 
 import es.usc.citius.aligments.config.ParametrosImpl;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMSet;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
@@ -438,8 +439,27 @@ public class Traza implements InterfazTraza {
     }
 
     @Override
-    public Double getHeuristicaModelo(int pos, CMIndividual m, Integer lastEjecuted) {
-        double h = Readers.getReader().getPaths().checkTrace(tareas, pos);
+    public Double getHeuristicaModelo(int pos, CMIndividual m, Integer lastEjecuted, TIntHashSet possibleEnabeldTasks) {
+        //Get heuristic with paths of model
+        //double h = Readers.getReader().getPaths().checkTrace(tareas, pos);
+
+        TIntHashSet possibleEnabledTasksCopy = new TIntHashSet(possibleEnabeldTasks);
+        double h = 0d;
+        for (;pos<tareas.size();pos++) {
+            Integer tarea = leerTarea(pos);
+            if (!possibleEnabledTasksCopy.contains(tarea)) {
+                h += ParametrosImpl.getC_TRAZA();
+            } else {
+                h += ParametrosImpl.getC_SINCRONO();
+            }
+            CMSet outputs = m.getTask(tarea).getOutputs();
+            for (int i=0; i < outputs.size(); i++) {
+                TIntHashSet hashSetOutputs = outputs.get(i);
+                //Add all outputs of task to HashSet
+                possibleEnabledTasksCopy.addAll(hashSetOutputs);
+            }
+        }
+
         return h;
     }
 

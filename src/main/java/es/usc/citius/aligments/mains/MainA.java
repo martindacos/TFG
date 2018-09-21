@@ -28,7 +28,7 @@ public class MainA {
         ///home/martin/Descargas/PLG_Logs/49_Actividades/1000BigNoise.xes /home/martin/Descargas/PLG_Logs/49_Actividades/Individual.hn
         ///home/martin/Descargas/PLG_Logs/SPL03-raw.xes /home/martin/Descargas/PLG_Logs/upper.hn
 
-        ///home/martin/Documentos/projects/prodigen-backend/log-dir/RP/RP0.csv /home/martin/Documentos/projects/prodigen-backend/log-dir/RP/HM0.hn
+        ///home/martin/Descargas/PLG_Logs/4_Actividades/5.xes /home/martin/Descargas/PLG_Logs/4_Actividades/Individual.hn
         Readers miReader;
         switch (args.length) {
             case 2:

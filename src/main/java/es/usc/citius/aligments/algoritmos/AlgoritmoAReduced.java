@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.*;
 
-import static es.usc.citius.aligments.config.Parametros.PENALIZACION_FORZADO;
+import static es.usc.citius.aligments.config.Parametros.*;
 import static es.usc.citius.aligments.problem.NState.StateMove.*;
 
 public class AlgoritmoAReduced {
@@ -67,7 +67,7 @@ public class AlgoritmoAReduced {
             //Evitar que el log salga por pantalla
             //LOGGER.setUseParentHandlers(false);
             //Definimos el nivel del log
-            LOGGER.setLevel(Level.FINEST);
+            LOGGER.setLevel(Level.INFO);
         }
 
         ParametrosImpl parametrosImpl;
@@ -115,17 +115,25 @@ public class AlgoritmoAReduced {
             public Double estimate(State state) {
                 timer.resume();
                 //Sólo Poñemos a Heurística. Da g() xa se encarga Hipster.
-                //Heurística. Número de elementos que faltan por procesar da traza
-                //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea());
+                Double heuristicaPrecise = 0d;
+                switch (ParametrosImpl.getHEURISTIC()) {
+                    case HEURISTIC_TRACE :
+                        //Heurística. Número de elementos que faltan por procesar da traza
+                        heuristicaPrecise = miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea());
+                        break;
+                    case HEURISTIC_MODEL :
+                        //h() de tareas que se pueden ejecutar en ese momento y aproximación de siguientes
+                        heuristicaPrecise = miReader.getTrazaActual().getHeuristicaModelo(state.getPos(), miReader.getInd(), state.getTarea(), state.getPossibleEnabledTasks());
+
+                }
+                timer.pause();
+                return heuristicaPrecise;
+
                 //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaCajas(state.getPos(), miReader.getInd(), state.getTarea(), state.getTrazaMovs(), state.getSincroMovs());
                 //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaTokenReplay(state.getPos(), miReader.getInd(), state.getMarcado(), state.getTarea(), state);
                 //Nueva heurística que tiene en cuenta tanto las tareas restantes por procesar del modelo como de la traza
                 //TODO Refinar cas combinación dos elementos ou buscar unha nova solución (estima de máis)
                 //Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaPrecise(state.getPos(), miReader.getInd(), state.getTarea());
-                Double heuristicaPrecise = miReader.getTrazaActual().getHeuristicaModelo(state.getPos(), miReader.getInd(), state.getTarea());
-                timer.pause();
-                //return heuristicaPrecise;
-                return 0d;
             }
         };
 
@@ -138,7 +146,8 @@ public class AlgoritmoAReduced {
         //Si queremos explorar una traza en concreto debemos avanzar llamando a miReader.avanzarPos();
         timerTotal.start();
 
-        CMIndividual originalIndividual = miReader.getInd();
+        //CMIndividual originalIndividual = miReader.getInd();
+        miReader.getInd().print();
         //miReader.setPos(2);
         for (int i = 0; i < miReader.getTraces().size(); i++) {
             if (i > 0) {
@@ -180,14 +189,14 @@ public class AlgoritmoAReduced {
             AStar.Iterator it = astar.iterator();
 
             while (it.hasNext()) {
-                if (print) {
-                    Map<State, WeightedNode<StateMove, State, Double>> listaAbiertos = it.getOpen();
-                    //System.out.println("Tamaño lista abiertos: " + listaAbiertos.size());
-                    for (Map.Entry<State, WeightedNode<StateMove, State, Double>> entry : listaAbiertos.entrySet()) {
-                        WeightedNode<StateMove, State, Double> value = entry.getValue();
-                        if (!estados.contains(value)) {
-                            estados.add(value);
-                            /*System.out.println();
+                Map<State, WeightedNode<StateMove, State, Double>> listaAbiertos = it.getOpen();
+                for (Map.Entry<State, WeightedNode<StateMove, State, Double>> entry : listaAbiertos.entrySet()) {
+                    WeightedNode<StateMove, State, Double> value = entry.getValue();
+                    if (!estados.contains(value)) {
+                        estados.add(value);
+                        if (print) {
+                            /*System.out.println("Tamaño lista abiertos: " + listaAbiertos.size());
+                            System.out.println();
                             System.out.println(entry.getKey().toString());
                             WeightedNode<StateMove, State, Double> stateMoveStateDoubleWeightedNode = value.previousNode();
                             while (stateMoveStateDoubleWeightedNode != null) {
@@ -201,7 +210,7 @@ public class AlgoritmoAReduced {
                 //System.out.println("*****************************");
                 WeightedNode n1 = (WeightedNode) it.next();
                 State s = (State) n1.state();
-                System.out.println("Estado seleccionado -> " + s.toString());
+                //System.out.println("Estado seleccionado -> " + s.toString());
                 double score = (double) n1.getScore();
 
                 if (print) {
@@ -224,7 +233,8 @@ public class AlgoritmoAReduced {
                     }
                 }
 
-                if (miReader.getTrazaActual().procesadoTraza(s.getPos()) && s.finalModelo()) {
+                //if (miReader.getTrazaActual().procesadoTraza(s.getPos()) && s.finalModelo()) {
+                if (miReader.getTrazaActual().procesadoTraza(s.getPos())) {
                     parar = true;
                     if (mejorScore == 0) {
                         mejorScore = (double) n1.getCost();
@@ -351,7 +361,8 @@ public class AlgoritmoAReduced {
         }
 
         e.setDiferentStates(estados.size());
-        printStates();
+        e.setTiempoCalculo(total_time);
+        //printStates();
         return e;
     }
 

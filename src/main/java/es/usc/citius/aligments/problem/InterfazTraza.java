@@ -1,6 +1,7 @@
 package es.usc.citius.aligments.problem;
 
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.ArrayList;
 
@@ -32,7 +33,7 @@ public interface InterfazTraza {
     //Double getHeuristicaTokenReplay(int pos, CMIndividual m, CMMarking marking, Integer lastEjecuted, NState.State state);
 
     //Calculamos la heurística para una traza utilizando unicamente las entradas y salidas del modelo
-    Double getHeuristicaModelo(int pos, CMIndividual m, Integer lastEjecuted);
+    Double getHeuristicaModelo(int pos, CMIndividual m, Integer lastEjecuted, TIntHashSet possibleEnabledTasks);
 
     //Función que dada una posición indica si la traza fue procesada
     boolean procesadoTraza(int pos);

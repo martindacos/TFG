@@ -17,6 +17,8 @@ public class ParametrosImpl implements Parametros {
     private static double E_INTERVALO = EPSILON_INTERVALO;
     private static double E_FINAL = EPSILON_FINAL;
 
+    private static String HEURISTIC = HEURISTIC_TRACE;
+
     public static ParametrosImpl getParametrosImpl() {
         if (miParametrosImpl == null) {
             miParametrosImpl = new ParametrosImpl();
@@ -78,5 +80,13 @@ public class ParametrosImpl implements Parametros {
 
     public void setE_FINAL(double E_FINAL) {
         this.E_FINAL = E_FINAL;
+    }
+
+    public static void setHEURISTIC(String HEURISTIC) {
+        ParametrosImpl.HEURISTIC = HEURISTIC;
+    }
+
+    public static String getHEURISTIC() {
+        return HEURISTIC;
     }
 }
