@@ -83,7 +83,7 @@ public class AlgoritmoAReduced {
         //Guardamos el coste mínimo del camino del individuo
         InterfazEstadisticas e = new EstadisticasImpl();
         //Creamos las interfaces de salida por terminal
-        InterfazSalida salida = new SalidaTerminalImpl();
+        InterfazSalida salida = new SalidaTerminalImpl(print);
 
         /*Funciones para el algoritmo A* */
         ActionFunction<StateMove, State> af = new ActionFunction<StateMove, State>() {
@@ -233,8 +233,8 @@ public class AlgoritmoAReduced {
                     }
                 }
 
-                //if (miReader.getTrazaActual().procesadoTraza(s.getPos()) && s.finalModelo()) {
-                if (miReader.getTrazaActual().procesadoTraza(s.getPos())) {
+                if (miReader.getTrazaActual().procesadoTraza(s.getPos()) && s.finalModelo()) {
+                //if (miReader.getTrazaActual().procesadoTraza(s.getPos())) {
                     parar = true;
                     if (mejorScore == 0) {
                         mejorScore = (double) n1.getCost();
@@ -306,12 +306,10 @@ public class AlgoritmoAReduced {
             miReader.getTrazaActual().setScore(nuevoScoreR);
             //Guardamos el tiempo de cálculo del alineamiento
             miReader.getTrazaActual().setTiempoC(time_end - time_start);
-            if (print) {
-                System.out.println(salida.ActualizarTrazasReduced(miReader.getTrazaActual(), n, true, miReader.getInd()));
-                //System.out.println(n.path().toString());
-                //LOGGER.log(Level.INFO, salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd()));
-                //LOGGER.log(Level.INFO, n.path().toString());
-            }
+            salida.ActualizarTrazasReduced(miReader.getTrazaActual(), n, true, miReader.getInd());
+            //System.out.println(n.path().toString());
+            //LOGGER.log(Level.INFO, salida.ActualizarTrazas(miReader.getTrazaActual(), n, true, miReader.getInd()));
+            //LOGGER.log(Level.INFO, n.path().toString());
 
             if (print) {
                 //System.out.println(e.getStatMovs());

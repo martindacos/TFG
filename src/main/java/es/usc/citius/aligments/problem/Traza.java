@@ -5,17 +5,22 @@ import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTa
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.hash.TIntHashSet;
+import org.processmining.plugins.petrinet.replayresult.StepTypes;
 
 import java.util.*;
+import java.util.stream.Stream;
+
+import static org.processmining.plugins.petrinet.replayresult.StepTypes.*;
 
 /**
- *
  * @author marti
  */
 public class Traza implements InterfazTraza {
 
     private String id;
-    private ArrayList<Integer> tareas;
+    private List<Integer> tareas;
+    private List<NState.StateMove> steps;
+    private List<String> stepsTasks;
     private double score;
     private int numRepeticiones;
     private double tiempoC;
@@ -38,6 +43,8 @@ public class Traza implements InterfazTraza {
 
     public Traza() {
         this.tareas = new ArrayList<>();
+        this.steps = new ArrayList<>();
+        this.stepsTasks = new ArrayList<>();
         this.numRepeticiones = 1;
         memoriaC = 0;
         tareaFinalModelo = -1;
@@ -53,8 +60,18 @@ public class Traza implements InterfazTraza {
         return tareasModeloActivas;
     }
 
-    public ArrayList<Integer> getTareas() {
+    public List<Integer> getTareas() {
         return tareas;
+    }
+
+    @Override
+    public List<NState.StateMove> getSteps() {
+        return steps;
+    }
+
+    @Override
+    public List<String> getStepsTasks() {
+        return stepsTasks;
     }
 
     public void setTareas(ArrayList<Integer> tareas) {
@@ -89,6 +106,62 @@ public class Traza implements InterfazTraza {
     @Override
     public void anadirTarea(int t) {
         tareas.add(t);
+    }
+
+    @Override
+    public void addStep(NState.StateMove step) {
+        this.steps.add(step);
+    }
+
+    @Override
+    public void addStepTask(String stepTask) {
+        this.stepsTasks.add(stepTask);
+    }
+
+    public boolean compareSteps(List<StepTypes> stepsCobefra) {
+        int i = 0;
+        //Count movements of CoBeFra
+        int sincCobefra = 0;
+        int logCobefra = 0;
+        int modelCobefra = 0;
+        boolean returnValue = true;
+        for (StepTypes step : stepsCobefra) {
+            if (!step.equals(MINVI)) {
+                if (step.equals(LMGOOD)) {
+                    sincCobefra++;
+                } else if (step.equals(L)) {
+                    logCobefra++;
+                } else if (step.equals(MREAL)) {
+                    modelCobefra++;
+                }
+
+                if (i >= steps.size()) {
+                    return false;
+                } else {
+                    NState.StateMove stateMove = steps.get(i);
+                    i++;
+                    if (step.equals(LMGOOD) && !stateMove.equals(NState.StateMove.SINCRONO)) {
+                        returnValue = false;
+                    } else if (step.equals(L) && !stateMove.equals(NState.StateMove.TRAZA)) {
+                        returnValue = false;
+                    } else if (step.equals(MREAL) && !stateMove.equals(NState.StateMove.MODELO)) {
+                        returnValue = false;
+                    }
+                }
+            }
+        }
+
+        //Check the number of movements for order problems
+        if (returnValue == false) {
+            long sinc = steps.stream().filter(step -> step.equals(NState.StateMove.SINCRONO)).count();
+            long log = steps.stream().filter(step -> step.equals(NState.StateMove.TRAZA)).count();
+            long model = steps.stream().filter(step -> step.equals(NState.StateMove.MODELO)).count();
+            if (sincCobefra == sinc && logCobefra == log && modelCobefra == model) {
+                returnValue = true;
+                System.out.println("It seems the same on trace " + id);
+            }
+        }
+        return returnValue;
     }
 
     @Override
@@ -135,7 +208,7 @@ public class Traza implements InterfazTraza {
         resultado = Math.max(tareasFin, r);
 
         //Si el camino del modelo es mayor que el de la traza contamos las tareas a mayores del modelo como movimientos en él
-        if (resultado != 0 && tareasFin!=r && resultado == tareasFin) {
+        if (resultado != 0 && tareasFin != r && resultado == tareasFin) {
             double v = (tareasFin - r) * ParametrosImpl.getC_MODELO();
             r *= ParametrosImpl.getC_SINCRONO();
             resultado = v + r;
@@ -171,7 +244,7 @@ public class Traza implements InterfazTraza {
 
         //Recuperamos las tareas no procesadas en la traza
         ArrayList<Integer> tareasNoProcesadas = new ArrayList<>();
-        for (int i=pos; i <= tareas.size() - 1; i++) {
+        for (int i = pos; i <= tareas.size() - 1; i++) {
             tareasNoProcesadas.add(tareas.get(i));
         }
 
@@ -342,13 +415,13 @@ public class Traza implements InterfazTraza {
                 tareasNoProcesadas.remove(0);
             }
 
-            if (Break && tareasNoProcesadas.size()==0 ) {
+            if (Break && tareasNoProcesadas.size() == 0) {
                 //Alcanzamos la tarea final del modelo y no quedan elementos por procesar en la traza
                 break label1;
-            } else if (!Break && tareasNoProcesadas.size()==0) {
+            } else if (!Break && tareasNoProcesadas.size() == 0) {
                 //Faltan tareas por ejecutar en el modelo
                 movimientosTraza++;
-            } else if (!Break && size1==size2 && tareasNoProcesadas.size()==0) {
+            } else if (!Break && size1 == size2 && tareasNoProcesadas.size() == 0) {
                 //TODO Si no se puede alcanzar el final del modelo????
                 System.err.print("La heurística no puede alcanzar la tarea final de modelo");
                 System.exit(4);
@@ -428,7 +501,7 @@ public class Traza implements InterfazTraza {
 
         //Recuperamos las tareas no procesadas en la traza
         ArrayList<Integer> tareasNoProcesadas = new ArrayList<>();
-        for (int i=pos; i <= tareas.size() - 1; i++) {
+        for (int i = pos; i <= tareas.size() - 1; i++) {
             tareasNoProcesadas.add(tareas.get(i));
         }
 
@@ -445,7 +518,7 @@ public class Traza implements InterfazTraza {
 
         TIntHashSet possibleEnabledTasksCopy = new TIntHashSet(possibleEnabeldTasks);
         double h = 0d;
-        for (;pos<tareas.size();pos++) {
+        for (; pos < tareas.size(); pos++) {
             Integer tarea = leerTarea(pos);
             if (!possibleEnabledTasksCopy.contains(tarea)) {
                 h += ParametrosImpl.getC_TRAZA();
@@ -453,7 +526,7 @@ public class Traza implements InterfazTraza {
                 h += ParametrosImpl.getC_SINCRONO();
             }
             CMSet outputs = m.getTask(tarea).getOutputs();
-            for (int i=0; i < outputs.size(); i++) {
+            for (int i = 0; i < outputs.size(); i++) {
                 TIntHashSet hashSetOutputs = outputs.get(i);
                 //Add all outputs of task to HashSet
                 possibleEnabledTasksCopy.addAll(hashSetOutputs);
@@ -548,7 +621,7 @@ public class Traza implements InterfazTraza {
                 for (int t : tareasNoProcesadas) {
                     if (caminoCopy.contains(t)) {
                         tareasSincronas++;
-                        caminoCopy.remove((Object)t);
+                        caminoCopy.remove((Object) t);
                     } else {
                         tareasTraza++;
                     }

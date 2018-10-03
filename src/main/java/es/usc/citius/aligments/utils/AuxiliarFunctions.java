@@ -20,7 +20,7 @@ public class AuxiliarFunctions {
      */
 
     public static CMIndividual simplifyModel(CMIndividual model, InterfazTraza trace) {
-        ArrayList<Integer> tareas = trace.getTareas();
+        List<Integer> tareas = trace.getTareas();
         TIntObjectIterator<CMTask> it = model.getTasks().iterator();
         //Check what tasks of model not are in the trace
         List<Integer> tasks = new ArrayList<>();

@@ -1,8 +1,10 @@
 package es.usc.citius.aligments.problem;
 
+import es.usc.citius.prodigen.config.NameConstants;
 import es.usc.citius.prodigen.domainLogic.exceptions.*;
 import es.usc.citius.prodigen.domainLogic.workflow.CaseInstance;
 import es.usc.citius.prodigen.domainLogic.workflow.Log;
+import es.usc.citius.prodigen.domainLogic.workflow.LogEntryImpl;
 import es.usc.citius.prodigen.domainLogic.workflow.LogEntryInterface;
 import es.usc.citius.prodigen.domainLogic.workflow.Task.Task;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMSet;
@@ -15,10 +17,18 @@ import es.usc.citius.prodigen.domainLogic.workflow.logReader.LogReaderXES;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
+import org.deckfour.xes.extension.std.XConceptExtension;
+import org.deckfour.xes.extension.std.XLifecycleExtension;
+import org.deckfour.xes.in.XesXmlParser;
+import org.deckfour.xes.model.XAttribute;
+import org.deckfour.xes.model.XLog;
+import org.deckfour.xes.model.XTrace;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -33,6 +43,7 @@ public class Readers {
     private static int pos = 0;
     private static ArrayList<InterfazTraza> traces;
     private static Paths paths;
+    private static List<String> orderTraces = new ArrayList<>();
 
     public static void reset() {
         miReader = null;
@@ -41,6 +52,7 @@ public class Readers {
         pos = 0;
         traces = null;
         paths = null;
+        orderTraces = new ArrayList<>();
     }
 
     public Readers(Log miLog) {
@@ -86,13 +98,19 @@ public class Readers {
         }
         return miReader;
     }
-    
+
+    public static List<String> getOrderTraces() {
+        return orderTraces;
+    }
+
     private Readers(String logPath, String indPath) throws EmptyLogException, WrongLogEntryException, NonFinishedWorkflowException, InvalidFileExtensionException, MalformedFileException {
         traces = new ArrayList<>();
         // Read the log.
         //LogReaderInterface reader = new LogReaderCSV();
         LogReaderInterface reader = new LogReaderXES();
         ArrayList<LogEntryInterface> entries = reader.read(null, null, new File(logPath));
+        //TODO Can remove, only for test CoBeFRa
+        readXesWithOrden(logPath);
         log = new Log("test","log.txt",entries);
 
         // Obtain the individual from the file.
@@ -108,23 +126,23 @@ public class Readers {
             //ind = ModelFormatConversor.HNtoCN(ind);
         }
         
-        System.out.println("Log '" + log.getName() + "':");
+        //System.out.println("Log '" + log.getName() + "':");
         ConcurrentHashMap<String, CaseInstance> traces = log.getCaseInstances();
         int j = 1;
         for (String traceKey : traces.keySet()) {
             CaseInstance trace = traces.get(traceKey);
             Integer numRepetitions = trace.getNumInstances();
-            System.out.print("\t" + j + " Trace '" + trace.getId() + "' (" + numRepetitions + " repetitions): [ ");
+            //System.out.print("\t" + j + " Trace '" + trace.getId() + "' (" + numRepetitions + " repetitions): [ ");
             TIntArrayList tasks = trace.getTaskSequence();
             Traza traza = new Traza();
             traza.setId(trace.getId());
             for (int i=0; i < tasks.size(); i++) {
-                System.out.print(tasks.get(i) + " ");
+                //System.out.print(tasks.get(i) + " ");
                 traza.anadirTarea(tasks.get(i));
             }
             traza.setNumRepeticiones(numRepetitions);
             this.traces.add(traza);
-            System.out.println("]");
+            //System.out.println("]");
             j++;
         }
         //Remove task without inputs and outputs
@@ -264,6 +282,21 @@ public class Readers {
 
     public ArrayList<InterfazTraza> getTraces() {
         return traces;
+    }
+
+    public InterfazTraza getTrace(String id) throws Exception {
+        for (InterfazTraza trace : traces) {
+            if (trace.getId().equals(id)) return trace;
+        }
+        throw new Exception();
+    }
+
+    public InterfazTraza getTrace(Integer pos) throws Exception {
+        String traceID = orderTraces.get(pos);
+        if (traces.stream().filter(t -> t.getId().equals(traceID)).count() > 0) {
+            return traces.stream().filter(t -> t.getId().equals(traceID)).findAny().get();
+        }
+        return null;
     }
 
     public void setTraces(ArrayList<InterfazTraza> traces) {
@@ -498,5 +531,23 @@ public class Readers {
         }*/
 
         return p;
+    }
+
+    private void readXesWithOrden(String xesPath) {
+        File file = new File(xesPath);
+        XesXmlParser reader = new XesXmlParser();
+
+        try {
+            List<XLog> parser = reader.parse(file);
+            XLog traces = parser.get(0);
+            int numCases = traces.size();
+            for (int caseIndex = 0; caseIndex < numCases; caseIndex++) {
+                XTrace trace = traces.get(caseIndex);
+                XAttribute caseName = trace.getAttributes().get("concept:name");
+                orderTraces.add(caseName.toString());
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(LogReaderXES.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

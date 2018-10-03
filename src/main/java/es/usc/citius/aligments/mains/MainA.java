@@ -65,7 +65,7 @@ public class MainA {
         time_end = System.currentTimeMillis();
         total_time = time_end - time_start;
 
-        InterfazSalida salida = new SalidaTerminalImpl();
+        InterfazSalida salida = new SalidaTerminalImpl(true);
         String s = salida.estadisticasModelo(miReader.getInd(), 0d, total_time, 0d);
         System.out.println(s);
     }

@@ -2,8 +2,10 @@ package es.usc.citius.aligments.problem;
 
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import gnu.trove.set.hash.TIntHashSet;
+import org.processmining.plugins.petrinet.replayresult.StepTypes;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -69,5 +71,15 @@ public interface InterfazTraza {
 
     ArrayList<Integer> getTareasModeloActivas();
 
-    ArrayList<Integer> getTareas();
+    List<Integer> getTareas();
+
+    List<String> getStepsTasks();
+
+    void addStep(NState.StateMove step);
+
+    void addStepTask(String stepTask);
+
+    boolean compareSteps(List<StepTypes> stepsCobefra);
+
+    List<NState.StateMove> getSteps();
 }

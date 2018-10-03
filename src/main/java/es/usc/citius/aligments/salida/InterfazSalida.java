@@ -1,8 +1,11 @@
 package es.usc.citius.aligments.salida;
 
 import es.usc.citius.aligments.problem.InterfazTraza;
-import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import es.usc.citius.aligments.problem.Readers;
 import es.usc.citius.hipster.model.AbstractNode;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import org.processmining.plugins.petrinet.replayresult.PNRepResult;
+import org.processmining.plugins.replayer.replayresult.SyncReplayResult;
 
 /**
  *
@@ -26,10 +29,18 @@ public interface InterfazSalida {
     String ActualizarTrazasOld(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind);
 
     //Función que imprime las trazas y su nodo solución (alineamiento)
-    String ActualizarTrazasReduced(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind);
+    void ActualizarTrazasReduced(InterfazTraza trace, AbstractNode nodo, boolean ad, CMIndividual ind);
 
     //Función que imprime el número total de trazas a alinear
     void setTotalTrazas(int size);
 
     String getStatMovs();
+
+    void printCobefra(SyncReplayResult result);
+
+    void printCobefra(PNRepResult pnRepResult);
+
+    void printTrace(InterfazTraza trace);
+
+    void compareResults(PNRepResult pnRepResult, Readers miReader);
 }

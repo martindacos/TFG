@@ -85,7 +85,7 @@ public class AlgoritmoAReducedLarge {
         //Guardamos el coste mínimo del camino del individuo
         InterfazEstadisticas e = new EstadisticasImpl();
         //Creamos las interfaces de salida por terminal
-        InterfazSalida salida = new SalidaTerminalImpl();
+        InterfazSalida salida = new SalidaTerminalImpl(print);
 
         /*Funciones para el algoritmo A* */
         ActionFunction<StateMove, NStateLarge.StateLarge> af = new ActionFunction<StateMove, NStateLarge.StateLarge>() {

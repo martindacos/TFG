@@ -1,11 +1,15 @@
 package es.usc.citius.aligments.algoritmos;
 
+import be.kuleuven.econ.cbf.metrics.recall.AryaFitness;
 import es.usc.citius.aligments.config.Parametros;
 import es.usc.citius.aligments.config.ParametrosImpl;
 import es.usc.citius.aligments.estadisticas.InterfazEstadisticas;
 import es.usc.citius.aligments.problem.InterfazTraza;
 import es.usc.citius.aligments.problem.Readers;
 import es.usc.citius.aligments.problem.Traza;
+import es.usc.citius.aligments.salida.InterfazSalida;
+import es.usc.citius.aligments.salida.SalidaTerminalImpl;
+import es.usc.citius.aligments.utils.Timer;
 import es.usc.citius.prodigen.domainLogic.workflow.Task.Task;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMSet;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMTask;
@@ -15,6 +19,7 @@ import gnu.trove.set.hash.TIntHashSet;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.processmining.cobefra.AligmentBasedFitness;
 
 import java.util.ArrayList;
 
@@ -352,7 +357,7 @@ public class AlgoritmoAReducedTest {
     public void problem5() throws Exception {
         String PATH = "/home/martin/Documentos/projects/Aligments/TFG/deMedeiros/";
 
-        for (int i=2; i<=10; i++) {
+        for (int i = 2; i <= 10; i++) {
             resetReader();
             Readers miReader = Readers.getReader(PATH + "g" + i + "/grpd_g" + i + "pi300.xes", PATH + "g" + i + "/FHM.hn");
             InterfazEstadisticas problem = AlgoritmoAReduced.problem(miReader, false);
@@ -379,5 +384,43 @@ public class AlgoritmoAReducedTest {
 
         System.out.println();
 
+    }
+
+    //Test que comparan la ejecucion con CoBeFra
+    @Test
+    public void problem7() throws Exception {
+        String PATH = "/home/martin/Documentos/projects/Aligments/TFG/deMedeiros/";
+        InterfazSalida salida = new SalidaTerminalImpl(false);
+
+        for (int i = 8; i <= 8; i++) {
+            resetReader();
+            Timer total = new Timer();
+            total.start();
+            Readers miReader = Readers.getReader(PATH + "g" + i + "/grpd_g" + i + "pi300.xes", PATH + "g" + i + "/FHM.hn");
+            ParametrosImpl.setHEURISTIC(Parametros.HEURISTIC_MODEL);
+            InterfazEstadisticas problem = AlgoritmoAReduced.problem(miReader, false);
+            total.stop();
+
+            System.out.println("Modelo G" + i);
+            System.out.println("Fitness : " + problem.getFitness());
+            AryaFitness cobefra = AligmentBasedFitness.calculate(PATH + "g" + i + "/grpd_g" + i + "pi300.xes", PATH + "g" + i + "/FHM.pnml");
+            //salida.printCobefra(cobefra.getPNRepResult());
+
+            salida.compareResults(cobefra.getPNRepResult(), miReader);
+            //System.out.println("\tTiempo de Cálculo \t Diferent States \t Memoria Consumida");
+            //System.out.println("\t" + problem.getTiempoCalculo() + " \t" + problem.getDiferentStates() + " \t" + problem.getMemoriaConsumida());
+            System.out.println();
+            System.out.println();
+        }
+    }
+
+    //Test que comparan la ejecucion con CoBeFra
+    @Test
+    public void problem8() throws Exception {
+        String PATH = "/home/martin/Documentos/projects/Aligments/TFG/deMedeiros/";
+        InterfazSalida salida = new SalidaTerminalImpl(true);
+
+        AryaFitness cobefra = AligmentBasedFitness.calculate(PATH + "g9/grpd_g9pi1.xes", PATH + "g9/FHM.pnml");
+        salida.printCobefra(cobefra.getPNRepResult());
     }
 }

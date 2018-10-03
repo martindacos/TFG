@@ -1,9 +1,10 @@
 package es.usc.citius.aligments.mains;
 
+import be.kuleuven.econ.cbf.metrics.recall.AryaFitness;
 import org.processmining.cobefra.AligmentBasedFitness;
 
 public class MainCoBeFra {
     public static void main(String[] args) {
-        AligmentBasedFitness aligmentBasedFitness = new AligmentBasedFitness(args[0], args[1]);
+        AryaFitness cobefra = AligmentBasedFitness.calculate(args[0], args[1]);
     }
 }
