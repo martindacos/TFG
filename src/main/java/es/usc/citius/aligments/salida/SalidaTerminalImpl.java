@@ -7,6 +7,8 @@ import es.usc.citius.aligments.problem.Readers;
 import es.usc.citius.hipster.model.AbstractNode;
 import es.usc.citius.hipster.model.impl.ADStarNodeImpl;
 import es.usc.citius.hipster.model.impl.WeightedNode;
+import es.usc.citius.prodigen.domainLogic.workflow.Task.Task;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMTask;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.petrinet.replayresult.StepTypes;
@@ -165,7 +167,10 @@ public class SalidaTerminalImpl implements InterfazSalida {
             }
             NState.State s = (NState.State) node.state();
             trace.addStep((NState.StateMove) node.action());
-            String idTask = ind.getTask(trace.leerTarea(s.getPos() - 1)).getTask().getId();
+            String idTask = "";
+            if (trace.leerTarea(s.getPos() - 1) != null) {
+                idTask = ind.getTask(trace.leerTarea(s.getPos() - 1)).getTask().getId();
+            }
             String idTaskModelo = ind.getTask(s.getTarea()).getTask().getId();
             if (node.action().equals(SINCRONO)) {
                 countS++;
@@ -203,7 +208,7 @@ public class SalidaTerminalImpl implements InterfazSalida {
         for (int i = 0; i < steps.size(); i++) {
             NState.StateMove step = steps.get(i);
             String stepTask = stepsTasks.get(i);
-            stepTask = stepTask.replace(":complete" , "");
+            stepTask = stepTask.replace(":complete", "");
             if (step.equals(SINCRONO)) {
                 j++;
                 salida = salida + "\n\t" + stepTask + "\t" + stepTask;
@@ -256,6 +261,7 @@ public class SalidaTerminalImpl implements InterfazSalida {
         Iterator<SyncReplayResult> iterator = pnRepResult.iterator();
         Integer count = 0;
         Integer queued_States = 0;
+        pnRepResult.size();
         while (iterator.hasNext()) {
             SyncReplayResult next = iterator.next();
             queued_States += next.getInfo().get("Queued States").intValue();
@@ -278,8 +284,7 @@ public class SalidaTerminalImpl implements InterfazSalida {
                 e.printStackTrace();
             }
         }
-        System.out.println("Nº de trazas distintas : " + count);
-        System.out.println("Total de estados en cola : " + queued_States);
+        System.out.print(count + "," + pnRepResult.size() + "," + queued_States);
     }
 
     @Override

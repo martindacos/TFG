@@ -158,7 +158,7 @@ public class Traza implements InterfazTraza {
             long model = steps.stream().filter(step -> step.equals(NState.StateMove.MODELO)).count();
             if (sincCobefra == sinc && logCobefra == log && modelCobefra == model) {
                 returnValue = true;
-                System.out.println("It seems the same on trace " + id);
+                //System.out.println("It seems the same on trace " + id);
             }
         }
         return returnValue;
@@ -166,7 +166,7 @@ public class Traza implements InterfazTraza {
 
     @Override
     public Integer leerTarea(int p) {
-        if (p < tareas.size()) {
+        if (p < tareas.size() && p >= 0) {
             return tareas.get(p);
         } else {
             return null;

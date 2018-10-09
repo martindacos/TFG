@@ -10,6 +10,7 @@ import es.usc.citius.aligments.problem.Traza;
 import es.usc.citius.aligments.salida.InterfazSalida;
 import es.usc.citius.aligments.salida.SalidaTerminalImpl;
 import es.usc.citius.aligments.utils.Timer;
+import es.usc.citius.prodigen.domainLogic.exceptions.*;
 import es.usc.citius.prodigen.domainLogic.workflow.Task.Task;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMSet;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMTask;
@@ -21,8 +22,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.processmining.cobefra.AligmentBasedFitness;
 import org.processmining.cobefra.AlignmentBasedPrecision;
+import org.processmining.plugins.astar.petrinet.AbstractPetrinetReplayer;
+import org.processmining.plugins.astar.petrinet.PetrinetReplayerWithoutILP;
+import org.processmining.plugins.petrinet.replayer.algorithms.IPNReplayAlgorithm;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.OptionalDouble;
 
 public class AlgoritmoAReducedTest {
 
@@ -404,12 +410,11 @@ public class AlgoritmoAReducedTest {
             total.stop();
 
             System.out.println("Modelo G" + i);
-            //System.out.println("Fitness : " + problem.getFitness());
+            System.out.println("Fitness : " + problem.getFitness());
             AryaFitness cobefra = AligmentBasedFitness.calculate(PATH + "g" + i + "/grpd_g" + i + "pi300.xes", PATH + "g" + i + "/FHM.pnml");
-            //AryaFitness cobefra = AligmentBasedFitness.calculate(PATH + "Cobefra/Test.xes", PATH + "Cobefra/Test.pnml");
-            salida.printCobefra(cobefra.getPNRepResult());
+            //salida.printCobefra(cobefra.getPNRepResult());
 
-            //salida.compareResults(cobefra.getPNRepResult(), miReader);
+            salida.compareResults(cobefra.getPNRepResult(), miReader);
             //System.out.println("\tTiempo de Cálculo \t Diferent States \t Memoria Consumida");
             //System.out.println("\t" + problem.getTiempoCalculo() + " \t" + problem.getDiferentStates() + " \t" + problem.getMemoriaConsumida());
             System.out.println();
@@ -427,5 +432,73 @@ public class AlgoritmoAReducedTest {
         salida.printCobefra(cobefra.getPNRepResult());
 
         AlignmentBasedPrecision.calculate(PATH + "g9/grpd_g9pi300.xes", PATH + "g9/PROM.pnml");
+    }
+
+    //Test que comparan la ejecucion con CoBeFra en Medeiros
+    @Test
+    public void testPLG() throws Exception {
+        List<String> logsPaths = new ArrayList<>();
+        List<String> modelsPaths = new ArrayList<>();
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_N.xes");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000.xes");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000_N.xes");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
+        runAligments(logsPaths, modelsPaths);
+    }
+
+    private void runAligments(List<String> logsPaths, List<String> modelsPaths) throws Exception {
+        InterfazSalida salida = new SalidaTerminalImpl(false);
+        System.out.println("Aligments Distintos,Trazas Distintas,Estados Co,Estados," +
+                "Fitness Co,Fitness,Time Co,Time");
+
+        for (int i = 0; i < logsPaths.size(); i++) {
+            String logPath = logsPaths.get(i);
+            String modelPath = modelsPaths.get(i);
+
+            System.out.println(logPath);
+
+            //Execute 5 times to get the average
+            Timer total = new Timer();
+            List<Long> times = new ArrayList<>();
+            List<Long> times_cobefra = new ArrayList<>();
+            InterfazEstadisticas problem = null;
+            AryaFitness cobefra = null;
+            Readers miReader = null;
+            for (int j = 0; j < 5; j++) {
+                resetReader();
+                total.start();
+                miReader = Readers.getReader(logPath, modelPath + ".hn");
+                ParametrosImpl.setHEURISTIC(Parametros.HEURISTIC_MODEL);
+                problem = AlgoritmoAReduced.problem(miReader, false);
+                total.stop();
+                times.add(total.getElapsedTime());
+
+                total.start();
+                cobefra = AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
+                total.stop();
+                times_cobefra.add(total.getElapsedTime());
+            }
+
+            salida.compareResults(cobefra.getPNRepResult(), miReader);
+            long average = averageLongs(times);
+            long averageCobefra = averageLongs(times_cobefra);
+            System.out.print("," + problem.getDiferentStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
+                    total.toSeconds(average));
+            System.out.println();
+            System.out.println();
+        }
+    }
+
+    private long averageLongs(List<Long> numbers) {
+        Long total = 0l;
+        for (Long l : numbers) {
+            total += l;
+        }
+        long l = total / numbers.size();
+        return l;
     }
 }

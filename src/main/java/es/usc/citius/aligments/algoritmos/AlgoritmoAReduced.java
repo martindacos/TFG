@@ -65,9 +65,9 @@ public class AlgoritmoAReduced {
             fileHandler.setFormatter(simpleFormatter);
             LOGGER.addHandler(fileHandler);
             //Evitar que el log salga por pantalla
-            //LOGGER.setUseParentHandlers(false);
+            LOGGER.setUseParentHandlers(false);
             //Definimos el nivel del log
-            LOGGER.setLevel(Level.INFO);
+            LOGGER.setLevel(Level.WARNING);
         }
 
         ParametrosImpl parametrosImpl;
@@ -334,20 +334,22 @@ public class AlgoritmoAReduced {
 
         e.setMemoriaConsumida(total_memoria);
 
-        String s = salida.estadisticasModelo(miReader.getInd(), e.getCoste(), total_time, e.getMemoriaConsumida());
-        LOGGER.log(Level.INFO, s);
-        LOGGER.log(Level.INFO, "\n " +
-                "Tiempo cálculo función heurística : " + timer.getReadableElapsedTime() + "\n " +
-                "Tiempo cálculo movimientos : " + timerMovs.getReadableElapsedTime() + "\n " +
-                "Tiempo aplicar movimientos : " + timerAct.getReadableElapsedTime() + "\n " +
-                "\n " +
-                "Tiempo clonar posibles activas : " + timerClonarPosiblesActivas.getReadableElapsedTime() + "\n " +
-                "\n " +
-                "Tiempo cálculo total : " + timerTotal.getReadableElapsedTime() +
-                "\n " +
-                "Nº Instancias marcado (estados diferentes) : " + estados.size() +
-                "\n " +
-                "Nº Instancias marcado : " + contadorInstanciasMarcado);
+        if (print) {
+            String s = salida.estadisticasModelo(miReader.getInd(), e.getCoste(), total_time, e.getMemoriaConsumida());
+            LOGGER.log(Level.INFO, s);
+            LOGGER.log(Level.INFO, "\n " +
+                    "Tiempo cálculo función heurística : " + timer.getReadableElapsedTime() + "\n " +
+                    "Tiempo cálculo movimientos : " + timerMovs.getReadableElapsedTime() + "\n " +
+                    "Tiempo aplicar movimientos : " + timerAct.getReadableElapsedTime() + "\n " +
+                    "\n " +
+                    "Tiempo clonar posibles activas : " + timerClonarPosiblesActivas.getReadableElapsedTime() + "\n " +
+                    "\n " +
+                    "Tiempo cálculo total : " + timerTotal.getReadableElapsedTime() +
+                    "\n " +
+                    "Nº Instancias marcado (estados diferentes) : " + estados.size() +
+                    "\n " +
+                    "Nº Instancias marcado : " + contadorInstanciasMarcado);
+        }
 
         if (print) {
             LOGGER.log(Level.INFO, "\nMovimientos ejecutados" + salida.getStatMovs());

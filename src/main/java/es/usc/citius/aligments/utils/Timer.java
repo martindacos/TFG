@@ -52,4 +52,10 @@ public class Timer {
         final long millis = TimeUnit.NANOSECONDS.toMillis(elapsedTime) - TimeUnit.SECONDS.toMillis(secs);
         return String.format("%01d.%03d", secs, millis);
     }
+
+    public String toSeconds(long time) {
+        final long secs = TimeUnit.NANOSECONDS.toSeconds(time);
+        final long millis = TimeUnit.NANOSECONDS.toMillis(time) - TimeUnit.SECONDS.toMillis(secs);
+        return String.format("%01d.%03d", secs, millis);
+    }
 }
