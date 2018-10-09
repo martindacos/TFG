@@ -36,6 +36,7 @@ public class EstadisticasImpl implements InterfazEstadisticas {
     private List<Integer> countResume;
     private int menorCamino = Integer.MAX_VALUE;
     private int diferentStates;
+    private int visitedStates;
 
     public EstadisticasImpl() {
         this.totalEventosLog = 0d;
@@ -345,5 +346,13 @@ public class EstadisticasImpl implements InterfazEstadisticas {
         return this.memoriaConsumida;
     }
 
+    @Override
+    public void setVisitedStates(int visitedStates) {
+        this.visitedStates = visitedStates;
+    }
 
+    @Override
+    public int getVisitedStates() {
+        return visitedStates;
+    }
 }

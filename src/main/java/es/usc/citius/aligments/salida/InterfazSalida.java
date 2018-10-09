@@ -42,5 +42,5 @@ public interface InterfazSalida {
 
     void printTrace(InterfazTraza trace);
 
-    void compareResults(PNRepResult pnRepResult, Readers miReader);
+    String compareResults(PNRepResult pnRepResult, Readers miReader);
 }

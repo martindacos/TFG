@@ -26,6 +26,8 @@ import org.processmining.plugins.astar.petrinet.AbstractPetrinetReplayer;
 import org.processmining.plugins.astar.petrinet.PetrinetReplayerWithoutILP;
 import org.processmining.plugins.petrinet.replayer.algorithms.IPNReplayAlgorithm;
 
+import java.io.File;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalDouble;
@@ -439,7 +441,7 @@ public class AlgoritmoAReducedTest {
     public void testPLG() throws Exception {
         List<String> logsPaths = new ArrayList<>();
         List<String> modelsPaths = new ArrayList<>();
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
+        /*logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_N.xes");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000.xes");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000_N.xes");
@@ -447,13 +449,28 @@ public class AlgoritmoAReducedTest {
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_BN.xes");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");*/
+
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/100.xes");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000.xes");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000_N.xes");
+        //logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/2000_BN.xes");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
+        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         runAligments(logsPaths, modelsPaths);
     }
 
     private void runAligments(List<String> logsPaths, List<String> modelsPaths) throws Exception {
         InterfazSalida salida = new SalidaTerminalImpl(false);
-        System.out.println("Aligments Distintos,Trazas Distintas,Estados Co,Estados," +
-                "Fitness Co,Fitness,Time Co,Time");
+        PrintWriter pw = new PrintWriter(new File("/home/martin/Descargas/PLG_Logs/results.csv"));
+        StringBuilder sb = new StringBuilder();
+        String HEAD = "Aligments Distintos,Trazas Distintas,Estados Co,Estados Visitados Co,Estados,Estados Visitados," +
+                "Fitness Co,Fitness,Time Co,Time\n";
+        sb.append(HEAD);
+        System.out.print(HEAD);
 
         for (int i = 0; i < logsPaths.size(); i++) {
             String logPath = logsPaths.get(i);
@@ -483,14 +500,20 @@ public class AlgoritmoAReducedTest {
                 times_cobefra.add(total.getElapsedTime());
             }
 
-            salida.compareResults(cobefra.getPNRepResult(), miReader);
+            //salida.printCobefra(cobefra.getPNRepResult());
+            String printComparation = salida.compareResults(cobefra.getPNRepResult(), miReader);
             long average = averageLongs(times);
             long averageCobefra = averageLongs(times_cobefra);
-            System.out.print("," + problem.getDiferentStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
+            System.out.print(printComparation + "," + problem.getDiferentStates() + "," + problem.getVisitedStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
                     total.toSeconds(average));
+            sb.append(printComparation + "," + problem.getDiferentStates() + "," + problem.getVisitedStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
+                    total.toSeconds(average) + "\n");
             System.out.println();
             System.out.println();
         }
+
+        pw.write(sb.toString());
+        pw.close();
     }
 
     private long averageLongs(List<Long> numbers) {

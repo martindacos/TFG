@@ -67,7 +67,7 @@ public class AlgoritmoAReduced {
             //Evitar que el log salga por pantalla
             LOGGER.setUseParentHandlers(false);
             //Definimos el nivel del log
-            LOGGER.setLevel(Level.WARNING);
+            LOGGER.setLevel(Level.INFO);
         }
 
         ParametrosImpl parametrosImpl;
@@ -149,6 +149,7 @@ public class AlgoritmoAReduced {
         //CMIndividual originalIndividual = miReader.getInd();
         //miReader.getInd().print();
         //miReader.setPos(2);
+        Integer visited_States = 0;
         for (int i = 0; i < miReader.getTraces().size(); i++) {
             if (i > 0) {
                 initialState.restartState();
@@ -189,6 +190,8 @@ public class AlgoritmoAReduced {
             AStar.Iterator it = astar.iterator();
 
             while (it.hasNext()) {
+                visited_States++;
+                /*MUY COSTOSO DE CALCULAR (SOLO PARA COMPROBACIONES)
                 Map<State, WeightedNode<StateMove, State, Double>> listaAbiertos = it.getOpen();
                 for (Map.Entry<State, WeightedNode<StateMove, State, Double>> entry : listaAbiertos.entrySet()) {
                     WeightedNode<StateMove, State, Double> value = entry.getValue();
@@ -203,10 +206,10 @@ public class AlgoritmoAReduced {
                                 System.out.print(" -> ");
                                 System.out.println(stateMoveStateDoubleWeightedNode.toString());
                                 stateMoveStateDoubleWeightedNode = stateMoveStateDoubleWeightedNode.previousNode();
-                            }*/
+                            }
                         }
                     }
-                }
+                }*/
                 //System.out.println("*****************************");
                 WeightedNode n1 = (WeightedNode) it.next();
                 State s = (State) n1.state();
@@ -360,8 +363,10 @@ public class AlgoritmoAReduced {
             LOGGER.log(Level.INFO, "\nMovimientos totales" + statMovsTotal);
         }
 
-        e.setDiferentStates(estados.size());
+        //TODO Should be estados.size()
+        e.setDiferentStates(contadorInstanciasMarcado);
         e.setTiempoCalculo(total_time);
+        e.setVisitedStates(visited_States);
         //printStates();
         return e;
     }

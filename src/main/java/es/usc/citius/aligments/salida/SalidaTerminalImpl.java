@@ -257,14 +257,16 @@ public class SalidaTerminalImpl implements InterfazSalida {
         }
     }
 
-    public void compareResults(PNRepResult pnRepResult, Readers miReader) {
+    public String compareResults(PNRepResult pnRepResult, Readers miReader) {
         Iterator<SyncReplayResult> iterator = pnRepResult.iterator();
         Integer count = 0;
         Integer queued_States = 0;
+        Integer num_States = 0;
         pnRepResult.size();
         while (iterator.hasNext()) {
             SyncReplayResult next = iterator.next();
             queued_States += next.getInfo().get("Queued States").intValue();
+            num_States += next.getInfo().get("Num. States").intValue();
             List<StepTypes> stepsCobefra = next.getStepTypes();
             SortedSet<Integer> traceIndex = next.getTraceIndex();
             try {
@@ -284,7 +286,8 @@ public class SalidaTerminalImpl implements InterfazSalida {
                 e.printStackTrace();
             }
         }
-        System.out.print(count + "," + pnRepResult.size() + "," + queued_States);
+
+        return count + "," + pnRepResult.size() + "," + queued_States + "," + num_States;
     }
 
     @Override

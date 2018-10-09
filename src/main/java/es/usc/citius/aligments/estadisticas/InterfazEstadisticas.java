@@ -32,6 +32,10 @@ public interface InterfazEstadisticas {
 
     void setTiempoCalculo(Long tiempo);
 
+    void setVisitedStates(int visitedStates);
+
+    int getVisitedStates();
+
     Long getTiempoCalculo();
 
     void setMemoriaConsumida(double memoria);
