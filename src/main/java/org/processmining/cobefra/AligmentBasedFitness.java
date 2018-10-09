@@ -13,8 +13,8 @@ public class AligmentBasedFitness {
         es.usc.citius.aligments.utils.Timer timer = new es.usc.citius.aligments.utils.Timer();
         timer.start();
         Mapping mapping = new Mapping(logfile, netfile);
-        mapping.assignUnmappedToInvisible();
-        //mapping.assignUnmappedToVisible();
+        //mapping.assignUnmappedToInvisible();
+        mapping.assignUnmappedToVisible();
 
         AryaFitness algorithm = new AryaFitness();
         //algorithm.setChosenAlgorithm(new PetrinetReplayerWithILP());

@@ -255,8 +255,10 @@ public class SalidaTerminalImpl implements InterfazSalida {
     public void compareResults(PNRepResult pnRepResult, Readers miReader) {
         Iterator<SyncReplayResult> iterator = pnRepResult.iterator();
         Integer count = 0;
+        Integer queued_States = 0;
         while (iterator.hasNext()) {
             SyncReplayResult next = iterator.next();
+            queued_States += next.getInfo().get("Queued States").intValue();
             List<StepTypes> stepsCobefra = next.getStepTypes();
             SortedSet<Integer> traceIndex = next.getTraceIndex();
             try {
@@ -277,6 +279,7 @@ public class SalidaTerminalImpl implements InterfazSalida {
             }
         }
         System.out.println("Nº de trazas distintas : " + count);
+        System.out.println("Total de estados en cola : " + queued_States);
     }
 
     @Override

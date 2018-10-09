@@ -147,7 +147,7 @@ public class AlgoritmoAReduced {
         timerTotal.start();
 
         //CMIndividual originalIndividual = miReader.getInd();
-        miReader.getInd().print();
+        //miReader.getInd().print();
         //miReader.setPos(2);
         for (int i = 0; i < miReader.getTraces().size(); i++) {
             if (i > 0) {

@@ -20,6 +20,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.processmining.cobefra.AligmentBasedFitness;
+import org.processmining.cobefra.AlignmentBasedPrecision;
 
 import java.util.ArrayList;
 
@@ -386,27 +387,29 @@ public class AlgoritmoAReducedTest {
 
     }
 
-    //Test que comparan la ejecucion con CoBeFra
+    //Test que comparan la ejecucion con CoBeFra en Medeiros
     @Test
-    public void problem7() throws Exception {
+    public void testMedeiros() throws Exception {
         String PATH = "/home/martin/Documentos/projects/Aligments/TFG/deMedeiros/";
         InterfazSalida salida = new SalidaTerminalImpl(false);
 
-        for (int i = 8; i <= 8; i++) {
+        for (int i = 10; i <= 10; i++) {
             resetReader();
             Timer total = new Timer();
             total.start();
             Readers miReader = Readers.getReader(PATH + "g" + i + "/grpd_g" + i + "pi300.xes", PATH + "g" + i + "/FHM.hn");
+            //Readers miReader = Readers.getReader(PATH + "Cobefra/Test.xes", PATH + "Cobefra/Test.hn");
             ParametrosImpl.setHEURISTIC(Parametros.HEURISTIC_MODEL);
             InterfazEstadisticas problem = AlgoritmoAReduced.problem(miReader, false);
             total.stop();
 
             System.out.println("Modelo G" + i);
-            System.out.println("Fitness : " + problem.getFitness());
+            //System.out.println("Fitness : " + problem.getFitness());
             AryaFitness cobefra = AligmentBasedFitness.calculate(PATH + "g" + i + "/grpd_g" + i + "pi300.xes", PATH + "g" + i + "/FHM.pnml");
-            //salida.printCobefra(cobefra.getPNRepResult());
+            //AryaFitness cobefra = AligmentBasedFitness.calculate(PATH + "Cobefra/Test.xes", PATH + "Cobefra/Test.pnml");
+            salida.printCobefra(cobefra.getPNRepResult());
 
-            salida.compareResults(cobefra.getPNRepResult(), miReader);
+            //salida.compareResults(cobefra.getPNRepResult(), miReader);
             //System.out.println("\tTiempo de Cálculo \t Diferent States \t Memoria Consumida");
             //System.out.println("\t" + problem.getTiempoCalculo() + " \t" + problem.getDiferentStates() + " \t" + problem.getMemoriaConsumida());
             System.out.println();
@@ -420,7 +423,9 @@ public class AlgoritmoAReducedTest {
         String PATH = "/home/martin/Documentos/projects/Aligments/TFG/deMedeiros/";
         InterfazSalida salida = new SalidaTerminalImpl(true);
 
-        AryaFitness cobefra = AligmentBasedFitness.calculate(PATH + "g9/grpd_g9pi1.xes", PATH + "g9/FHM.pnml");
+        AryaFitness cobefra = AligmentBasedFitness.calculate(PATH + "g9/grpd_g9pi300.xes", PATH + "g9/PROM.pnml");
         salida.printCobefra(cobefra.getPNRepResult());
+
+        AlignmentBasedPrecision.calculate(PATH + "g9/grpd_g9pi300.xes", PATH + "g9/PROM.pnml");
     }
 }
