@@ -441,24 +441,24 @@ public class AlgoritmoAReducedTest {
     public void testPLG() throws Exception {
         List<String> logsPaths = new ArrayList<>();
         List<String> modelsPaths = new ArrayList<>();
-        /*logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_N.xes");
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000.xes");
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000_N.xes");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
+        //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_N.xes");
+        //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000.xes");
+        //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000_N.xes");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_BN.xes");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");*/
+        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
+        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
+        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
+        //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_BN.xes");
+        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
 
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/100.xes");
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000.xes");
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000_N.xes");
+        //logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/100.xes");
+        //logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000.xes");
+        //logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000_N.xes");
         //logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/2000_BN.xes");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
+        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
+        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
+        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         runAligments(logsPaths, modelsPaths);
     }
@@ -485,7 +485,7 @@ public class AlgoritmoAReducedTest {
             InterfazEstadisticas problem = null;
             AryaFitness cobefra = null;
             Readers miReader = null;
-            for (int j = 0; j < 5; j++) {
+            for (int j = 0; j < 1; j++) {
                 resetReader();
                 total.start();
                 miReader = Readers.getReader(logPath, modelPath + ".hn");

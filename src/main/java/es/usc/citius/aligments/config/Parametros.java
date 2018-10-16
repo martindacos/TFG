@@ -9,7 +9,7 @@ public interface Parametros {
 
     double COSTE_MODELO_FORZADO = 3d;
     double PENALIZACION_FORZADO = 1d;
-    double COSTE_MODELO = 1.1d;
+    double COSTE_MODELO = 1d;
     double COSTE_TRAZA = 1d;
     //Este coste no puede ser de 0. Restaremos este añadido cuando calculemos los costes
     double COSTE_SINCRONO = 0.00001d;

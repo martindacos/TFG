@@ -150,6 +150,7 @@ public class AlgoritmoAReduced {
         //miReader.getInd().print();
         //miReader.setPos(2);
         Integer visited_States = 0;
+        Integer quedued_States = 0;
         for (int i = 0; i < miReader.getTraces().size(); i++) {
             if (i > 0) {
                 initialState.restartState();
@@ -232,6 +233,7 @@ public class AlgoritmoAReduced {
                     //System.out.println("------------------SIGO------------------");
                     //System.out.println("ESTIMACION " + estimacion + " MEJOR SCORE " + mejorScore);
                     if (score > mejorScore) {
+                        quedued_States += it.getOpen().size() + it.getClosed().size();
                         break;
                     }
                 }
@@ -364,7 +366,7 @@ public class AlgoritmoAReduced {
         }
 
         //TODO Should be estados.size()
-        e.setDiferentStates(contadorInstanciasMarcado);
+        e.setDiferentStates(quedued_States);
         e.setTiempoCalculo(total_time);
         e.setVisitedStates(visited_States);
         //printStates();
