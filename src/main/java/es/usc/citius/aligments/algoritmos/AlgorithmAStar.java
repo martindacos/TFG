@@ -46,9 +46,7 @@ import javax.swing.*;
 import java.util.*;
 
 import static es.usc.citius.aligments.problem.NStateLikeCoBeFra.*;
-import static es.usc.citius.aligments.problem.NStateLikeCoBeFra.StateMoveCoBeFra.LOG;
-import static es.usc.citius.aligments.problem.NStateLikeCoBeFra.StateMoveCoBeFra.MODEl;
-import static es.usc.citius.aligments.problem.NStateLikeCoBeFra.StateMoveCoBeFra.SYNC;
+import static es.usc.citius.aligments.problem.NStateLikeCoBeFra.StateMoveCoBeFra.*;
 import static nl.tue.astar.AStarThread.NOMOVE;
 
 public class AlgorithmAStar {
@@ -228,14 +226,17 @@ public class AlgorithmAStar {
         }
 
         //Model move
-        TIntIterator it = enabled.iterator();
-        while (it.hasNext()) {
-            // move model
-            it.next();
+        for (int i=0; i < state.modelSize(); i++) {
             possibleMovs.add(MODEl);
+        }
+        //Invisible move
+        for (int i=0; i < state.invisibleSize(); i++) {
+            possibleMovs.add(INVISIBLE);
         }
 
         timerMovs.pause();
+
+        //System.out.println("Posible movimientos del estado : " + possibleMovs);
         return possibleMovs;
     }
 
@@ -259,6 +260,9 @@ public class AlgorithmAStar {
                 LogMove logMove = state.getAndDeleteLogMovement();
                 successor = processMove(state, NOMOVE, logMove.getMovedEvent(), logMove.getActivity(), d);
                 break;
+            case INVISIBLE:
+                successor = processMove(state, state.getAndDeleteInvisibleMovement(), NOMOVE, NOMOVE, d);
+                break;
         }
 
         timerAct.pause();
@@ -277,6 +281,9 @@ public class AlgorithmAStar {
                 break;
             case SYNC:
                 cost = 1d;
+                break;
+            case INVISIBLE:
+                cost = 0.00001d;
                 break;
         }
         return cost;
@@ -343,8 +350,10 @@ public class AlgorithmAStar {
                     salida = salida + "\n\t>>\t" + delegate.getTransition((short) s.getModelMove());
                 } else if (node.action().equals(LOG)) {
                     salida = salida + "\n\t" + delegate.getTransition((short) s.getLogMove()) + "\t>>";
-                } else {
-                    salida = salida + "\n\n??????????????????????";
+                }  else if (node.action().equals(INVISIBLE)) {
+                    salida = salida + "\n\t>>\t>>";
+                }  else {
+                    salida = salida + "\n??????????????????????";
                 }
             }
             salida = salida + "\n\nCoste del alineamiento = " + finalNode.getScore();

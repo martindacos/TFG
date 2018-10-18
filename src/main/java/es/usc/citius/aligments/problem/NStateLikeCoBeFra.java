@@ -1,5 +1,6 @@
 package es.usc.citius.aligments.problem;
 
+import gnu.trove.iterator.TIntIterator;
 import gnu.trove.iterator.TShortIterator;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.TShortList;
@@ -13,6 +14,7 @@ import org.deckfour.xes.classification.XEventClass;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XTrace;
 import org.processmining.models.graphbased.directed.petrinet.elements.Place;
+import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
 import org.processmining.models.semantics.petrinet.Marking;
 import org.processmining.plugins.astar.petrinet.impl.AbstractPDelegate;
 
@@ -27,7 +29,7 @@ public final class NStateLikeCoBeFra {
     }
 
     public enum StateMoveCoBeFra {
-        SYNC, MODEl, LOG
+        SYNC, MODEl, LOG, INVISIBLE
     }
 
     public static final class StateLikeCoBeFra {
@@ -49,6 +51,7 @@ public final class NStateLikeCoBeFra {
         List<SyncMove> synchronous;
         List<LogMove> log;
         TIntList model;
+        TIntList invisible;
 
 
         public StateLikeCoBeFra(AbstractPDelegate<?> delegate, Marking m, XTrace t) {
@@ -72,6 +75,8 @@ public final class NStateLikeCoBeFra {
             executed = new BitMask(t.size());
             log = new ArrayList<>();
             synchronous = new ArrayList<>();
+            model = new TIntArrayList();
+            invisible = new TIntArrayList();
             logMove = NOMOVE;
             modelMove = NOMOVE;
             backtrace = NOMOVE;
@@ -85,6 +90,8 @@ public final class NStateLikeCoBeFra {
             this.executed = executed;
             this.log = new ArrayList<>();
             this.synchronous = new ArrayList<>();
+            this.model = new TIntArrayList();
+            this.invisible = new TIntArrayList();
             this.logMove = logMove;
             this.modelMove = modelMove;
             this.backtrace = backtrace;
@@ -163,8 +170,18 @@ public final class NStateLikeCoBeFra {
             return syncronous;
         }
 
-        public TIntList getModelMoves(Delegate<? extends Head, ? extends Tail> d) {
-            model = ((AbstractPDelegate<?>) d).getEnabledTransitionsChangingMarking(marking);
+        public TIntList getModelMoves(Delegate<? extends Head, ? extends Tail> delegate) {
+            AbstractPDelegate<?> d = (AbstractPDelegate<?>) delegate;
+            TIntIterator iterator = d.getEnabledTransitionsChangingMarking(marking).iterator();
+            while (iterator.hasNext()) {
+                int next = iterator.next();
+                Transition t = d.getTransition((short) next);
+                if (t.isInvisible()) {
+                    invisible.add(next);
+                } else {
+                    model.add(next);
+                }
+            }
             return model;
         }
 
@@ -214,6 +231,12 @@ public final class NStateLikeCoBeFra {
             return mov;
         }
 
+        public int getAndDeleteInvisibleMovement() {
+            int mov = invisible.get(0);
+            invisible.remove(0);
+            return mov;
+        }
+
         public void addSyncMovement(SyncMove mov) {
             synchronous.add(mov);
         }
@@ -235,5 +258,9 @@ public final class NStateLikeCoBeFra {
         public int getBacktrace() {
             return backtrace;
         }
+
+        public int invisibleSize() {return invisible.size();}
+
+        public int modelSize() {return model.size();}
     }
 }
