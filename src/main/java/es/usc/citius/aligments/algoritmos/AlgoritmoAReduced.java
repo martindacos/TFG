@@ -65,7 +65,7 @@ public class AlgoritmoAReduced {
             fileHandler.setFormatter(simpleFormatter);
             LOGGER.addHandler(fileHandler);
             //Evitar que el log salga por pantalla
-            LOGGER.setUseParentHandlers(false);
+            LOGGER.setUseParentHandlers(true);
             //Definimos el nivel del log
             LOGGER.setLevel(Level.INFO);
         }
@@ -116,7 +116,7 @@ public class AlgoritmoAReduced {
                 timer.resume();
                 //Sólo Poñemos a Heurística. Da g() xa se encarga Hipster.
                 Double heuristicaPrecise = 0d;
-                switch (ParametrosImpl.getHEURISTIC()) {
+                /*switch (ParametrosImpl.getHEURISTIC()) {
                     case HEURISTIC_TRACE :
                         //Heurística. Número de elementos que faltan por procesar da traza
                         heuristicaPrecise = miReader.getTrazaActual().getHeuristica(state.getPos(), miReader.getInd(), state.getTarea());
@@ -125,7 +125,7 @@ public class AlgoritmoAReduced {
                         //h() de tareas que se pueden ejecutar en ese momento y aproximación de siguientes
                         heuristicaPrecise = miReader.getTrazaActual().getHeuristicaModelo(state.getPos(), miReader.getInd(), state.getTarea(), state.getPossibleEnabledTasks());
 
-                }
+                }*/
                 timer.pause();
                 return heuristicaPrecise;
 

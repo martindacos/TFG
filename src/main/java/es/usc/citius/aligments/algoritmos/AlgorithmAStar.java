@@ -30,6 +30,7 @@ import org.deckfour.xes.extension.std.XConceptExtension;
 import org.deckfour.xes.info.XLogInfo;
 import org.deckfour.xes.info.XLogInfoFactory;
 import org.deckfour.xes.model.XLog;
+import org.deckfour.xes.model.XTrace;
 import org.processmining.models.graphbased.directed.petrinet.Petrinet;
 import org.processmining.models.semantics.petrinet.Marking;
 import org.processmining.plugins.astar.petrinet.PetrinetReplayerWithoutILP;
@@ -53,40 +54,19 @@ import static nl.tue.astar.AStarThread.NOMOVE;
 public class AlgorithmAStar {
 
     private static es.usc.citius.aligments.utils.Timer timerAct = new es.usc.citius.aligments.utils.Timer();
+    private static es.usc.citius.aligments.utils.Timer timerMovs = new es.usc.citius.aligments.utils.Timer();
+    private static es.usc.citius.aligments.utils.Timer timerTotal = new es.usc.citius.aligments.utils.Timer();
+    private static int contadorInstanciasMarcado = 0;
+
     private static Trace trace = null;
 
-    public static void problem(String logfile, String netfile) {
+    private static AbstractPDelegate<?> delegate;
+    private static XLog log;
+    private static Marking initMarking;
 
-        //Read Files
-        Mapping mapping = new Mapping(logfile, netfile);
-        mapping.assignUnmappedToInvisible();
-        Object[] petrinetWithMarking = mapping.getPetrinetWithMarking();
+    public static void problem(String logLile, String netFile) {
 
-        Petrinet petrinet = (Petrinet) petrinetWithMarking[0];
-        Marking marking = (Marking) petrinetWithMarking[1];
-
-        XLog log = mapping.getLog();
-        MappingUtils.setInvisiblesInPetrinet(mapping, petrinet);
-        TransEvClassMapping transEvClassMapping = MappingUtils.getTransEvClassMapping(mapping, petrinet, log);
-        XEventClassifier classifier = transEvClassMapping.getEventClassifier();
-        XLogInfo summary = XLogInfoFactory.createLogInfo(log, classifier);
-        XEventClasses classes = summary.getEventClasses();
-
-        //Initial and final marking
-        Marking initMarking = PetrinetUtils.getInitialMarking(petrinet);
-        Marking finaMarking = PetrinetUtils.getFinalMarking(petrinet);
-
-        IPNReplayParamProvider provider = new PetrinetReplayerWithoutILP().constructParamProvider(new FakePluginContext(),
-                petrinet, log, transEvClassMapping);
-        JComponent paramUI = provider.constructUI();
-
-        CostBasedCompleteParam parameters = (CostBasedCompleteParam) provider.constructReplayParameter(paramUI);
-        Map<org.processmining.models.graphbased.directed.petrinet.elements.Transition, Integer> mapTrans2Cost = parameters.getMapTrans2Cost();
-        Map<XEventClass, Integer> mapEvClass2Cost = parameters.getMapEvClass2Cost();
-
-        AbstractPDelegate<?> delegate = new PNaiveDelegate(petrinet, log, classes, transEvClassMapping, mapTrans2Cost,
-                mapEvClass2Cost, 1000, false, finaMarking);
-
+        readFiles(logLile, netFile);
 
         /*Funciones para el algoritmo A* */
         ActionFunction<StateMoveCoBeFra, StateLikeCoBeFra> af = new ActionFunction<StateMoveCoBeFra, StateLikeCoBeFra>() {
@@ -118,15 +98,30 @@ public class AlgorithmAStar {
             }
         };
 
-        long total_time = 0;
         List<WeightedNode> solutions = new ArrayList<>();
+        Map<Trace, Integer> tracesRepetitions = new HashMap<>();
+        Map<Trace, XTrace> xTraces = new HashMap<>();
 
-        //For each trace
+        timerTotal.start();
+        //Detect duplicated traces
         for (int i = 0; i < log.size(); i++) {
-            final StateLikeCoBeFra initialState = new StateLikeCoBeFra(delegate, initMarking, log.get(i));
             TIntList unUsedIndices = new TIntArrayList();
             TIntIntMap trace2orgTrace = new TIntIntHashMap(log.get(i).size(), 0.5f, -1, -1);
-            trace = getLinearTrace(log, i, delegate, unUsedIndices, trace2orgTrace);
+            Trace localTrace = getLinearTrace(log, i, delegate, unUsedIndices, trace2orgTrace);
+            if (tracesRepetitions.containsKey(localTrace)) {
+                tracesRepetitions.put(localTrace, tracesRepetitions.get(localTrace) + 1);
+            } else {
+                tracesRepetitions.put(localTrace, 1);
+                xTraces.put(localTrace, log.get(i));
+            }
+        }
+
+        for (Map.Entry<Trace, Integer> entry : tracesRepetitions.entrySet()) {
+            //TODO Do something with repetitions
+            Integer repetitions = entry.getValue();
+            XTrace xTrace = xTraces.get(entry.getKey());
+            final StateLikeCoBeFra initialState = new StateLikeCoBeFra(delegate, initMarking, xTrace);
+            trace = entry.getKey();
 
             //Definimos el problema de búsqueda
             SearchProblem<StateMoveCoBeFra, StateLikeCoBeFra, WeightedNode<StateMoveCoBeFra, StateLikeCoBeFra, Double>> p
@@ -140,8 +135,8 @@ public class AlgorithmAStar {
                     .build();
 
             WeightedNode n = null;
-            double mejorScore = 0d;
-            boolean parar = false;
+            double bestScore = 0d;
+            boolean stop = false;
 
             long time_start, time_end;
             time_start = System.currentTimeMillis();
@@ -155,44 +150,54 @@ public class AlgorithmAStar {
 
                 double score = (double) n1.getScore();
 
-                if (parar) {
-                    if (score > mejorScore) {
+                if (stop) {
+                    if (score > bestScore) {
                         break;
                     }
                 }
 
                 if (state.isFinal(delegate)) {
-                    parar = true;
-                    if (mejorScore == 0) {
-                        mejorScore = (double) n1.getCost();
+                    stop = true;
+                    if (bestScore == 0) {
+                        bestScore = (double) n1.getCost();
                         n = n1;
                     } else {
                         double aux = (double) n1.getCost();
-                        if (aux < mejorScore) {
-                            mejorScore = aux;
+                        if (aux < bestScore) {
+                            bestScore = aux;
                             n = n1;
                         }
                     }
                 }
             }
 
-            if (parar == false) {
-                System.err.print("Error. No se encontró ningún aligment para la traza nº " + i);
+            if (stop == false) {
+                System.err.print("Error. No se encontró ningún aligment para la traza " + trace.toString());
                 System.exit(2);
             }
 
             time_end = System.currentTimeMillis();
-            total_time = total_time + (time_end - time_start);
+            // (time_end - time_start); Traces calculation time
 
             solutions.add(n);
         }
+        timerTotal.stop();
 
-        printSolutions(solutions, delegate);
+        printTimes();
+        //printSolutions(solutions, delegate);
+    }
+
+    private static void printTimes() {
+        System.out.println("Tiempo cálculo movimientos : " + timerMovs.getReadableElapsedTime());
+        System.out.println("Tiempo aplicar movimientos : " + timerAct.getReadableElapsedTime());
+        System.out.println("Tiempo cálculo total : " + timerTotal.getReadableElapsedTime());
+        System.out.println("Nº Instancias marcado : " + contadorInstanciasMarcado);
     }
 
     private static Iterable<StateMoveCoBeFra> validMovementsFor(StateLikeCoBeFra state,
                                                                                   Delegate<? extends Head, ? extends Tail> delegate,
                                                                                   Trace trace) {
+        timerMovs.resume();
         List<StateMoveCoBeFra> possibleMovs = new ArrayList<>();
 
         TIntList enabled = state.getModelMoves(delegate);
@@ -230,6 +235,7 @@ public class AlgorithmAStar {
             possibleMovs.add(MODEl);
         }
 
+        timerMovs.pause();
         return possibleMovs;
     }
 
@@ -237,6 +243,7 @@ public class AlgorithmAStar {
                                                                          StateLikeCoBeFra state,
                                                                          Delegate<? extends Head, ? extends Tail> delegate) {
         timerAct.resume();
+        contadorInstanciasMarcado++;
         final AbstractPDelegate<?> d = (AbstractPDelegate<?>) delegate;
         StateLikeCoBeFra successor = null;
 
@@ -333,9 +340,9 @@ public class AlgorithmAStar {
                     salida = salida + "\n\t" + delegate.getTransition((short) s.getLogMove())+
                             "\t" + delegate.getTransition((short) s.getLogMove());
                 } else if (node.action().equals(MODEl)) {
-                    salida = salida + "\n\t>>\t" + s.getModelMove();
+                    salida = salida + "\n\t>>\t" + delegate.getTransition((short) s.getModelMove());
                 } else if (node.action().equals(LOG)) {
-                    salida = salida + "\n\t" + s.getLogMove() + "\t>>";
+                    salida = salida + "\n\t" + delegate.getTransition((short) s.getLogMove()) + "\t>>";
                 } else {
                     salida = salida + "\n\n??????????????????????";
                 }
@@ -343,5 +350,36 @@ public class AlgorithmAStar {
             salida = salida + "\n\nCoste del alineamiento = " + finalNode.getScore();
         }
         System.out.println(salida);
+    }
+
+    private static void readFiles(String logFile, String netFile) {
+        Mapping mapping = new Mapping(logFile, netFile);
+        mapping.assignUnmappedToInvisible();
+        Object[] petrinetWithMarking = mapping.getPetrinetWithMarking();
+
+        Petrinet petrinet = (Petrinet) petrinetWithMarking[0];
+        //Marking marking = (Marking) petrinetWithMarking[1];
+
+        log = mapping.getLog();
+        MappingUtils.setInvisiblesInPetrinet(mapping, petrinet);
+        TransEvClassMapping transEvClassMapping = MappingUtils.getTransEvClassMapping(mapping, petrinet, log);
+        XEventClassifier classifier = transEvClassMapping.getEventClassifier();
+        XLogInfo summary = XLogInfoFactory.createLogInfo(log, classifier);
+        XEventClasses classes = summary.getEventClasses();
+
+        //Initial and final marking
+        initMarking = PetrinetUtils.getInitialMarking(petrinet);
+        Marking finaMarking = PetrinetUtils.getFinalMarking(petrinet);
+
+        IPNReplayParamProvider provider = new PetrinetReplayerWithoutILP().constructParamProvider(new FakePluginContext(),
+                petrinet, log, transEvClassMapping);
+        JComponent paramUI = provider.constructUI();
+
+        CostBasedCompleteParam parameters = (CostBasedCompleteParam) provider.constructReplayParameter(paramUI);
+        Map<org.processmining.models.graphbased.directed.petrinet.elements.Transition, Integer> mapTrans2Cost = parameters.getMapTrans2Cost();
+        Map<XEventClass, Integer> mapEvClass2Cost = parameters.getMapEvClass2Cost();
+
+        delegate = new PNaiveDelegate(petrinet, log, classes, transEvClassMapping, mapTrans2Cost,
+                mapEvClass2Cost, 1000, false, finaMarking);
     }
 }

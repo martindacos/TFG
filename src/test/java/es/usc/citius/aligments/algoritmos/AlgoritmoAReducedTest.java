@@ -490,7 +490,7 @@ public class AlgoritmoAReducedTest {
                 total.start();
                 miReader = Readers.getReader(logPath, modelPath + ".hn");
                 ParametrosImpl.setHEURISTIC(Parametros.HEURISTIC_MODEL);
-                problem = AlgoritmoAReduced.problem(miReader, false);
+                problem = AlgoritmoAReduced.problem(miReader, true);
                 total.stop();
                 times.add(total.getElapsedTime());
 
@@ -501,15 +501,16 @@ public class AlgoritmoAReducedTest {
             }
 
             //salida.printCobefra(cobefra.getPNRepResult());
-            String printComparation = salida.compareResults(cobefra.getPNRepResult(), miReader);
+            //String printComparation = salida.compareResults(cobefra.getPNRepResult(), miReader);
             long average = averageLongs(times);
             long averageCobefra = averageLongs(times_cobefra);
-            System.out.print(printComparation + "," + problem.getDiferentStates() + "," + problem.getVisitedStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
+            System.out.println(total.toSeconds(averageCobefra) + "," + total.toSeconds(average));
+            /*System.out.print(printComparation + "," + problem.getDiferentStates() + "," + problem.getVisitedStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
                     total.toSeconds(average));
             sb.append(printComparation + "," + problem.getDiferentStates() + "," + problem.getVisitedStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
                     total.toSeconds(average) + "\n");
             System.out.println();
-            System.out.println();
+            System.out.println();*/
         }
 
         pw.write(sb.toString());

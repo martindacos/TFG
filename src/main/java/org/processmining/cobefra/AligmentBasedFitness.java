@@ -30,7 +30,7 @@ public class AligmentBasedFitness {
         return algorithm;
     }
 
-    public static AryaFitness calculate(String logfile, String netfile) throws AStarException {
+    public static AryaFitness calculate(String logfile, String netfile) {
         AlgorithmAStar.problem(logfile, netfile);
         return null;
     }
