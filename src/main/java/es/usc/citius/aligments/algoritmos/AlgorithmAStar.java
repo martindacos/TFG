@@ -27,6 +27,8 @@ import org.deckfour.xes.classification.XEventClass;
 import org.deckfour.xes.classification.XEventClasses;
 import org.deckfour.xes.classification.XEventClassifier;
 import org.deckfour.xes.extension.std.XConceptExtension;
+import org.deckfour.xes.factory.XFactory;
+import org.deckfour.xes.factory.XFactoryRegistry;
 import org.deckfour.xes.info.XLogInfo;
 import org.deckfour.xes.info.XLogInfoFactory;
 import org.deckfour.xes.model.XLog;
@@ -41,10 +43,15 @@ import org.processmining.plugins.kutoolbox.utils.FakePluginContext;
 import org.processmining.plugins.kutoolbox.utils.PetrinetUtils;
 import org.processmining.plugins.petrinet.replayer.algorithms.IPNReplayParamProvider;
 import org.processmining.plugins.petrinet.replayer.algorithms.costbasedcomplete.CostBasedCompleteParam;
+import org.processmining.plugins.petrinet.replayresult.PNRepResult;
+import org.processmining.plugins.petrinet.replayresult.PNRepResultImpl;
+import org.processmining.plugins.petrinet.replayresult.StepTypes;
+import org.processmining.plugins.replayer.replayresult.SyncReplayResult;
 
 import javax.swing.*;
 import java.util.*;
 
+import static es.usc.citius.aligments.config.Parametros.*;
 import static es.usc.citius.aligments.problem.NStateLikeCoBeFra.*;
 import static es.usc.citius.aligments.problem.NStateLikeCoBeFra.StateMoveCoBeFra.*;
 import static nl.tue.astar.AStarThread.NOMOVE;
@@ -62,7 +69,7 @@ public class AlgorithmAStar {
     private static XLog log;
     private static Marking initMarking;
 
-    public static void problem(String logLile, String netFile) {
+    public static PNRepResultImpl problem(String logLile, String netFile) {
 
         readFiles(logLile, netFile);
 
@@ -96,9 +103,11 @@ public class AlgorithmAStar {
             }
         };
 
-        List<WeightedNode> solutions = new ArrayList<>();
+        //List<WeightedNode> solutions = new ArrayList<>();
+        List<SyncReplayResult> solutions = new ArrayList<>();
         Map<Trace, Integer> tracesRepetitions = new HashMap<>();
-        Map<Trace, XTrace> xTraces = new HashMap<>();
+        //TODO Maybe save all index and know repetitions with size
+        Map<Trace, Integer> xTraces = new HashMap<>();
 
         timerTotal.start();
         //Detect duplicated traces
@@ -108,16 +117,93 @@ public class AlgorithmAStar {
             Trace localTrace = getLinearTrace(log, i, delegate, unUsedIndices, trace2orgTrace);
             if (tracesRepetitions.containsKey(localTrace)) {
                 tracesRepetitions.put(localTrace, tracesRepetitions.get(localTrace) + 1);
+                xTraces.put(localTrace, i);
             } else {
                 tracesRepetitions.put(localTrace, 1);
-                xTraces.put(localTrace, log.get(i));
+                xTraces.put(localTrace, i);
             }
         }
+
+        //TODO Extract to function
+        //Get cost of empty trace
+        XFactory factory = XFactoryRegistry.instance().currentDefault();
+        XTrace emptyTrace = factory.createTrace();
+        trace = new LinearTrace("Empty Trace", new TIntArrayList());
+
+        final StateLikeCoBeFra initialStateEmpty = new StateLikeCoBeFra(delegate, initMarking, emptyTrace);
+        //Definimos el problema de búsqueda
+        SearchProblem<StateMoveCoBeFra, StateLikeCoBeFra, WeightedNode<StateMoveCoBeFra, StateLikeCoBeFra, Double>> problem
+                = ProblemBuilder.create()
+                .initialState(initialStateEmpty)
+                .defineProblemWithExplicitActions()
+                .useActionFunction(af)
+                .useTransitionFunction(atf)
+                .useCostFunction(cf)
+                .useHeuristicFunction(hf)
+                .build();
+
+        WeightedNode n = null;
+        double bestScore = 0d;
+        boolean stop = false;
+
+        int minCostModel = 0;
+
+        long time_start, time_end;
+        time_start = System.currentTimeMillis();
+
+        AStar<StateMoveCoBeFra, StateLikeCoBeFra, Double, WeightedNode<StateMoveCoBeFra, StateLikeCoBeFra, Double>> astarEmpty = Hipster.createAStar(problem);
+        AStar.Iterator iterator = astarEmpty.iterator();
+
+        while (iterator.hasNext()) {
+            WeightedNode n1 = (WeightedNode) iterator.next();
+            StateLikeCoBeFra state = (StateLikeCoBeFra) n1.state();
+
+            double score = (double) n1.getScore();
+
+            if (stop) {
+                if (score > bestScore) {
+                    break;
+                }
+            }
+
+            if (state.isFinal(delegate)) {
+                stop = true;
+                if (bestScore == 0) {
+                    bestScore = (double) n1.getCost();
+                    n = n1;
+                } else {
+                    double aux = (double) n1.getCost();
+                    if (aux < bestScore) {
+                        bestScore = aux;
+                        n = n1;
+                    }
+                }
+            }
+        }
+
+        if (n != null) {
+            Double finalScore = (double) n.getScore();
+            Double delta = delegate.getDelta();
+            Iterator iteratorEmptyTrace = n.path().iterator();
+            iteratorEmptyTrace.next();
+            int backTraceSize = 0;
+            while (iteratorEmptyTrace.hasNext()) {
+                AbstractNode node = (WeightedNode) iteratorEmptyTrace.next();
+                if (node.action().equals(MODEl)) backTraceSize += delegate.getEpsilon();
+            }
+            assert (finalScore - backTraceSize) % delta.intValue() == 0;
+            minCostModel = (finalScore.intValue() - backTraceSize) / delta.intValue();
+        }
+
+        time_end = System.currentTimeMillis();
+        long time = time_end - time_start;
+        System.out.println("Time to calculate aligment of empty trace : " + time);
 
         for (Map.Entry<Trace, Integer> entry : tracesRepetitions.entrySet()) {
             //TODO Do something with repetitions
             Integer repetitions = entry.getValue();
-            XTrace xTrace = xTraces.get(entry.getKey());
+            Integer index = xTraces.get(entry.getKey());
+            XTrace xTrace = log.get(index);
             final StateLikeCoBeFra initialState = new StateLikeCoBeFra(delegate, initMarking, xTrace);
             trace = entry.getKey();
 
@@ -132,11 +218,10 @@ public class AlgorithmAStar {
                     .useHeuristicFunction(hf)
                     .build();
 
-            WeightedNode n = null;
-            double bestScore = 0d;
-            boolean stop = false;
+            n = null;
+            bestScore = 0d;
+            stop = false;
 
-            long time_start, time_end;
             time_start = System.currentTimeMillis();
 
             AStar<StateMoveCoBeFra, StateLikeCoBeFra, Double, WeightedNode<StateMoveCoBeFra, StateLikeCoBeFra, Double>> astar = Hipster.createAStar(p);
@@ -175,14 +260,21 @@ public class AlgorithmAStar {
             }
 
             time_end = System.currentTimeMillis();
-            // (time_end - time_start); Traces calculation time
+            time = time_end - time_start;
 
-            solutions.add(n);
+            //solutions.add(n);
+            SyncReplayResult result = addReplayResult(n, index, 0, true, time, 0, 0, minCostModel);
+            solutions.add(result);
         }
         timerTotal.stop();
 
         printTimes();
         //printSolutions(solutions, delegate);
+
+        PNRepResultImpl syncReplayResults = new PNRepResultImpl(solutions);
+        PNRepResultImpl sol = new PNRepResultImpl(syncReplayResults);
+
+        return sol;
     }
 
     private static void printTimes() {
@@ -274,16 +366,16 @@ public class AlgorithmAStar {
         Double cost = null;
         switch (action) {
             case MODEl:
-                cost = 1001d;
+                cost = delegate.getEpsilon() + delegate.getDelta() * MODEL_COST;
                 break;
             case LOG:
-                cost = 1001d;
+                cost = delegate.getEpsilon() + delegate.getDelta() * LOG_COST;
                 break;
             case SYNC:
-                cost = 1d;
+                cost = delegate.getEpsilon() + delegate.getDelta() * SYNC_COST;
                 break;
             case INVISIBLE:
-                cost = 0.00001d;
+                cost = 0d;
                 break;
         }
         return cost;
@@ -361,7 +453,7 @@ public class AlgorithmAStar {
         System.out.println(salida);
     }
 
-    private static void readFiles(String logFile, String netFile) {
+    private static void readFiles (String logFile, String netFile) {
         Mapping mapping = new Mapping(logFile, netFile);
         mapping.assignUnmappedToInvisible();
         Object[] petrinetWithMarking = mapping.getPetrinetWithMarking();
@@ -388,7 +480,93 @@ public class AlgorithmAStar {
         Map<org.processmining.models.graphbased.directed.petrinet.elements.Transition, Integer> mapTrans2Cost = parameters.getMapTrans2Cost();
         Map<XEventClass, Integer> mapEvClass2Cost = parameters.getMapEvClass2Cost();
 
+        //Difference with cost SYNC
+        int delta = 1000;
         delegate = new PNaiveDelegate(petrinet, log, classes, transEvClassMapping, mapTrans2Cost,
-                mapEvClass2Cost, 1000, false, finaMarking);
+                mapEvClass2Cost, delta, false, finaMarking);
+    }
+
+    protected static SyncReplayResult addReplayResult (WeightedNode node, int traceIndex, int stateCount, boolean isReliable, long milliseconds,
+                                               int queuedStates, int traversedArcs, int minCostMoveModel) {
+        double mmCost = 0; // total cost of move on model
+        double mlCost = 0; // total cost of move on log
+        double mSyncCost = 0; // total cost of synchronous move
+
+        double mmUpper = 0; // total cost if all movements are move on model (including the synchronous one)
+        double mlUpper = 0; // total cost if all events are move on log
+
+        int eventInTrace = 0;
+        List<StepTypes> stepTypes = new ArrayList<>(node.pathSize());
+        List<Object> nodeInstance = new ArrayList<>(node.pathSize());
+
+        Iterator iterator = node.path().iterator();
+        //First element is null
+        iterator.next();
+        while (iterator.hasNext()) {
+            AbstractNode actualNode = (WeightedNode) iterator.next();
+            StateLikeCoBeFra state = (StateLikeCoBeFra) actualNode.state();
+
+            if (actualNode.action().equals(SYNC)) {
+                eventInTrace++;
+                stepTypes.add(StepTypes.LMGOOD);
+                nodeInstance.add(delegate.getTransition((short) state.getLogMove()));
+                double syncCost = delegate.getDelta() * SYNC_COST / delegate.getDelta();
+                mSyncCost += syncCost;
+                mmUpper += syncCost;
+                mlUpper += LOG_COST;
+            } else if (actualNode.action().equals(MODEl)) {
+                stepTypes.add(StepTypes.MREAL);
+                nodeInstance.add(delegate.getTransition((short) state.getModelMove()));
+                double modelCost = (delegate.getDelta() * MODEL_COST) / delegate.getDelta();
+                mmCost += modelCost;
+                mmUpper += modelCost;
+                mlUpper += LOG_COST;
+            } else if (actualNode.action().equals(LOG)) {
+                eventInTrace++;
+                stepTypes.add(StepTypes.L);
+                nodeInstance.add(delegate.getTransition((short) state.getLogMove()));
+                double logCost = (delegate.getDelta() * LOG_COST) / delegate.getDelta();
+                mmCost += logCost;
+                mmUpper += logCost;
+                mlUpper += LOG_COST;
+            } else if (actualNode.action().equals(INVISIBLE)) {
+                stepTypes.add(StepTypes.MINVI);
+                nodeInstance.add(delegate.getTransition((short) state.getModelMove()));
+            }
+        }
+
+        SyncReplayResult res = new SyncReplayResult(nodeInstance, stepTypes, traceIndex);
+
+        res.setReliable(isReliable);
+        Map<String, Double> info = new HashMap<>();
+        info.put(PNRepResult.RAWFITNESSCOST, (mmCost + mlCost + mSyncCost));
+        info.put(PNRepResult.MAXFITNESSCOST, (mlUpper + minCostMoveModel));
+        info.put(PNRepResult.MAXMOVELOGCOST, (mlUpper));
+
+        if (mlCost > 0) {
+            info.put(PNRepResult.MOVELOGFITNESS, 1 - (mlCost / mlUpper));
+        } else {
+            info.put(PNRepResult.MOVELOGFITNESS, 1.0);
+        }
+
+        if (mmCost > 0) {
+            info.put(PNRepResult.MOVEMODELFITNESS, 1 - (mmCost / mmUpper));
+        } else {
+            info.put(PNRepResult.MOVEMODELFITNESS, 1.0);
+        }
+        info.put(PNRepResult.NUMSTATEGENERATED, (double) stateCount);
+        info.put(PNRepResult.QUEUEDSTATE, (double) queuedStates);
+        info.put(PNRepResult.TRAVERSEDARCS, (double) traversedArcs);
+
+        // set info fitness
+        if (mmCost > 0 || mlCost > 0 || mSyncCost > 0) {
+            info.put(PNRepResult.TRACEFITNESS, 1 - ((mmCost + mlCost + mSyncCost) / (mlUpper + minCostMoveModel)));
+        } else {
+            info.put(PNRepResult.TRACEFITNESS, 1.0);
+        }
+        info.put(PNRepResult.TIME, (double) milliseconds);
+        info.put(PNRepResult.ORIGTRACELENGTH, (double) eventInTrace);
+        res.setInfo(info);
+        return res;
     }
 }

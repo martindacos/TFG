@@ -44,7 +44,6 @@ public final class NStateLikeCoBeFra {
         //CoBeFra PRecord copy
         protected final int logMove; //         4 bytes
         protected final int modelMove; //       4 bytes
-        protected final int backtrace; //       4 bytes
         BitMask executed;
 
         //Ids of possible movements
@@ -79,11 +78,10 @@ public final class NStateLikeCoBeFra {
             invisible = new TIntArrayList();
             logMove = NOMOVE;
             modelMove = NOMOVE;
-            backtrace = NOMOVE;
         }
 
         public StateLikeCoBeFra(ShortShortMultiset marking, ShortShortMultiset parikh, int hashCode, BitMask executed
-                , int logMove, int modelMove, int backtrace) {
+                , int logMove, int modelMove) {
             this.marking = marking;
             this.parikh = parikh;
             this.hashCode = hashCode;
@@ -94,7 +92,6 @@ public final class NStateLikeCoBeFra {
             this.invisible = new TIntArrayList();
             this.logMove = logMove;
             this.modelMove = modelMove;
-            this.backtrace = backtrace;
         }
 
         protected ShortShortMultiset cloneAndUpdateMarking(AbstractPDelegate<?> delegate, ShortShortMultiset marking,
@@ -150,7 +147,7 @@ public final class NStateLikeCoBeFra {
                 newExecuted = executed;
             }
 
-            return new StateLikeCoBeFra(newMarking, newParikh, PROVIDER.hash(newMarking, newParikh), newExecuted, modelMove, logMove, activity);
+            return new StateLikeCoBeFra(newMarking, newParikh, PROVIDER.hash(newMarking, newParikh), newExecuted, modelMove, logMove);
         }
 
         public TIntList getSynchronousMoves(Delegate<? extends Head, ? extends Tail> d, TIntList enabled, int activity) {
@@ -253,10 +250,6 @@ public final class NStateLikeCoBeFra {
 
         public int getLogMove() {
             return logMove;
-        }
-
-        public int getBacktrace() {
-            return backtrace;
         }
 
         public int invisibleSize() {return invisible.size();}

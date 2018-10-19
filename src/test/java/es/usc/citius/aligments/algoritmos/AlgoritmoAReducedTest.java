@@ -4,6 +4,7 @@ import be.kuleuven.econ.cbf.metrics.recall.AryaFitness;
 import es.usc.citius.aligments.config.Parametros;
 import es.usc.citius.aligments.config.ParametrosImpl;
 import es.usc.citius.aligments.estadisticas.InterfazEstadisticas;
+import es.usc.citius.aligments.mains.AligmentsWithCoBeFraMarking;
 import es.usc.citius.aligments.problem.InterfazTraza;
 import es.usc.citius.aligments.problem.Readers;
 import es.usc.citius.aligments.problem.Traza;
@@ -25,11 +26,14 @@ import org.processmining.cobefra.AlignmentBasedPrecision;
 import org.processmining.plugins.astar.petrinet.AbstractPetrinetReplayer;
 import org.processmining.plugins.astar.petrinet.PetrinetReplayerWithoutILP;
 import org.processmining.plugins.petrinet.replayer.algorithms.IPNReplayAlgorithm;
+import org.processmining.plugins.petrinet.replayresult.PNRepResultImpl;
+import org.processmining.plugins.replayer.replayresult.SyncReplayResult;
 
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.OptionalDouble;
 
 public class AlgoritmoAReducedTest {
@@ -441,13 +445,15 @@ public class AlgoritmoAReducedTest {
     public void testPLG() throws Exception {
         List<String> logsPaths = new ArrayList<>();
         List<String> modelsPaths = new ArrayList<>();
+        //logsPaths.add("/home/martin/Descargas/PLG_Logs/test/log.xes");
+        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/test/test");
         //logsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/5.xes");
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/Individual");
-        //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
         //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_N.xes");
         //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000.xes");
         //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000_N.xes");
-        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
@@ -455,11 +461,11 @@ public class AlgoritmoAReducedTest {
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
 
         //logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/100.xes");
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000.xes");
+        //logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000.xes");
         //logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000_N.xes");
         //logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/2000_BN.xes");
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
+        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         runAligments(logsPaths, modelsPaths);
@@ -486,6 +492,7 @@ public class AlgoritmoAReducedTest {
             List<Long> times_cobefra = new ArrayList<>();
             InterfazEstadisticas problem = null;
             AryaFitness cobefra = null;
+            PNRepResultImpl aligmentsWithCobefraMarking = null;
             Readers miReader = null;
             for (int j = 0; j < 1; j++) {
                 resetReader();
@@ -496,14 +503,21 @@ public class AlgoritmoAReducedTest {
                 total.stop();
                 times.add(total.getElapsedTime());
 
-                total.start();
                 cobefra = AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
+
+                total.start();
+                aligmentsWithCobefraMarking = AligmentsWithCoBeFraMarking.calculate(logPath, modelPath + ".pnml");
                 total.stop();
                 times_cobefra.add(total.getElapsedTime());
             }
 
             //salida.printCobefra(cobefra.getPNRepResult());
-            //String printComparation = salida.compareResults(cobefra.getPNRepResult(), miReader);
+            //String printComparation2 = salida.compareResults(cobefra.getPNRepResult(), miReader);
+            //System.out.println("*******************");
+
+            //Info With All Metrics
+            Map<String, Object> info = aligmentsWithCobefraMarking.getInfo();
+            String printComparation = salida.compareResults(aligmentsWithCobefraMarking, miReader);
             long average = averageLongs(times);
             long averageCobefra = averageLongs(times_cobefra);
             System.out.println(total.toSeconds(averageCobefra) + "," + total.toSeconds(average));
