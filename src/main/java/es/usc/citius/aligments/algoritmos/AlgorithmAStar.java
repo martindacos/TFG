@@ -3,6 +3,8 @@ package es.usc.citius.aligments.algoritmos;
 import be.kuleuven.econ.cbf.input.Mapping;
 import be.kuleuven.econ.cbf.utils.MappingUtils;
 import es.usc.citius.aligments.problem.LogMove;
+import es.usc.citius.aligments.problem.NStateLikeCoBeFra;
+import es.usc.citius.aligments.problem.PossibleMovements;
 import es.usc.citius.aligments.problem.SyncMove;
 import es.usc.citius.hipster.algorithm.AStar;
 import es.usc.citius.hipster.algorithm.Hipster;
@@ -68,6 +70,7 @@ public class AlgorithmAStar {
     private static AbstractPDelegate<?> delegate;
     private static XLog log;
     private static Marking initMarking;
+    private static PossibleMovements possibleMovements;
 
     public static PNRepResultImpl problem(String logLile, String netFile) {
 
@@ -77,7 +80,7 @@ public class AlgorithmAStar {
         ActionFunction<StateMoveCoBeFra, StateLikeCoBeFra> af = new ActionFunction<StateMoveCoBeFra, StateLikeCoBeFra>() {
             @Override
             public Iterable<StateMoveCoBeFra> actionsFor(StateLikeCoBeFra state) {
-                return AlgorithmAStar.validMovementsFor(state, delegate, trace);
+                return AlgorithmAStar.validMovementsFor(state);
             }
         };
 
@@ -85,7 +88,7 @@ public class AlgorithmAStar {
         atf = new ActionStateTransitionFunction<StateMoveCoBeFra, StateLikeCoBeFra>() {
             @Override
             public StateLikeCoBeFra apply(StateMoveCoBeFra action, StateLikeCoBeFra state) {
-                return AlgorithmAStar.applyActionToState(action, state, delegate);
+                return AlgorithmAStar.applyActionToState(action, state);
             }
         };
 
@@ -99,7 +102,7 @@ public class AlgorithmAStar {
         HeuristicFunction<StateLikeCoBeFra, Double> hf = new HeuristicFunction<StateLikeCoBeFra, Double>() {
             @Override
             public Double estimate(StateLikeCoBeFra state) {
-                return 1d;
+                return 0d;
             }
         };
 
@@ -112,7 +115,7 @@ public class AlgorithmAStar {
         for (int i = 0; i < log.size(); i++) {
             TIntList unUsedIndices = new TIntArrayList();
             TIntIntMap trace2orgTrace = new TIntIntHashMap(log.get(i).size(), 0.5f, -1, -1);
-            Trace localTrace = getLinearTrace(log, i, delegate, unUsedIndices, trace2orgTrace);
+            Trace localTrace = getLinearTrace(log, i, unUsedIndices, trace2orgTrace);
             if (xTraces.containsKey(localTrace)) {
                 SortedSet<Integer> repetitionsIndex = xTraces.get(localTrace);
                 repetitionsIndex.add(i);
@@ -286,13 +289,30 @@ public class AlgorithmAStar {
         System.out.println("Nº Instancias marcado : " + contadorInstanciasMarcado);
     }
 
-    private static Iterable<StateMoveCoBeFra> validMovementsFor(StateLikeCoBeFra state,
-                                                                                  Delegate<? extends Head, ? extends Tail> delegate,
-                                                                                  Trace trace) {
+    private static Iterable<StateMoveCoBeFra> validMovementsFor(StateLikeCoBeFra state) {
         timerMovs.resume();
         List<StateMoveCoBeFra> possibleMovs = new ArrayList<>();
 
-        TIntList enabled = state.getModelMoves(delegate);
+        TIntList modelMoves = null;
+        TIntList invisibleMoves = null;
+
+        if (isValidMoveOnModel(state)) {
+            //Save Enabled moves on state
+            modelMoves = state.getModelMoves(delegate);
+
+            //Model move
+            for (int i = 0; i < modelMoves.size(); i++) {
+                possibleMovs.add(MODEl);
+            }
+
+            //Invisible move
+            invisibleMoves = state.getInvisible();
+            for (int i = 0; i < invisibleMoves.size(); i++) {
+                possibleMovs.add(INVISIBLE);
+            }
+        }
+
+        possibleMovements = new PossibleMovements(modelMoves, invisibleMoves);
 
         TIntCollection nextEvents = trace.getNextEvents(state.getExecuted());
         TIntIterator evtIt = nextEvents.iterator();
@@ -304,28 +324,19 @@ public class AlgorithmAStar {
 
             // move both log and model synchronously;
             int activity = trace.get(nextEvent);
-            ml = state.getSynchronousMoves(delegate, enabled, activity);
+            ml = state.getSynchronousMoves(delegate, activity);
             TIntIterator it = ml.iterator();
             while (it.hasNext()) {
                 possibleMovs.add(SYNC);
                 int trans = it.next();
                 SyncMove mov = new SyncMove(trans, nextEvent, activity);
-                state.addSyncMovement(mov);
+                possibleMovements.addSyncMovement(mov);
             }
 
             //Log Move
             possibleMovs.add(LOG);
             LogMove mov = new LogMove(nextEvent, activity);
-            state.addLogMovement(mov);
-        }
-
-        //Model move
-        for (int i=0; i < state.modelSize(); i++) {
-            possibleMovs.add(MODEl);
-        }
-        //Invisible move
-        for (int i=0; i < state.invisibleSize(); i++) {
-            possibleMovs.add(INVISIBLE);
+            possibleMovements.addLogMovement(mov);
         }
 
         timerMovs.pause();
@@ -334,28 +345,29 @@ public class AlgorithmAStar {
         return possibleMovs;
     }
 
-    private static StateLikeCoBeFra applyActionToState(StateMoveCoBeFra action,
-                                                                         StateLikeCoBeFra state,
-                                                                         Delegate<? extends Head, ? extends Tail> delegate) {
+    private static boolean isValidMoveOnModel(StateLikeCoBeFra state) {
+        return state.getPreviousMove()==null || state.getModelMove() != NOMOVE;
+    }
+
+    private static StateLikeCoBeFra applyActionToState(StateMoveCoBeFra action, StateLikeCoBeFra state) {
         timerAct.resume();
         contadorInstanciasMarcado++;
-        final AbstractPDelegate<?> d = (AbstractPDelegate<?>) delegate;
         StateLikeCoBeFra successor = null;
 
         switch (action) {
             case SYNC:
-                SyncMove syncMove = state.getAndDeleteSyncMovement();
-                successor = processMove(state, syncMove.getModelMove(), syncMove.getMovedEvent(), syncMove.getActivity(), d);
-                break;
-            case MODEl:
-                successor = processMove(state, state.getAndDeleteModelMovement(), NOMOVE, NOMOVE, d);
+                SyncMove syncMove = possibleMovements.getAndDeleteSyncMovement();
+                successor = processMove(state, syncMove.getModelMove(), syncMove.getMovedEvent(), syncMove.getActivity(), SYNC);
                 break;
             case LOG:
-                LogMove logMove = state.getAndDeleteLogMovement();
-                successor = processMove(state, NOMOVE, logMove.getMovedEvent(), logMove.getActivity(), d);
+                LogMove logMove = possibleMovements.getAndDeleteLogMovement();
+                successor = processMove(state, NOMOVE, logMove.getMovedEvent(), logMove.getActivity(), LOG);
+                break;
+            case MODEl:
+                successor = processMove(state, possibleMovements.getAndDeleteModelMovement(), NOMOVE, NOMOVE, MODEl);
                 break;
             case INVISIBLE:
-                successor = processMove(state, state.getAndDeleteInvisibleMovement(), NOMOVE, NOMOVE, d);
+                successor = processMove(state, possibleMovements.getAndDeleteInvisibleMovement(), NOMOVE, NOMOVE, INVISIBLE);
                 break;
         }
 
@@ -367,17 +379,17 @@ public class AlgorithmAStar {
         StateMoveCoBeFra action = transition.getAction();
         Double cost = null;
         switch (action) {
-            case MODEl:
-                cost = delegate.getEpsilon() + delegate.getDelta() * MODEL_COST;
-                break;
             case LOG:
                 cost = delegate.getEpsilon() + delegate.getDelta() * LOG_COST;
                 break;
             case SYNC:
                 cost = delegate.getEpsilon() + delegate.getDelta() * SYNC_COST;
                 break;
+            case MODEl:
+                cost = delegate.getEpsilon() + delegate.getDelta() * MODEL_COST;
+                break;
             case INVISIBLE:
-                cost = INVISIBLE_COST;
+                cost = delegate.getEpsilon() + delegate.getDelta() * INVISIBLE_COST;
                 break;
         }
         return cost;
@@ -391,8 +403,7 @@ public class AlgorithmAStar {
      * @param trace2orgTrace
      * @return
      */
-    protected static LinearTrace getLinearTrace(XLog log, int trace, AbstractPDelegate<?> delegate, TIntList unUsedIndices,
-                                                TIntIntMap trace2orgTrace) {
+    protected static LinearTrace getLinearTrace(XLog log, int trace, TIntList unUsedIndices, TIntIntMap trace2orgTrace) {
         int s = log.get(trace).size();
         String name = XConceptExtension.instance().extractName(log.get(trace));
         if (name == null || name.isEmpty()) {
@@ -414,11 +425,10 @@ public class AlgorithmAStar {
         return result;
     }
 
-    protected static StateLikeCoBeFra processMove(StateLikeCoBeFra state, int modelMove, int movedEvent, int activity,
-                                                                    AbstractPDelegate<?> delegate) {
+    protected static StateLikeCoBeFra processMove(StateLikeCoBeFra state, int modelMove, int movedEvent, int activity, StateMoveCoBeFra move) {
 
         // First, construct the next state from the old state
-        final StateLikeCoBeFra newState = state.getNextHead(delegate, modelMove, movedEvent, activity);
+        final StateLikeCoBeFra newState = state.getNextHead(delegate, modelMove, movedEvent, activity, move);
         return newState;
     }
 
@@ -438,15 +448,15 @@ public class AlgorithmAStar {
                 StateLikeCoBeFra s = (StateLikeCoBeFra) node.state();
 
                 if (node.action().equals(SYNC)) {
-                    salida = salida + "\n\t" + delegate.getTransition((short) s.getLogMove())+
+                    salida = salida + "\n\t" + delegate.getTransition((short) s.getLogMove()) +
                             "\t" + delegate.getTransition((short) s.getLogMove());
                 } else if (node.action().equals(MODEl)) {
                     salida = salida + "\n\t>>\t" + delegate.getTransition((short) s.getModelMove());
                 } else if (node.action().equals(LOG)) {
                     salida = salida + "\n\t" + delegate.getTransition((short) s.getLogMove()) + "\t>>";
-                }  else if (node.action().equals(INVISIBLE)) {
+                } else if (node.action().equals(INVISIBLE)) {
                     salida = salida + "\n\t>>\t>>";
-                }  else {
+                } else {
                     salida = salida + "\n??????????????????????";
                 }
             }
@@ -455,7 +465,7 @@ public class AlgorithmAStar {
         System.out.println(salida);
     }
 
-    private static void readFiles (String logFile, String netFile) {
+    private static void readFiles(String logFile, String netFile) {
         Mapping mapping = new Mapping(logFile, netFile);
         mapping.assignUnmappedToInvisible();
         Object[] petrinetWithMarking = mapping.getPetrinetWithMarking();
@@ -488,8 +498,8 @@ public class AlgorithmAStar {
                 mapEvClass2Cost, delta, false, finaMarking);
     }
 
-    protected static SyncReplayResult addReplayResult (WeightedNode node, SortedSet<Integer> tracesIndex, int stateCount, boolean isReliable, long milliseconds,
-                                               int queuedStates, int traversedArcs, int minCostMoveModel) {
+    protected static SyncReplayResult addReplayResult(WeightedNode node, SortedSet<Integer> tracesIndex, int stateCount, boolean isReliable, long milliseconds,
+                                                      int queuedStates, int traversedArcs, int minCostMoveModel) {
         double mmCost = 0; // total cost of move on model
         double mlCost = 0; // total cost of move on log
         double mSyncCost = 0; // total cost of synchronous move

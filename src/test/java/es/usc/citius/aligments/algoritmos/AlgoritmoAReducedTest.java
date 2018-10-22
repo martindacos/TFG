@@ -26,15 +26,18 @@ import org.processmining.cobefra.AlignmentBasedPrecision;
 import org.processmining.plugins.astar.petrinet.AbstractPetrinetReplayer;
 import org.processmining.plugins.astar.petrinet.PetrinetReplayerWithoutILP;
 import org.processmining.plugins.petrinet.replayer.algorithms.IPNReplayAlgorithm;
+import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.petrinet.replayresult.PNRepResultImpl;
+import org.processmining.plugins.petrinet.replayresult.StepTypes;
 import org.processmining.plugins.replayer.replayresult.SyncReplayResult;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.OptionalDouble;
+import java.util.*;
+
+import static org.processmining.plugins.petrinet.replayresult.StepTypes.L;
+import static org.processmining.plugins.petrinet.replayresult.StepTypes.LMGOOD;
+import static org.processmining.plugins.petrinet.replayresult.StepTypes.MREAL;
 
 public class AlgoritmoAReducedTest {
 
@@ -490,6 +493,7 @@ public class AlgoritmoAReducedTest {
             Timer total = new Timer();
             List<Long> times = new ArrayList<>();
             List<Long> times_cobefra = new ArrayList<>();
+            List<Long> times_mine = new ArrayList<>();
             InterfazEstadisticas problem = null;
             AryaFitness cobefra = null;
             PNRepResultImpl aligmentsWithCobefraMarking = null;
@@ -503,12 +507,15 @@ public class AlgoritmoAReducedTest {
                 total.stop();
                 times.add(total.getElapsedTime());
 
+                total.start();
                 cobefra = AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
+                total.stop();
+                times_cobefra.add(total.getElapsedTime());
 
                 total.start();
                 aligmentsWithCobefraMarking = AligmentsWithCoBeFraMarking.calculate(logPath, modelPath + ".pnml");
                 total.stop();
-                times_cobefra.add(total.getElapsedTime());
+                times_mine.add(total.getElapsedTime());
             }
 
             //salida.printCobefra(cobefra.getPNRepResult());
@@ -519,10 +526,12 @@ public class AlgoritmoAReducedTest {
             //Info With All Metrics
             Map<String, Object> info = aligmentsWithCobefraMarking.getInfo();
             System.out.println("CoBeFra : " + cobefra.getResult() + " vs " + info.get("Trace Fitness"));
-            String printComparation = salida.compareResults(aligmentsWithCobefraMarking, miReader);
+            compareResults(cobefra.getPNRepResult(), aligmentsWithCobefraMarking);
+            //String printComparation = salida.compareResults(aligmentsWithCobefraMarking, miReader);
             long average = averageLongs(times);
             long averageCobefra = averageLongs(times_cobefra);
-            System.out.println(total.toSeconds(averageCobefra) + "," + total.toSeconds(average));
+            long averageMine = averageLongs(times_mine);
+            System.out.println(total.toSeconds(averageCobefra) + "," + total.toSeconds(average) + " ," + total.toSeconds(averageMine));
             /*System.out.print(printComparation + "," + problem.getDiferentStates() + "," + problem.getVisitedStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
                     total.toSeconds(average));
             sb.append(printComparation + "," + problem.getDiferentStates() + "," + problem.getVisitedStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
@@ -542,5 +551,47 @@ public class AlgoritmoAReducedTest {
         }
         long l = total / numbers.size();
         return l;
+    }
+
+    public void compareResults(PNRepResult cobefra, PNRepResult mine) {
+        Iterator<SyncReplayResult> cobefraIterator = cobefra.iterator();
+        while (cobefraIterator.hasNext()) {
+            SyncReplayResult nextCobefra = cobefraIterator.next();
+
+            Iterator<SyncReplayResult> mineIterator = mine.iterator();
+            while (mineIterator.hasNext()) {
+                SyncReplayResult nextMine = mineIterator.next();
+
+                if (nextMine.getTraceIndex().equals(nextCobefra.getTraceIndex())) {
+                    if (!nextCobefra.getInfo().get(PNRepResult.TRACEFITNESS).equals(nextMine.getInfo().get(PNRepResult.TRACEFITNESS))) {
+                        printSyncReplayResult(nextCobefra);
+                        printSyncReplayResult(nextMine);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    private void printSyncReplayResult(SyncReplayResult result) {
+        String salida = "";
+        salida = salida + "\n***************************";
+        salida = salida + "\n\n---------SALIDA VISUAL----------";
+        salida = salida + "\n\tTRAZA\tMODELO";
+        List<Object> nodeInstance = result.getNodeInstance();
+        List<StepTypes> steps = result.getStepTypes();
+        for (int i = 0; i < nodeInstance.size(); i++) {
+            Object node = nodeInstance.get(i);
+            StepTypes step = steps.get(i);
+            if (step.equals(LMGOOD)) {
+                salida = salida + "\n\t" + node + "\t" + node;
+            } else if (step.equals(L)) {
+                salida = salida + "\n\t" + node + "\t>>";
+            } else if (step.equals(MREAL)) {
+                salida = salida + "\n\t>>\t" + node;
+            }
+        }
+
+        System.out.println(salida);
     }
 }

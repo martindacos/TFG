@@ -18,9 +18,6 @@ import org.processmining.models.graphbased.directed.petrinet.elements.Transition
 import org.processmining.models.semantics.petrinet.Marking;
 import org.processmining.plugins.astar.petrinet.impl.AbstractPDelegate;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static nl.tue.astar.AStarThread.NOMOVE;
 
 public final class NStateLikeCoBeFra {
@@ -47,12 +44,9 @@ public final class NStateLikeCoBeFra {
         protected final int activity; //       4 bytes
         BitMask executed;
 
-        //Ids of possible movements
-        List<SyncMove> synchronous;
-        List<LogMove> log;
-        TIntList model;
-        TIntList invisible;
+        private TIntList invisible;
 
+        protected final StateMoveCoBeFra previousMove;
 
         public StateLikeCoBeFra(AbstractPDelegate<?> delegate, Marking m, XTrace t) {
             marking = new ShortShortMultiset(delegate.numPlaces());
@@ -73,28 +67,22 @@ public final class NStateLikeCoBeFra {
             }
             hashCode = PROVIDER.hash(marking, parikh);
             executed = new BitMask(t.size());
-            log = new ArrayList<>();
-            synchronous = new ArrayList<>();
-            model = new TIntArrayList();
-            invisible = new TIntArrayList();
             logMove = NOMOVE;
             modelMove = NOMOVE;
             activity = NOMOVE;
+            previousMove = null;
         }
 
         public StateLikeCoBeFra(ShortShortMultiset marking, ShortShortMultiset parikh, int hashCode, BitMask executed
-                , int modelMove, int logMove, int activity) {
+                , int modelMove, int logMove, int activity, StateMoveCoBeFra previousMove) {
             this.marking = marking;
             this.parikh = parikh;
             this.hashCode = hashCode;
             this.executed = executed;
-            this.log = new ArrayList<>();
-            this.synchronous = new ArrayList<>();
-            this.model = new TIntArrayList();
-            this.invisible = new TIntArrayList();
             this.modelMove = modelMove;
             this.logMove = logMove;
             this.activity = activity;
+            this.previousMove = previousMove;
         }
 
         protected ShortShortMultiset cloneAndUpdateMarking(AbstractPDelegate<?> delegate, ShortShortMultiset marking,
@@ -127,7 +115,8 @@ public final class NStateLikeCoBeFra {
             return newMarking;
         }
 
-        public StateLikeCoBeFra getNextHead(Delegate<? extends Head, ? extends Tail> d, int modelMove, int logMove, int activity) {
+        public StateLikeCoBeFra getNextHead(Delegate<? extends Head, ? extends Tail> d, int modelMove, int logMove, int activity,
+                                            StateMoveCoBeFra previousMove) {
             AbstractPDelegate<?> delegate = (AbstractPDelegate<?>) d;
 
             final ShortShortMultiset newMarking;
@@ -150,10 +139,10 @@ public final class NStateLikeCoBeFra {
                 newExecuted = executed;
             }
 
-            return new StateLikeCoBeFra(newMarking, newParikh, PROVIDER.hash(newMarking, newParikh), newExecuted, modelMove, logMove, activity);
+            return new StateLikeCoBeFra(newMarking, newParikh, PROVIDER.hash(newMarking, newParikh), newExecuted, modelMove, logMove, activity, previousMove);
         }
 
-        public TIntList getSynchronousMoves(Delegate<? extends Head, ? extends Tail> d, TIntList enabled, int activity) {
+        public TIntList getSynchronousMoves(Delegate<? extends Head, ? extends Tail> d, int activity) {
             final AbstractPDelegate<?> delegate = (AbstractPDelegate<?>) d;
 
             // only consider transitions mapped to activity
@@ -173,6 +162,8 @@ public final class NStateLikeCoBeFra {
         public TIntList getModelMoves(Delegate<? extends Head, ? extends Tail> delegate) {
             AbstractPDelegate<?> d = (AbstractPDelegate<?>) delegate;
             TIntIterator iterator = d.getEnabledTransitionsChangingMarking(marking).iterator();
+            TIntList model = new TIntArrayList();
+            invisible = new TIntArrayList();
             while (iterator.hasNext()) {
                 int next = iterator.next();
                 Transition t = d.getTransition((short) next);
@@ -215,38 +206,6 @@ public final class NStateLikeCoBeFra {
             return executed;
         }
 
-        public void addLogMovement(LogMove mov) {
-            log.add(mov);
-        }
-
-        public LogMove getAndDeleteLogMovement() {
-            LogMove mov = log.get(0);
-            log.remove(0);
-            return mov;
-        }
-
-        public int getAndDeleteModelMovement() {
-            int mov = model.get(0);
-            model.remove(0);
-            return mov;
-        }
-
-        public int getAndDeleteInvisibleMovement() {
-            int mov = invisible.get(0);
-            invisible.remove(0);
-            return mov;
-        }
-
-        public void addSyncMovement(SyncMove mov) {
-            synchronous.add(mov);
-        }
-
-        public SyncMove getAndDeleteSyncMovement() {
-            SyncMove mov = synchronous.get(0);
-            synchronous.remove(0);
-            return mov;
-        }
-
         public int getModelMove() {
             return modelMove;
         }
@@ -255,12 +214,16 @@ public final class NStateLikeCoBeFra {
             return logMove;
         }
 
-        public int invisibleSize() {return invisible.size();}
-
-        public int modelSize() {return model.size();}
-
         public int getActivity() {
             return activity;
+        }
+
+        public StateMoveCoBeFra getPreviousMove() {
+            return previousMove;
+        }
+
+        public TIntList getInvisible() {
+            return invisible;
         }
     }
 }
