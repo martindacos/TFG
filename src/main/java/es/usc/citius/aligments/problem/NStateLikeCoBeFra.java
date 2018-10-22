@@ -44,6 +44,7 @@ public final class NStateLikeCoBeFra {
         //CoBeFra PRecord copy
         protected final int logMove; //         4 bytes
         protected final int modelMove; //       4 bytes
+        protected final int activity; //       4 bytes
         BitMask executed;
 
         //Ids of possible movements
@@ -78,10 +79,11 @@ public final class NStateLikeCoBeFra {
             invisible = new TIntArrayList();
             logMove = NOMOVE;
             modelMove = NOMOVE;
+            activity = NOMOVE;
         }
 
         public StateLikeCoBeFra(ShortShortMultiset marking, ShortShortMultiset parikh, int hashCode, BitMask executed
-                , int logMove, int modelMove) {
+                , int modelMove, int logMove, int activity) {
             this.marking = marking;
             this.parikh = parikh;
             this.hashCode = hashCode;
@@ -90,8 +92,9 @@ public final class NStateLikeCoBeFra {
             this.synchronous = new ArrayList<>();
             this.model = new TIntArrayList();
             this.invisible = new TIntArrayList();
-            this.logMove = logMove;
             this.modelMove = modelMove;
+            this.logMove = logMove;
+            this.activity = activity;
         }
 
         protected ShortShortMultiset cloneAndUpdateMarking(AbstractPDelegate<?> delegate, ShortShortMultiset marking,
@@ -147,7 +150,7 @@ public final class NStateLikeCoBeFra {
                 newExecuted = executed;
             }
 
-            return new StateLikeCoBeFra(newMarking, newParikh, PROVIDER.hash(newMarking, newParikh), newExecuted, modelMove, logMove);
+            return new StateLikeCoBeFra(newMarking, newParikh, PROVIDER.hash(newMarking, newParikh), newExecuted, modelMove, logMove, activity);
         }
 
         public TIntList getSynchronousMoves(Delegate<? extends Head, ? extends Tail> d, TIntList enabled, int activity) {
@@ -255,5 +258,9 @@ public final class NStateLikeCoBeFra {
         public int invisibleSize() {return invisible.size();}
 
         public int modelSize() {return model.size();}
+
+        public int getActivity() {
+            return activity;
+        }
     }
 }

@@ -449,12 +449,12 @@ public class AlgoritmoAReducedTest {
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/test/test");
         //logsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/5.xes");
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/Individual");
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
-        //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_N.xes");
+        //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_N.xes");
         //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000.xes");
         //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000_N.xes");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
         //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_BN.xes");
@@ -512,11 +512,13 @@ public class AlgoritmoAReducedTest {
             }
 
             //salida.printCobefra(cobefra.getPNRepResult());
-            //String printComparation2 = salida.compareResults(cobefra.getPNRepResult(), miReader);
             //System.out.println("*******************");
+            //salida.printCobefra(aligmentsWithCobefraMarking);
+            //String printComparation2 = salida.compareResults(cobefra.getPNRepResult(), miReader);
 
             //Info With All Metrics
             Map<String, Object> info = aligmentsWithCobefraMarking.getInfo();
+            System.out.println("CoBeFra : " + cobefra.getResult() + " vs " + info.get("Trace Fitness"));
             String printComparation = salida.compareResults(aligmentsWithCobefraMarking, miReader);
             long average = averageLongs(times);
             long averageCobefra = averageLongs(times_cobefra);
