@@ -63,7 +63,9 @@ public class AlgorithmAStar {
     private static es.usc.citius.aligments.utils.Timer timerAct = new es.usc.citius.aligments.utils.Timer();
     private static es.usc.citius.aligments.utils.Timer timerMovs = new es.usc.citius.aligments.utils.Timer();
     private static es.usc.citius.aligments.utils.Timer timerTotal = new es.usc.citius.aligments.utils.Timer();
-    private static int contadorInstanciasMarcado = 0;
+    private static int stateCount;
+    private static int queuedStateCount;
+    private static long aligmentTime;
 
     private static Trace trace = null;
 
@@ -72,41 +74,23 @@ public class AlgorithmAStar {
     private static Marking initMarking;
     private static PossibleMovements possibleMovements;
 
-    public static PNRepResultImpl problem(String logLile, String netFile) {
+    //A* Functions
+    private static ActionFunction<StateMoveCoBeFra, StateLikeCoBeFra> af;
+    private static ActionStateTransitionFunction<StateMoveCoBeFra, StateLikeCoBeFra> atf;
+    private static CostFunction<StateMoveCoBeFra, StateLikeCoBeFra, Double> cf;
+    private static HeuristicFunction<StateLikeCoBeFra, Double> hf;
 
+    public static PNRepResultImpl problem(String logLile, String netFile) {
         readFiles(logLile, netFile);
 
-        /*Funciones para el algoritmo A* */
-        ActionFunction<StateMoveCoBeFra, StateLikeCoBeFra> af = new ActionFunction<StateMoveCoBeFra, StateLikeCoBeFra>() {
-            @Override
-            public Iterable<StateMoveCoBeFra> actionsFor(StateLikeCoBeFra state) {
-                return AlgorithmAStar.validMovementsFor(state);
-            }
-        };
+        af = state -> AlgorithmAStar.validMovementsFor(state);
 
-        ActionStateTransitionFunction<StateMoveCoBeFra, StateLikeCoBeFra> atf;
-        atf = new ActionStateTransitionFunction<StateMoveCoBeFra, StateLikeCoBeFra>() {
-            @Override
-            public StateLikeCoBeFra apply(StateMoveCoBeFra action, StateLikeCoBeFra state) {
-                return AlgorithmAStar.applyActionToState(action, state);
-            }
-        };
+        atf = (action, state) -> AlgorithmAStar.applyActionToState(action, state);
 
-        CostFunction<StateMoveCoBeFra, StateLikeCoBeFra, Double> cf = new CostFunction<StateMoveCoBeFra, StateLikeCoBeFra, Double>() {
-            @Override
-            public Double evaluate(Transition<StateMoveCoBeFra, StateLikeCoBeFra> transition) {
-                return AlgorithmAStar.evaluateToState(transition);
-            }
-        };
+        cf = transition -> AlgorithmAStar.evaluateToState(transition);
 
-        HeuristicFunction<StateLikeCoBeFra, Double> hf = new HeuristicFunction<StateLikeCoBeFra, Double>() {
-            @Override
-            public Double estimate(StateLikeCoBeFra state) {
-                return 0d;
-            }
-        };
+        hf = state -> 0d;
 
-        //List<WeightedNode> solutions = new ArrayList<>();
         List<SyncReplayResult> solutions = new ArrayList<>();
         Map<Trace, SortedSet<Integer>> xTraces = new HashMap<>();
 
@@ -127,17 +111,65 @@ public class AlgorithmAStar {
             }
         }
 
-        //TODO Extract to function
-        //Get cost of empty trace
+        WeightedNode n;
+        int minCostModel = getMinCostModel();
+
+        for (Map.Entry<Trace, SortedSet<Integer>> entry : xTraces.entrySet()) {
+            SortedSet<Integer> repetitionsIndex = entry.getValue();
+            XTrace xTrace = log.get(repetitionsIndex.first());
+            final StateLikeCoBeFra initialState = new StateLikeCoBeFra(delegate, initMarking, xTrace);
+            trace = entry.getKey();
+
+            queuedStateCount = 0;
+            aligmentTime = 0l;
+            n = getOptimalAligment(initialState);
+
+            SyncReplayResult result = addReplayResult(n, repetitionsIndex, stateCount, true, aligmentTime, queuedStateCount, 0, minCostModel);
+            solutions.add(result);
+        }
+        timerTotal.stop();
+
+        //printTimes();
+
+        PNRepResultImpl syncReplayResults = new PNRepResultImpl(solutions);
+        PNRepResultImpl sol = new PNRepResultImpl(syncReplayResults);
+
+        return sol;
+    }
+
+    private static int getMinCostModel() {
+        WeightedNode n;
         XFactory factory = XFactoryRegistry.instance().currentDefault();
         XTrace emptyTrace = factory.createTrace();
         trace = new LinearTrace("Empty Trace", new TIntArrayList());
 
         final StateLikeCoBeFra initialStateEmpty = new StateLikeCoBeFra(delegate, initMarking, emptyTrace);
-        //Definimos el problema de búsqueda
-        SearchProblem<StateMoveCoBeFra, StateLikeCoBeFra, WeightedNode<StateMoveCoBeFra, StateLikeCoBeFra, Double>> problem
+        int minCostModel = 0;
+
+        n = getOptimalAligment(initialStateEmpty);
+
+        if (n != null) {
+            Double finalCost = (double) n.getCost();
+            Double delta = delegate.getDelta();
+            Iterator iteratorEmptyTrace = n.path().iterator();
+            iteratorEmptyTrace.next();
+            int backTraceSize = 0;
+            while (iteratorEmptyTrace.hasNext()) {
+                AbstractNode node = (WeightedNode) iteratorEmptyTrace.next();
+                if (node.action().equals(MODEl) || node.action().equals(INVISIBLE)) backTraceSize += delegate.getEpsilon();
+            }
+            assert (finalCost - backTraceSize) % delta.intValue() == 0;
+            minCostModel = (finalCost.intValue() - backTraceSize) / delta.intValue();
+        }
+
+        System.out.println("Time to calculate aligment of empty trace : " + aligmentTime);
+        return minCostModel;
+    }
+
+    private static WeightedNode getOptimalAligment(StateLikeCoBeFra initialState) {
+        SearchProblem<StateMoveCoBeFra, StateLikeCoBeFra, WeightedNode<StateMoveCoBeFra, StateLikeCoBeFra, Double>> p
                 = ProblemBuilder.create()
-                .initialState(initialStateEmpty)
+                .initialState(initialState)
                 .defineProblemWithExplicitActions()
                 .useActionFunction(af)
                 .useTransitionFunction(atf)
@@ -149,22 +181,21 @@ public class AlgorithmAStar {
         double bestScore = 0d;
         boolean stop = false;
 
-        int minCostModel = 0;
+        long time_start = System.currentTimeMillis();
 
-        long time_start, time_end;
-        time_start = System.currentTimeMillis();
+        AStar<StateMoveCoBeFra, StateLikeCoBeFra, Double, WeightedNode<StateMoveCoBeFra, StateLikeCoBeFra, Double>> astar = Hipster.createAStar(p);
+        AStar.Iterator it = astar.iterator();
 
-        AStar<StateMoveCoBeFra, StateLikeCoBeFra, Double, WeightedNode<StateMoveCoBeFra, StateLikeCoBeFra, Double>> astarEmpty = Hipster.createAStar(problem);
-        AStar.Iterator iterator = astarEmpty.iterator();
-
-        while (iterator.hasNext()) {
-            WeightedNode n1 = (WeightedNode) iterator.next();
+        stateCount = 0;
+        while (it.hasNext()) {
+            WeightedNode n1 = (WeightedNode) it.next();
             StateLikeCoBeFra state = (StateLikeCoBeFra) n1.state();
 
-            double score = (double) n1.getScore();
+            double cost = (double) n1.getCost();
 
             if (stop) {
-                if (score > bestScore) {
+                if (cost > bestScore) {
+                    queuedStateCount = it.getOpen().size();
                     break;
                 }
             }
@@ -184,113 +215,26 @@ public class AlgorithmAStar {
             }
         }
 
-        if (n != null) {
-            Double finalScore = (double) n.getCost();
-            Double delta = delegate.getDelta();
-            Iterator iteratorEmptyTrace = n.path().iterator();
-            iteratorEmptyTrace.next();
-            int backTraceSize = 0;
-            while (iteratorEmptyTrace.hasNext()) {
-                AbstractNode node = (WeightedNode) iteratorEmptyTrace.next();
-                if (node.action().equals(MODEl)) backTraceSize += delegate.getEpsilon();
-            }
-            assert (finalScore - backTraceSize) % delta.intValue() == 0;
-            minCostModel = (finalScore.intValue() - backTraceSize) / delta.intValue();
+        if (stop == false) {
+            System.err.print("Error. No se encontró ningún aligment para la traza " + trace.toString());
+            System.exit(2);
         }
 
-        time_end = System.currentTimeMillis();
-        long time = time_end - time_start;
-        System.out.println("Time to calculate aligment of empty trace : " + time);
+        long time_end = System.currentTimeMillis();
+        aligmentTime = time_end - time_start;
 
-        for (Map.Entry<Trace, SortedSet<Integer>> entry : xTraces.entrySet()) {
-            //TODO Do something with repetitions
-            SortedSet<Integer> repetitionsIndex = entry.getValue();
-            if (repetitionsIndex.contains(773)) {
-                System.out.println();
-            }
-            XTrace xTrace = log.get(repetitionsIndex.first());
-            final StateLikeCoBeFra initialState = new StateLikeCoBeFra(delegate, initMarking, xTrace);
-            trace = entry.getKey();
-
-            //Definimos el problema de búsqueda
-            SearchProblem<StateMoveCoBeFra, StateLikeCoBeFra, WeightedNode<StateMoveCoBeFra, StateLikeCoBeFra, Double>> p
-                    = ProblemBuilder.create()
-                    .initialState(initialState)
-                    .defineProblemWithExplicitActions()
-                    .useActionFunction(af)
-                    .useTransitionFunction(atf)
-                    .useCostFunction(cf)
-                    .useHeuristicFunction(hf)
-                    .build();
-
-            n = null;
-            bestScore = 0d;
-            stop = false;
-
-            time_start = System.currentTimeMillis();
-
-            AStar<StateMoveCoBeFra, StateLikeCoBeFra, Double, WeightedNode<StateMoveCoBeFra, StateLikeCoBeFra, Double>> astar = Hipster.createAStar(p);
-            AStar.Iterator it = astar.iterator();
-
-            while (it.hasNext()) {
-                WeightedNode n1 = (WeightedNode) it.next();
-                StateLikeCoBeFra state = (StateLikeCoBeFra) n1.state();
-
-                double score = (double) n1.getCost();
-
-                if (stop) {
-                    if (score > bestScore) {
-                        break;
-                    }
-                }
-
-                if (state.isFinal(delegate)) {
-                    stop = true;
-                    if (bestScore == 0) {
-                        bestScore = (double) n1.getCost();
-                        n = n1;
-                    } else {
-                        double aux = (double) n1.getCost();
-                        if (aux < bestScore) {
-                            bestScore = aux;
-                            n = n1;
-                        }
-                    }
-                }
-            }
-
-            if (stop == false) {
-                System.err.print("Error. No se encontró ningún aligment para la traza " + trace.toString());
-                System.exit(2);
-            }
-
-            time_end = System.currentTimeMillis();
-            time = time_end - time_start;
-
-            //solutions.add(n);
-            SyncReplayResult result = addReplayResult(n, repetitionsIndex, 0, true, time, 0, 0, minCostModel);
-            solutions.add(result);
-        }
-        timerTotal.stop();
-
-        printTimes();
-        //printSolutions(solutions, delegate);
-
-        PNRepResultImpl syncReplayResults = new PNRepResultImpl(solutions);
-        PNRepResultImpl sol = new PNRepResultImpl(syncReplayResults);
-
-        return sol;
+        return n;
     }
 
     private static void printTimes() {
         System.out.println("Tiempo cálculo movimientos : " + timerMovs.getReadableElapsedTime());
         System.out.println("Tiempo aplicar movimientos : " + timerAct.getReadableElapsedTime());
         System.out.println("Tiempo cálculo total : " + timerTotal.getReadableElapsedTime());
-        System.out.println("Nº Instancias marcado : " + contadorInstanciasMarcado);
     }
 
     private static Iterable<StateMoveCoBeFra> validMovementsFor(StateLikeCoBeFra state) {
         timerMovs.resume();
+        stateCount++;
         List<StateMoveCoBeFra> possibleMovs = new ArrayList<>();
 
         TIntList modelMoves = null;
@@ -341,17 +285,15 @@ public class AlgorithmAStar {
 
         timerMovs.pause();
 
-        //System.out.println("Posible movimientos del estado : " + possibleMovs);
         return possibleMovs;
     }
 
     private static boolean isValidMoveOnModel(StateLikeCoBeFra state) {
-        return state.getPreviousMove()==null || state.getModelMove() != NOMOVE;
+        return state.getPreviousMove() == null || state.getModelMove() != NOMOVE;
     }
 
     private static StateLikeCoBeFra applyActionToState(StateMoveCoBeFra action, StateLikeCoBeFra state) {
         timerAct.resume();
-        contadorInstanciasMarcado++;
         StateLikeCoBeFra successor = null;
 
         switch (action) {
@@ -395,14 +337,6 @@ public class AlgorithmAStar {
         return cost;
     }
 
-    /**
-     * get list of event class. Record the indexes of non-mapped event classes.
-     *
-     * @param trace
-     * @param unUsedIndices
-     * @param trace2orgTrace
-     * @return
-     */
     protected static LinearTrace getLinearTrace(XLog log, int trace, TIntList unUsedIndices, TIntIntMap trace2orgTrace) {
         int s = log.get(trace).size();
         String name = XConceptExtension.instance().extractName(log.get(trace));
@@ -430,39 +364,6 @@ public class AlgorithmAStar {
         // First, construct the next state from the old state
         final StateLikeCoBeFra newState = state.getNextHead(delegate, modelMove, movedEvent, activity, move);
         return newState;
-    }
-
-    //TODO Revise print
-    public static void printSolutions(List<WeightedNode> solutions, AbstractPDelegate<?> delegate) {
-        String salida = "";
-        for (WeightedNode finalNode : solutions) {
-            Iterator it2 = finalNode.path().iterator();
-            //La primera iteración corresponde con el Estado Inicial, que no imprimimos
-            it2.next();
-            salida = salida + "\n***************************";
-            salida = salida + "\n\n---------SALIDA VISUAL----------";
-            salida = salida + "\n\tTRAZA\tMODELO";
-            while (it2.hasNext()) {
-                AbstractNode node = (WeightedNode) it2.next();
-
-                StateLikeCoBeFra s = (StateLikeCoBeFra) node.state();
-
-                if (node.action().equals(SYNC)) {
-                    salida = salida + "\n\t" + delegate.getTransition((short) s.getLogMove()) +
-                            "\t" + delegate.getTransition((short) s.getLogMove());
-                } else if (node.action().equals(MODEl)) {
-                    salida = salida + "\n\t>>\t" + delegate.getTransition((short) s.getModelMove());
-                } else if (node.action().equals(LOG)) {
-                    salida = salida + "\n\t" + delegate.getTransition((short) s.getLogMove()) + "\t>>";
-                } else if (node.action().equals(INVISIBLE)) {
-                    salida = salida + "\n\t>>\t>>";
-                } else {
-                    salida = salida + "\n??????????????????????";
-                }
-            }
-            salida = salida + "\n\nCoste del alineamiento = " + finalNode.getScore();
-        }
-        System.out.println(salida);
     }
 
     private static void readFiles(String logFile, String netFile) {
@@ -522,14 +423,12 @@ public class AlgorithmAStar {
                 eventInTrace++;
                 stepTypes.add(StepTypes.LMGOOD);
                 nodeInstance.add(delegate.getTransition((short) state.getModelMove()));
-                //double syncCost = delegate.getDelta() * SYNC_COST / delegate.getDelta();
                 mSyncCost += SYNC_COST;
                 mmUpper += MODEL_COST;
                 mlUpper += LOG_COST;
             } else if (actualNode.action().equals(MODEl)) {
                 stepTypes.add(StepTypes.MREAL);
                 nodeInstance.add(delegate.getTransition((short) state.getModelMove()));
-                //double modelCost = (delegate.getDelta() * MODEL_COST) / delegate.getDelta();
                 mmCost += MODEL_COST;
                 mmUpper += MODEL_COST;
             } else if (actualNode.action().equals(LOG)) {
@@ -537,10 +436,7 @@ public class AlgorithmAStar {
                 stepTypes.add(StepTypes.L);
                 short a = (short) state.getActivity();
                 nodeInstance.add(delegate.getEventClass(a));
-                //double logCost = (delegate.getDelta() * LOG_COST) / delegate.getDelta();
                 mlCost += LOG_COST;
-                //mmCost += LOG_COST;
-                //mmUpper += MODEL_COST;
                 mlUpper += LOG_COST;
             } else if (actualNode.action().equals(INVISIBLE)) {
                 stepTypes.add(StepTypes.MINVI);

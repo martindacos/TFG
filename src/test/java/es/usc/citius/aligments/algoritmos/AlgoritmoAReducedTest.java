@@ -448,29 +448,29 @@ public class AlgoritmoAReducedTest {
     public void testPLG() throws Exception {
         List<String> logsPaths = new ArrayList<>();
         List<String> modelsPaths = new ArrayList<>();
-        //logsPaths.add("/home/martin/Descargas/PLG_Logs/test/log.xes");
-        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/test/test");
-        //logsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/5.xes");
-        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/Individual");
-        //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/test/log.xes");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/test/test");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/5.xes");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/Individual");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_N.xes");
-        //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000.xes");
-        //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000_N.xes");
-        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000.xes");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000_N.xes");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
-        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
-        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
-        //logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_BN.xes");
-        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_BN.xes");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
 
-        //logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/100.xes");
-        //logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000.xes");
-        //logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000_N.xes");
-        //logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/2000_BN.xes");
-        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
-        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
-        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
-        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/100.xes");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000.xes");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000_N.xes");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/2000_BN.xes");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         runAligments(logsPaths, modelsPaths);
     }
 
@@ -501,9 +501,9 @@ public class AlgoritmoAReducedTest {
             for (int j = 0; j < 1; j++) {
                 resetReader();
                 total.start();
-                miReader = Readers.getReader(logPath, modelPath + ".hn");
+                //miReader = Readers.getReader(logPath, modelPath + ".hn");
                 ParametrosImpl.setHEURISTIC(Parametros.HEURISTIC_MODEL);
-                problem = AlgoritmoAReduced.problem(miReader, false);
+                //problem = AlgoritmoAReduced.problem(miReader, false);
                 total.stop();
                 times.add(total.getElapsedTime());
 
@@ -525,19 +525,19 @@ public class AlgoritmoAReducedTest {
 
             //Info With All Metrics
             Map<String, Object> info = aligmentsWithCobefraMarking.getInfo();
-            System.out.println("CoBeFra : " + cobefra.getResult() + " vs " + info.get("Trace Fitness"));
-            compareResults(cobefra.getPNRepResult(), aligmentsWithCobefraMarking);
+            String printComparation = compareResults(cobefra.getPNRepResult(), aligmentsWithCobefraMarking);
             //String printComparation = salida.compareResults(aligmentsWithCobefraMarking, miReader);
             long average = averageLongs(times);
             long averageCobefra = averageLongs(times_cobefra);
             long averageMine = averageLongs(times_mine);
             System.out.println(total.toSeconds(averageCobefra) + "," + total.toSeconds(average) + " ," + total.toSeconds(averageMine));
+            System.out.print(printComparation + "," + cobefra.getResult() + "," + info.get("Trace Fitness"));
             /*System.out.print(printComparation + "," + problem.getDiferentStates() + "," + problem.getVisitedStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
                     total.toSeconds(average));
             sb.append(printComparation + "," + problem.getDiferentStates() + "," + problem.getVisitedStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
-                    total.toSeconds(average) + "\n");
+                    total.toSeconds(average) + "\n");*/
             System.out.println();
-            System.out.println();*/
+            System.out.println();
         }
 
         pw.write(sb.toString());
@@ -553,24 +553,38 @@ public class AlgoritmoAReducedTest {
         return l;
     }
 
-    public void compareResults(PNRepResult cobefra, PNRepResult mine) {
+    public String compareResults(PNRepResult cobefra, PNRepResult mine) {
+        //TODO Compare more elements
         Iterator<SyncReplayResult> cobefraIterator = cobefra.iterator();
+        Integer queued_States = 0;
+        Integer num_States = 0;
+        Integer queued_States2 = 0;
+        Integer num_States2 = 0;
+        Integer count = 0;
         while (cobefraIterator.hasNext()) {
             SyncReplayResult nextCobefra = cobefraIterator.next();
+            queued_States += nextCobefra.getInfo().get("Queued States").intValue();
+            num_States += nextCobefra.getInfo().get("Num. States").intValue();
 
             Iterator<SyncReplayResult> mineIterator = mine.iterator();
             while (mineIterator.hasNext()) {
                 SyncReplayResult nextMine = mineIterator.next();
 
                 if (nextMine.getTraceIndex().equals(nextCobefra.getTraceIndex())) {
+                    queued_States2 += nextMine.getInfo().get("Queued States").intValue();
+                    num_States2 += nextMine.getInfo().get("Num. States").intValue();
+
                     if (!nextCobefra.getInfo().get(PNRepResult.TRACEFITNESS).equals(nextMine.getInfo().get(PNRepResult.TRACEFITNESS))) {
                         printSyncReplayResult(nextCobefra);
                         printSyncReplayResult(nextMine);
+                        count++;
                     }
                     break;
                 }
             }
         }
+
+        return count + "," + cobefra.size() + "," + queued_States + "," + num_States+ "," + queued_States2 + "," + num_States2;
     }
 
     private void printSyncReplayResult(SyncReplayResult result) {
