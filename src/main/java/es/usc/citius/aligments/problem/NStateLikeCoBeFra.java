@@ -189,15 +189,18 @@ public final class NStateLikeCoBeFra {
             return parikh;
         }
 
+        @Override
         public int hashCode() {
             return hashCode;
         }
 
+        @Override
         public boolean equals(Object o) {
             return (o != null) && (o instanceof StateLikeCoBeFra) && (((StateLikeCoBeFra) o).marking.equals(marking))
                     && (((StateLikeCoBeFra) o).parikh.equals(parikh));
         }
 
+        @Override
         public String toString() {
             return "[m:" + marking + "<BR/>p:" + parikh + "]";
         }

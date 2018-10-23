@@ -14,23 +14,29 @@ public class PossibleMovements {
     private List<Integer> model;
     private List<Integer> invisible;
 
-    public PossibleMovements(TIntList model, TIntList invisible) {
+    public PossibleMovements() {
         this.model = new ArrayList<>();
+        this.invisible = new ArrayList<>();
+        this.synchronous = new ArrayList<>();
+        this.log = new ArrayList<>();
+    }
+
+    public void setModel(TIntList model) {
         if (model != null) {
             TIntIterator modelIterator = model.iterator();
             while (modelIterator.hasNext()) {
                 this.model.add(modelIterator.next());
             }
         }
-        this.invisible = new ArrayList<>();
+    }
+
+    public void setInvisible(TIntList invisible) {
         if (invisible != null) {
             TIntIterator invisibleIterator = invisible.iterator();
             while (invisibleIterator.hasNext()) {
                 this.invisible.add(invisibleIterator.next());
             }
         }
-        this.synchronous = new ArrayList<>();
-        this.log = new ArrayList<>();
     }
 
     public void addLogMovement(LogMove mov) {

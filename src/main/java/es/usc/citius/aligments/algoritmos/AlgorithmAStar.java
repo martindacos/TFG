@@ -65,6 +65,7 @@ public class AlgorithmAStar {
     private static es.usc.citius.aligments.utils.Timer timerTotal = new es.usc.citius.aligments.utils.Timer();
     private static int stateCount;
     private static int queuedStateCount;
+    private static int traversedArcCount;
     private static long aligmentTime;
 
     private static Trace trace = null;
@@ -80,8 +81,8 @@ public class AlgorithmAStar {
     private static CostFunction<StateMoveCoBeFra, StateLikeCoBeFra, Double> cf;
     private static HeuristicFunction<StateLikeCoBeFra, Double> hf;
 
-    public static PNRepResultImpl problem(String logLile, String netFile) {
-        readFiles(logLile, netFile);
+    public static PNRepResultImpl problem(String logFile, String netFile) {
+        readFiles(logFile, netFile);
 
         af = state -> AlgorithmAStar.validMovementsFor(state);
 
@@ -120,11 +121,14 @@ public class AlgorithmAStar {
             final StateLikeCoBeFra initialState = new StateLikeCoBeFra(delegate, initMarking, xTrace);
             trace = entry.getKey();
 
+            stateCount = 0;
             queuedStateCount = 0;
             aligmentTime = 0l;
+            traversedArcCount = 0;
             n = getOptimalAligment(initialState);
 
-            SyncReplayResult result = addReplayResult(n, repetitionsIndex, stateCount, true, aligmentTime, queuedStateCount, 0, minCostModel);
+            SyncReplayResult result = addReplayResult(n, repetitionsIndex, stateCount, true, aligmentTime,
+                    queuedStateCount, traversedArcCount, minCostModel);
             solutions.add(result);
         }
         timerTotal.stop();
@@ -162,7 +166,7 @@ public class AlgorithmAStar {
             minCostModel = (finalCost.intValue() - backTraceSize) / delta.intValue();
         }
 
-        System.out.println("Time to calculate aligment of empty trace : " + aligmentTime);
+        //System.out.println("Time to calculate aligment of empty trace : " + aligmentTime);
         return minCostModel;
     }
 
@@ -186,7 +190,6 @@ public class AlgorithmAStar {
         AStar<StateMoveCoBeFra, StateLikeCoBeFra, Double, WeightedNode<StateMoveCoBeFra, StateLikeCoBeFra, Double>> astar = Hipster.createAStar(p);
         AStar.Iterator it = astar.iterator();
 
-        stateCount = 0;
         while (it.hasNext()) {
             WeightedNode n1 = (WeightedNode) it.next();
             StateLikeCoBeFra state = (StateLikeCoBeFra) n1.state();
@@ -212,6 +215,9 @@ public class AlgorithmAStar {
                         n = n1;
                     }
                 }
+                //TODO Maybe is not correct. CoBeFra do this.
+                queuedStateCount = it.getOpen().size() + stateCount;
+                break;
             }
         }
 
@@ -237,26 +243,10 @@ public class AlgorithmAStar {
         stateCount++;
         List<StateMoveCoBeFra> possibleMovs = new ArrayList<>();
 
-        TIntList modelMoves = null;
-        TIntList invisibleMoves = null;
+        TIntList modelMoves;
+        TIntList invisibleMoves;
 
-        if (isValidMoveOnModel(state)) {
-            //Save Enabled moves on state
-            modelMoves = state.getModelMoves(delegate);
-
-            //Model move
-            for (int i = 0; i < modelMoves.size(); i++) {
-                possibleMovs.add(MODEl);
-            }
-
-            //Invisible move
-            invisibleMoves = state.getInvisible();
-            for (int i = 0; i < invisibleMoves.size(); i++) {
-                possibleMovs.add(INVISIBLE);
-            }
-        }
-
-        possibleMovements = new PossibleMovements(modelMoves, invisibleMoves);
+        possibleMovements = new PossibleMovements();
 
         TIntCollection nextEvents = trace.getNextEvents(state.getExecuted());
         TIntIterator evtIt = nextEvents.iterator();
@@ -281,6 +271,25 @@ public class AlgorithmAStar {
             possibleMovs.add(LOG);
             LogMove mov = new LogMove(nextEvent, activity);
             possibleMovements.addLogMovement(mov);
+        }
+
+        if (isValidMoveOnModel(state)) {
+            //Save Enabled moves on state
+            modelMoves = state.getModelMoves(delegate);
+
+            //Model move
+            for (int i = 0; i < modelMoves.size(); i++) {
+                possibleMovs.add(MODEl);
+            }
+
+            //Invisible move
+            invisibleMoves = state.getInvisible();
+            for (int i = 0; i < invisibleMoves.size(); i++) {
+                possibleMovs.add(INVISIBLE);
+            }
+
+            possibleMovements.setModel(modelMoves);
+            possibleMovements.setInvisible(invisibleMoves);
         }
 
         timerMovs.pause();
@@ -363,6 +372,8 @@ public class AlgorithmAStar {
 
         // First, construct the next state from the old state
         final StateLikeCoBeFra newState = state.getNextHead(delegate, modelMove, movedEvent, activity, move);
+        traversedArcCount++;
+
         return newState;
     }
 

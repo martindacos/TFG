@@ -448,8 +448,8 @@ public class AlgoritmoAReducedTest {
     public void testPLG() throws Exception {
         List<String> logsPaths = new ArrayList<>();
         List<String> modelsPaths = new ArrayList<>();
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/test/log.xes");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/test/test");
+        //logsPaths.add("/home/martin/Descargas/PLG_Logs/test/log.xes");
+        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/test/test");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/5.xes");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/Individual");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
@@ -498,7 +498,7 @@ public class AlgoritmoAReducedTest {
             AryaFitness cobefra = null;
             PNRepResultImpl aligmentsWithCobefraMarking = null;
             Readers miReader = null;
-            for (int j = 0; j < 1; j++) {
+            for (int j = 0; j < 5; j++) {
                 resetReader();
                 total.start();
                 //miReader = Readers.getReader(logPath, modelPath + ".hn");
@@ -506,6 +506,8 @@ public class AlgoritmoAReducedTest {
                 //problem = AlgoritmoAReduced.problem(miReader, false);
                 total.stop();
                 times.add(total.getElapsedTime());
+
+                AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
 
                 total.start();
                 cobefra = AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
@@ -554,17 +556,19 @@ public class AlgoritmoAReducedTest {
     }
 
     public String compareResults(PNRepResult cobefra, PNRepResult mine) {
-        //TODO Compare more elements
         Iterator<SyncReplayResult> cobefraIterator = cobefra.iterator();
         Integer queued_States = 0;
         Integer num_States = 0;
+        Integer traversed_Arcs = 0;
         Integer queued_States2 = 0;
         Integer num_States2 = 0;
+        Integer traversed_Arcs2 = 0;
         Integer count = 0;
         while (cobefraIterator.hasNext()) {
             SyncReplayResult nextCobefra = cobefraIterator.next();
             queued_States += nextCobefra.getInfo().get("Queued States").intValue();
             num_States += nextCobefra.getInfo().get("Num. States").intValue();
+            traversed_Arcs += nextCobefra.getInfo().get("Traversed Arcs").intValue();
 
             Iterator<SyncReplayResult> mineIterator = mine.iterator();
             while (mineIterator.hasNext()) {
@@ -573,8 +577,16 @@ public class AlgoritmoAReducedTest {
                 if (nextMine.getTraceIndex().equals(nextCobefra.getTraceIndex())) {
                     queued_States2 += nextMine.getInfo().get("Queued States").intValue();
                     num_States2 += nextMine.getInfo().get("Num. States").intValue();
+                    traversed_Arcs2 += nextMine.getInfo().get("Traversed Arcs").intValue();
 
-                    if (!nextCobefra.getInfo().get(PNRepResult.TRACEFITNESS).equals(nextMine.getInfo().get(PNRepResult.TRACEFITNESS))) {
+                    if (!nextCobefra.getInfo().get(PNRepResult.TRACEFITNESS).equals(nextMine.getInfo().get(PNRepResult.TRACEFITNESS)) ||
+                            !nextCobefra.getInfo().get(PNRepResult.RAWFITNESSCOST).equals(nextMine.getInfo().get(PNRepResult.RAWFITNESSCOST)) ||
+                            !nextCobefra.getInfo().get(PNRepResult.MAXFITNESSCOST).equals(nextMine.getInfo().get(PNRepResult.MAXFITNESSCOST)) ||
+                            !nextCobefra.getInfo().get(PNRepResult.MAXMOVELOGCOST).equals(nextMine.getInfo().get(PNRepResult.MAXMOVELOGCOST)) ||
+                            !nextCobefra.getInfo().get(PNRepResult.MOVELOGFITNESS).equals(nextMine.getInfo().get(PNRepResult.MOVELOGFITNESS)) ||
+                            !nextCobefra.getInfo().get(PNRepResult.MOVEMODELFITNESS).equals(nextMine.getInfo().get(PNRepResult.MOVEMODELFITNESS)) ||
+                            !nextCobefra.getInfo().get(PNRepResult.ORIGTRACELENGTH).equals(nextMine.getInfo().get(PNRepResult.ORIGTRACELENGTH))) {
+                            //!nextCobefra.getInfo().get(PNRepResult.NUMSTATEGENERATED).equals(nextMine.getInfo().get(PNRepResult.NUMSTATEGENERATED))) {
                         printSyncReplayResult(nextCobefra);
                         printSyncReplayResult(nextMine);
                         count++;
@@ -584,7 +596,7 @@ public class AlgoritmoAReducedTest {
             }
         }
 
-        return count + "," + cobefra.size() + "," + queued_States + "," + num_States+ "," + queued_States2 + "," + num_States2;
+        return count + "," + cobefra.size() + "," + queued_States + "," + num_States + "," + traversed_Arcs + "," + queued_States2 + "," + num_States2 + "," + traversed_Arcs2;
     }
 
     private void printSyncReplayResult(SyncReplayResult result) {
