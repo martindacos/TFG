@@ -1,0 +1,9 @@
+Posibles Heurísticas
+
+1. Máximo entre el número de tareas que quedan por procesar en la traza y una estimación rápida de la distancia entre la última tarea procesada en la traza y la tarea final del modelo. Esta h() es muy optimista.
+
+2. Heurística Token Replay: descartada porque va a ser mucho más lento que el actual ProDiGen. Además, para una estimación correcta se tenía que ejecutar en muchos de los estados (porque si en la esploración no hago el mismo “movimiento” que en el TR ya no vale).
+
+3. Con la misma idea que en “1” calculamos la máxima distancia entre las tareas que nos quedan por procesar en la traza y en el modelo. En este caso, la estimación en el modelo es más precisa, calculando todos los posibles caminos hasta la tarea final. El mayor problema es contemplar los paralelos y las tareas activas del modelo (no unicamente la última tarea ejecutada, perdiendo las optimizaciones realizadas) ya que sería muy costoso. Además, en un primer momento nos quedábamos con el camino más corto de menor coste, pero como el de menor coste puede ser de cualquier tamaño, se tienen que explorar todos los caminos. En realidad se tendría que hacer un A* para cada estado…
+
+4. Heurística de cajas: en base al modelo actual, obtenemos las salidas para cada evento. Vemos si la tarea actual de la traza se puede ejecutar.  Si se puede ejecutar eliminamos la tarea y calculamos sus salidas y la de las restantes de la caja (incluyendo las propias tareas en la siguiente caja). Si no se puede ejecutar calculamos las salidas de todas. Problemas: se tendría que realizar para los estados que no ejecutan movimientos síncronos. Se tienen que tener en cuenta los movimientos realizados anteriormente para poder saber las tareas activas en el estado (pasa lo mismo que en “3”), no vale simplemente con restar a la estimación el movimiento realizado. Si se tienen las tareas activas actualizadas en todos los estados perdemos las optimizaciones de tiempo realizadas.

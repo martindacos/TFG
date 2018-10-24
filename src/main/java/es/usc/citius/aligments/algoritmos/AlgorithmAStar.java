@@ -90,7 +90,7 @@ public class AlgorithmAStar {
 
         cf = transition -> AlgorithmAStar.evaluateToState(transition);
 
-        hf = state -> 0d;
+        hf = state -> AlgorithmAStar.heuristicFunction(state);
 
         List<SyncReplayResult> solutions = new ArrayList<>();
         Map<Trace, SortedSet<Integer>> xTraces = new HashMap<>();
@@ -139,6 +139,11 @@ public class AlgorithmAStar {
         PNRepResultImpl sol = new PNRepResultImpl(syncReplayResults);
 
         return sol;
+    }
+
+    private static Double heuristicFunction(StateLikeCoBeFra state) {
+        int numElts = state.getParikhVector().getNumElts();
+        return (double) numElts;
     }
 
     private static int getMinCostModel() {
@@ -273,6 +278,7 @@ public class AlgorithmAStar {
             possibleMovements.addLogMovement(mov);
         }
 
+        //Model move only after initial move, sync move or model move.
         if (isValidMoveOnModel(state)) {
             //Save Enabled moves on state
             modelMoves = state.getModelMoves(delegate);
@@ -294,6 +300,7 @@ public class AlgorithmAStar {
 
         timerMovs.pause();
 
+        //System.out.println(possibleMovs);
         return possibleMovs;
     }
 

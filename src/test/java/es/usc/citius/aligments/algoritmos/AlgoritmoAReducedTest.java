@@ -450,6 +450,8 @@ public class AlgoritmoAReducedTest {
         List<String> modelsPaths = new ArrayList<>();
         //logsPaths.add("/home/martin/Descargas/PLG_Logs/test/log.xes");
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/test/test");
+        //logsPaths.add("/home/martin/Descargas/PLG_Logs/test/diagram.xes");
+        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/test/diagram");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/5.xes");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/Individual");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
