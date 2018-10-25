@@ -25,6 +25,8 @@ import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import nl.tue.astar.*;
 import nl.tue.astar.util.LinearTrace;
+import nl.tue.astar.util.ShortShortMultiset;
+import nl.tue.storage.compressor.BitMask;
 import org.deckfour.xes.classification.XEventClass;
 import org.deckfour.xes.classification.XEventClasses;
 import org.deckfour.xes.classification.XEventClassifier;
@@ -60,8 +62,9 @@ import static nl.tue.astar.AStarThread.NOMOVE;
 
 public class AlgorithmAStar {
 
-    private static es.usc.citius.aligments.utils.Timer timerAct = new es.usc.citius.aligments.utils.Timer();
-    private static es.usc.citius.aligments.utils.Timer timerMovs = new es.usc.citius.aligments.utils.Timer();
+    private static es.usc.citius.aligments.utils.Timer timerAct;
+    private static es.usc.citius.aligments.utils.Timer timerMovs;
+    private static es.usc.citius.aligments.utils.Timer timerHeuristic;
     private static es.usc.citius.aligments.utils.Timer timerTotal = new es.usc.citius.aligments.utils.Timer();
     private static int stateCount;
     private static int queuedStateCount;
@@ -82,6 +85,11 @@ public class AlgorithmAStar {
     private static HeuristicFunction<StateLikeCoBeFra, Double> hf;
 
     public static PNRepResultImpl problem(String logFile, String netFile) {
+        timerAct = new es.usc.citius.aligments.utils.Timer();
+        timerMovs = new es.usc.citius.aligments.utils.Timer();
+        timerHeuristic = new es.usc.citius.aligments.utils.Timer();
+
+        timerTotal.start();
         readFiles(logFile, netFile);
 
         af = state -> AlgorithmAStar.validMovementsFor(state);
@@ -95,7 +103,6 @@ public class AlgorithmAStar {
         List<SyncReplayResult> solutions = new ArrayList<>();
         Map<Trace, SortedSet<Integer>> xTraces = new HashMap<>();
 
-        timerTotal.start();
         //Detect duplicated traces
         for (int i = 0; i < log.size(); i++) {
             TIntList unUsedIndices = new TIntArrayList();
@@ -131,19 +138,111 @@ public class AlgorithmAStar {
                     queuedStateCount, traversedArcCount, minCostModel);
             solutions.add(result);
         }
-        timerTotal.stop();
-
-        //printTimes();
 
         PNRepResultImpl syncReplayResults = new PNRepResultImpl(solutions);
         PNRepResultImpl sol = new PNRepResultImpl(syncReplayResults);
 
+        timerTotal.stop();
+
+        printTimes();
         return sol;
     }
 
     private static Double heuristicFunction(StateLikeCoBeFra state) {
+        timerHeuristic.resume();
+        double heuristic;
+        heuristic = lookUntilNoSync(state);
+        //heuristic = lookNext(state);
+        //heuristic = remainingTraceEvents(state);
+        timerHeuristic.pause();
+        return heuristic;
+    }
+
+    private static double lookUntilNoSync(StateLikeCoBeFra state) {
+        //TODO TEST
+        double heuristic = 0;
+        ShortShortMultiset newMarking = state.getMarking().clone();
+        BitMask newExecuted = state.getExecuted().clone();
+        ShortShortMultiset newParikh = state.getParikhVector().clone();
+
+        while (true) {
+            TIntCollection nextEvents = trace.getNextEvents(newExecuted);
+            TIntIterator evtIt = nextEvents.iterator();
+
+            if (nextEvents.size() > 1) {
+                System.err.println("TENEMOS MÁS DE UNA TAREA SIGUIENTE EN LA TRAZA ????? ");
+            }
+
+            if (evtIt.hasNext()) {
+                int nextEvent = evtIt.next();
+
+                //synchronously
+                int activity = trace.get(nextEvent);
+                TIntList ml = state.getSynchronousMoves(delegate, activity, newMarking);
+                TIntIterator it = ml.iterator();
+
+                if (ml.size() > 1) {
+                    System.err.println("TENEMOS MÁS DE UN MOVIMIENTO SYNC EN h() ????? ");
+                }
+
+                if (it.hasNext()) {
+                    int modelMove = it.next();
+                    newMarking = StateLikeCoBeFra.updateMarking(delegate, newMarking, (short) modelMove);
+                    newExecuted.set(nextEvent, true);
+                    newParikh.adjustValue((short) activity, (short) -1);
+                    heuristic += 1;
+                } else {
+                    //Not SYNC mov possible
+                    heuristic += 1000;
+                    break;
+                }
+            } else {
+                //End of trace
+                break;
+            }
+        }
+
+        //Sum the rest of trace elements
+        heuristic += newParikh.getNumElts();
+        return heuristic;
+    }
+
+    private static double remainingTraceEvents(StateLikeCoBeFra state) {
         int numElts = state.getParikhVector().getNumElts();
         return (double) numElts;
+    }
+
+    private static double lookNext(StateLikeCoBeFra state) {
+        //TODO TEST
+        double heuristic = 0;
+        TIntCollection nextEvents = trace.getNextEvents(state.getExecuted());
+        TIntIterator evtIt = nextEvents.iterator();
+
+        if (nextEvents.size() > 1) {
+            System.err.println("TENEMOS MÁS DE UNA TAREA SIGUIENTE EN LA TRAZA ????? ");
+        }
+
+        if (evtIt.hasNext()) {
+            int nextEvent = evtIt.next();
+
+            //synchronously
+            int activity = trace.get(nextEvent);
+            TIntList ml = state.getSynchronousMoves(delegate, activity, state.getMarking());
+            TIntIterator it = ml.iterator();
+
+            if (ml.size() > 1) {
+                System.err.println("TENEMOS MÁS DE UN MOVIMIENTO SYNC EN h() ????? ");
+            }
+
+            if (!it.hasNext()) {
+                //Not SYNC mov possible
+                heuristic += 1000;
+            }
+        }
+
+        //Sum the rest of trace elements ()
+        heuristic += state.getParikhVector().getNumElts();
+        return heuristic;
     }
 
     private static int getMinCostModel() {
@@ -165,7 +264,8 @@ public class AlgorithmAStar {
             int backTraceSize = 0;
             while (iteratorEmptyTrace.hasNext()) {
                 AbstractNode node = (WeightedNode) iteratorEmptyTrace.next();
-                if (node.action().equals(MODEl) || node.action().equals(INVISIBLE)) backTraceSize += delegate.getEpsilon();
+                if (node.action().equals(MODEl) || node.action().equals(INVISIBLE))
+                    backTraceSize += delegate.getEpsilon();
             }
             assert (finalCost - backTraceSize) % delta.intValue() == 0;
             minCostModel = (finalCost.intValue() - backTraceSize) / delta.intValue();
@@ -240,6 +340,7 @@ public class AlgorithmAStar {
     private static void printTimes() {
         System.out.println("Tiempo cálculo movimientos : " + timerMovs.getReadableElapsedTime());
         System.out.println("Tiempo aplicar movimientos : " + timerAct.getReadableElapsedTime());
+        System.out.println("Tiempo calcular heurística : " + timerHeuristic.getReadableElapsedTime());
         System.out.println("Tiempo cálculo total : " + timerTotal.getReadableElapsedTime());
     }
 
@@ -263,7 +364,7 @@ public class AlgorithmAStar {
 
             // move both log and model synchronously;
             int activity = trace.get(nextEvent);
-            ml = state.getSynchronousMoves(delegate, activity);
+            ml = state.getSynchronousMoves(delegate, activity, state.getMarking());
             TIntIterator it = ml.iterator();
             while (it.hasNext()) {
                 possibleMovs.add(SYNC);
@@ -411,8 +512,6 @@ public class AlgorithmAStar {
         Map<org.processmining.models.graphbased.directed.petrinet.elements.Transition, Integer> mapTrans2Cost = parameters.getMapTrans2Cost();
         Map<XEventClass, Integer> mapEvClass2Cost = parameters.getMapEvClass2Cost();
 
-        //Difference with cost SYNC
-        int delta = 1000;
         delegate = new PNaiveDelegate(petrinet, log, classes, transEvClassMapping, mapTrans2Cost,
                 mapEvClass2Cost, delta, false, finaMarking);
     }

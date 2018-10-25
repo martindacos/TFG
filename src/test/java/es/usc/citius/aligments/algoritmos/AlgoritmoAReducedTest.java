@@ -452,7 +452,7 @@ public class AlgoritmoAReducedTest {
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/test/test");
         //logsPaths.add("/home/martin/Descargas/PLG_Logs/test/diagram.xes");
         //modelsPaths.add("/home/martin/Descargas/PLG_Logs/test/diagram");
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/5.xes");
+        /*logsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/5.xes");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/Individual");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_N.xes");
@@ -471,7 +471,8 @@ public class AlgoritmoAReducedTest {
         logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/2000_BN.xes");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");*/
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000_N.xes");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         runAligments(logsPaths, modelsPaths);
     }
@@ -500,7 +501,7 @@ public class AlgoritmoAReducedTest {
             AryaFitness cobefra = null;
             PNRepResultImpl aligmentsWithCobefraMarking = null;
             Readers miReader = null;
-            for (int j = 0; j < 5; j++) {
+            for (int j = 0; j < 2; j++) {
                 resetReader();
                 total.start();
                 //miReader = Readers.getReader(logPath, modelPath + ".hn");

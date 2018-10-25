@@ -25,8 +25,13 @@ public interface Parametros {
     String HEURISTIC_TRACE = "HEURISTIC_TRACE";
     String HEURISTIC_MODEL = "HEURISTIC_MODEL";
 
+    //A Star like CoBeFra
+
     double MODEL_COST = 1d;
     double LOG_COST = 1d;
     double SYNC_COST = 0d;
     double INVISIBLE_COST = 0d;
+
+    //Difference with cost SYNC
+    int delta = 1000;
 }

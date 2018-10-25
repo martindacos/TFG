@@ -115,6 +115,34 @@ public final class NStateLikeCoBeFra {
             return newMarking;
         }
 
+        public static ShortShortMultiset updateMarking(AbstractPDelegate<?> delegate, ShortShortMultiset marking, short modelMove) {
+            // clone the marking
+            short[] in = delegate.getInputOf(modelMove);
+            short[] out = delegate.getOutputOf(modelMove);
+
+            for (short place = delegate.numPlaces(); place-- > 0; ) {
+                short needed = in[place];
+                if (needed != AbstractPDelegate.INHIBITED) {
+                    // only adjust the value for non-inhibitor arcs
+                    marking.adjustValue(place, (short) -needed);
+                }
+            }
+
+            for (short place = delegate.numPlaces(); place-- > 0; ) {
+                short val = marking.get(place);
+                short produced = out[place];
+                if (produced < 0) {
+                    // combination or reset arc and regular arc (regular arc may be 0)
+                    // first get the actual produced tokens
+                    produced = (short) (-(produced + 1));
+                    // then account for removing all tokens first
+                    produced -= val;
+                }
+                marking.adjustValue(place, produced);
+            }
+            return marking;
+        }
+
         public StateLikeCoBeFra getNextHead(Delegate<? extends Head, ? extends Tail> d, int modelMove, int logMove, int activity,
                                             StateMoveCoBeFra previousMove) {
             AbstractPDelegate<?> delegate = (AbstractPDelegate<?>) d;
@@ -142,7 +170,7 @@ public final class NStateLikeCoBeFra {
             return new StateLikeCoBeFra(newMarking, newParikh, PROVIDER.hash(newMarking, newParikh), newExecuted, modelMove, logMove, activity, previousMove);
         }
 
-        public TIntList getSynchronousMoves(Delegate<? extends Head, ? extends Tail> d, int activity) {
+        public TIntList getSynchronousMoves(Delegate<? extends Head, ? extends Tail> d, int activity, ShortShortMultiset marking) {
             final AbstractPDelegate<?> delegate = (AbstractPDelegate<?>) d;
 
             // only consider transitions mapped to activity
