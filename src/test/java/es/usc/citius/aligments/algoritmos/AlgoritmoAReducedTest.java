@@ -472,8 +472,8 @@ public class AlgoritmoAReducedTest {
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");*/
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000_N.xes");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
+        logsPaths.add("/home/martin/Descargas/PLG_Logs/123_Actividades/5000BN.xes");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/123_Actividades/Individual");
         runAligments(logsPaths, modelsPaths);
     }
 

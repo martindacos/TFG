@@ -187,7 +187,7 @@ public final class NStateLikeCoBeFra {
             return syncronous;
         }
 
-        public TIntList getModelMoves(Delegate<? extends Head, ? extends Tail> delegate) {
+        public TIntList getModelMoves(Delegate<? extends Head, ? extends Tail> delegate, ShortShortMultiset marking) {
             AbstractPDelegate<?> d = (AbstractPDelegate<?>) delegate;
             TIntIterator iterator = d.getEnabledTransitionsChangingMarking(marking).iterator();
             TIntList model = new TIntArrayList();

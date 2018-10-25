@@ -144,21 +144,21 @@ public class AlgorithmAStar {
 
         timerTotal.stop();
 
-        printTimes();
+        //printTimes();
         return sol;
     }
 
     private static Double heuristicFunction(StateLikeCoBeFra state) {
         timerHeuristic.resume();
         double heuristic;
-        heuristic = lookUntilNoSync(state);
+        //heuristic = lookUntilNoSyncOrInvisible(state);
         //heuristic = lookNext(state);
-        //heuristic = remainingTraceEvents(state);
+        heuristic = remainingTraceEvents(state);
         timerHeuristic.pause();
         return heuristic;
     }
 
-    private static double lookUntilNoSync(StateLikeCoBeFra state) {
+    private static double lookUntilNoSyncOrInvisible(StateLikeCoBeFra state) {
         //TODO TEST
         double heuristic = 0;
         ShortShortMultiset newMarking = state.getMarking().clone();
@@ -192,9 +192,21 @@ public class AlgorithmAStar {
                     newParikh.adjustValue((short) activity, (short) -1);
                     heuristic += 1;
                 } else {
-                    //Not SYNC mov possible
-                    heuristic += 1000;
-                    break;
+                    //Not SYNC mov possible. Try with INVISIBLE
+                    state.getModelMoves(delegate, newMarking);
+                    TIntList invisibleMoves = state.getInvisible();
+
+                    if (!invisibleMoves.isEmpty()) {
+                        TIntIterator invisibleMovesIterator = invisibleMoves.iterator();
+                        while (invisibleMovesIterator.hasNext()) {
+                            int invisibleMove = invisibleMovesIterator.next();
+                            newMarking = StateLikeCoBeFra.updateMarking(delegate, newMarking, (short) invisibleMove);
+                        }
+                        heuristic += 1;
+                    } else {
+                        heuristic += 1000;
+                        break;
+                    }
                 }
             } else {
                 //End of trace
@@ -225,7 +237,7 @@ public class AlgorithmAStar {
         if (evtIt.hasNext()) {
             int nextEvent = evtIt.next();
 
-            //synchronously
+            //SYNC
             int activity = trace.get(nextEvent);
             TIntList ml = state.getSynchronousMoves(delegate, activity, state.getMarking());
             TIntIterator it = ml.iterator();
@@ -235,8 +247,14 @@ public class AlgorithmAStar {
             }
 
             if (!it.hasNext()) {
-                //Not SYNC mov possible
-                heuristic += 1000;
+                //Not SYNC mov possible. Try with INVISIBLE
+                state.getModelMoves(delegate, state.getMarking());
+                TIntList invisibleMoves = state.getInvisible();
+
+                if (invisibleMoves.isEmpty()) {
+                    //Not INVISIBLE mov possible.
+                    heuristic += 1000;
+                }
             }
         }
 
@@ -382,7 +400,7 @@ public class AlgorithmAStar {
         //Model move only after initial move, sync move or model move.
         if (isValidMoveOnModel(state)) {
             //Save Enabled moves on state
-            modelMoves = state.getModelMoves(delegate);
+            modelMoves = state.getModelMoves(delegate, state.getMarking());
 
             //Model move
             for (int i = 0; i < modelMoves.size(); i++) {
