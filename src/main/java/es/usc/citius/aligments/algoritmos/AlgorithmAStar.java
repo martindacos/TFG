@@ -20,6 +20,7 @@ import es.usc.citius.hipster.model.problem.SearchProblem;
 import gnu.trove.TIntCollection;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
+import gnu.trove.list.TShortList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
@@ -391,10 +392,13 @@ public class AlgorithmAStar {
                 possibleMovements.addSyncMovement(mov);
             }
 
-            //Log Move
-            possibleMovs.add(LOG);
-            LogMove mov = new LogMove(nextEvent, activity);
-            possibleMovements.addLogMovement(mov);
+            //Not valid log move with previous model move on same event (same as sync move)
+            if (isValidMoveOnLog(state, delegate.getTransitions((short) activity))) {
+                //Log Move
+                possibleMovs.add(LOG);
+                LogMove mov = new LogMove(nextEvent, activity);
+                possibleMovements.addLogMovement(mov);
+            }
         }
 
         //Model move only after initial move, sync move or model move.
@@ -425,6 +429,16 @@ public class AlgorithmAStar {
 
     private static boolean isValidMoveOnModel(StateLikeCoBeFra state) {
         return state.getPreviousMove() == null || state.getModelMove() != NOMOVE;
+    }
+
+    private static boolean isValidMoveOnLog(StateLikeCoBeFra state, TShortList activities) {
+        if (state.getPreviousMove() == null) {
+            return true;
+        } else if (state.getModelMove() != NOMOVE && state.getLogMove() == NOMOVE && activities.contains((short)state.getModelMove())) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     private static StateLikeCoBeFra applyActionToState(StateMoveCoBeFra action, StateLikeCoBeFra state) {
