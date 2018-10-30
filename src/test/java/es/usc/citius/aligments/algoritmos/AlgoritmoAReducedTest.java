@@ -10,12 +10,15 @@ import es.usc.citius.aligments.problem.Readers;
 import es.usc.citius.aligments.problem.Traza;
 import es.usc.citius.aligments.salida.InterfazSalida;
 import es.usc.citius.aligments.salida.SalidaTerminalImpl;
+import es.usc.citius.aligments.utils.IndividualToPNML;
 import es.usc.citius.aligments.utils.Timer;
 import es.usc.citius.prodigen.domainLogic.exceptions.*;
 import es.usc.citius.prodigen.domainLogic.workflow.Task.Task;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMSet;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMTask;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.writer.IndividualWriterInterface;
+import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.writer.IndividualWriterPNMLNew;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
 import org.junit.Assert;
@@ -463,7 +466,7 @@ public class AlgoritmoAReducedTest {
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_BN.xes");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");*/
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/model");
 
         logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/100.xes");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/1000.xes");
@@ -472,7 +475,7 @@ public class AlgoritmoAReducedTest {
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");*/
         logsPaths.add("/home/martin/Descargas/PLG_Logs/123_Actividades/5000BN.xes");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/123_Actividades/Individual");
         runAligments(logsPaths, modelsPaths);
@@ -502,16 +505,18 @@ public class AlgoritmoAReducedTest {
             AryaFitness cobefra = null;
             PNRepResultImpl aligmentsWithCobefraMarking = null;
             Readers miReader = null;
-            for (int j = 0; j < 5; j++) {
+            for (int j = 0; j < 2; j++) {
                 resetReader();
                 total.start();
                 //miReader = Readers.getReader(logPath, modelPath + ".hn");
                 ParametrosImpl.setHEURISTIC(Parametros.HEURISTIC_MODEL);
+                //IndividualToPNML writer = new IndividualToPNML();
+                //writer.write("/home/martin/Descargas/PLG_Logs/test/testpnml.pnml", miReader.getInd());
                 //problem = AlgoritmoAReduced.problem(miReader, false);
                 total.stop();
                 times.add(total.getElapsedTime());
 
-                AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
+                //AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
 
                 total.start();
                 cobefra = AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");

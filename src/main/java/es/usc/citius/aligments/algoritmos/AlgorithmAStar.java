@@ -2,10 +2,11 @@ package es.usc.citius.aligments.algoritmos;
 
 import be.kuleuven.econ.cbf.input.Mapping;
 import be.kuleuven.econ.cbf.utils.MappingUtils;
-import es.usc.citius.aligments.problem.LogMove;
-import es.usc.citius.aligments.problem.NStateLikeCoBeFra;
-import es.usc.citius.aligments.problem.PossibleMovements;
-import es.usc.citius.aligments.problem.SyncMove;
+import es.usc.citius.aligments.hipster.ProblemBuilderMine;
+import es.usc.citius.aligments.hipster.WeightedNodeMine;
+import es.usc.citius.aligments.problem.movs.LogMove;
+import es.usc.citius.aligments.problem.movs.PossibleMovements;
+import es.usc.citius.aligments.problem.movs.SyncMove;
 import es.usc.citius.hipster.algorithm.AStar;
 import es.usc.citius.hipster.algorithm.Hipster;
 import es.usc.citius.hipster.model.AbstractNode;
@@ -14,8 +15,7 @@ import es.usc.citius.hipster.model.function.ActionFunction;
 import es.usc.citius.hipster.model.function.ActionStateTransitionFunction;
 import es.usc.citius.hipster.model.function.CostFunction;
 import es.usc.citius.hipster.model.function.HeuristicFunction;
-import es.usc.citius.hipster.model.impl.WeightedNode;
-import es.usc.citius.hipster.model.problem.ProblemBuilder;
+import es.usc.citius.hipster.model.function.impl.BinaryOperation;
 import es.usc.citius.hipster.model.problem.SearchProblem;
 import gnu.trove.TIntCollection;
 import gnu.trove.iterator.TIntIterator;
@@ -120,7 +120,7 @@ public class AlgorithmAStar {
             }
         }
 
-        WeightedNode n;
+        AbstractNode n;
         int minCostModel = getMinCostModel();
 
         for (Map.Entry<Trace, SortedSet<Integer>> entry : xTraces.entrySet()) {
@@ -145,7 +145,7 @@ public class AlgorithmAStar {
 
         timerTotal.stop();
 
-        //printTimes();
+        printTimes();
         return sol;
     }
 
@@ -160,7 +160,6 @@ public class AlgorithmAStar {
     }
 
     private static double lookUntilNoSyncOrInvisible(StateLikeCoBeFra state) {
-        //TODO TEST
         double heuristic = 0;
         ShortShortMultiset newMarking = state.getMarking().clone();
         BitMask newExecuted = state.getExecuted().clone();
@@ -226,7 +225,6 @@ public class AlgorithmAStar {
     }
 
     private static double lookNext(StateLikeCoBeFra state) {
-        //TODO TEST
         double heuristic = 0;
         TIntCollection nextEvents = trace.getNextEvents(state.getExecuted());
         TIntIterator evtIt = nextEvents.iterator();
@@ -248,13 +246,18 @@ public class AlgorithmAStar {
             }
 
             if (!it.hasNext()) {
-                //Not SYNC mov possible. Try with INVISIBLE
-                state.getModelMoves(delegate, state.getMarking());
-                TIntList invisibleMoves = state.getInvisible();
+                //Not SYNC mov possible. Try with INVISIBLE if it is possible to do a model move
+                if (isValidMoveOnModel(state)) {
+                    state.getModelMoves(delegate, state.getMarking());
+                    TIntList invisibleMoves = state.getInvisible();
 
-                if (invisibleMoves.isEmpty()) {
-                    //Not INVISIBLE mov possible.
-                    heuristic += 1000;
+                    if (invisibleMoves.isEmpty()) {
+                        //Not INVISIBLE mov possible.
+                        heuristic += delegate.getDelta();
+                    }
+                } else if (state.getParikhVector().getNumElts() > 0) {
+                    //Only LOG move possible. We put - 1 because sum 1 on rest of trace elements for the same event.
+                    heuristic += delegate.getDelta() - 1;
                 }
             }
         }
@@ -265,7 +268,7 @@ public class AlgorithmAStar {
     }
 
     private static int getMinCostModel() {
-        WeightedNode n;
+        WeightedNodeMine n;
         XFactory factory = XFactoryRegistry.instance().currentDefault();
         XTrace emptyTrace = factory.createTrace();
         trace = new LinearTrace("Empty Trace", new TIntArrayList());
@@ -273,7 +276,7 @@ public class AlgorithmAStar {
         final StateLikeCoBeFra initialStateEmpty = new StateLikeCoBeFra(delegate, initMarking, emptyTrace);
         int minCostModel = 0;
 
-        n = getOptimalAligment(initialStateEmpty);
+        n = (WeightedNodeMine) getOptimalAligment(initialStateEmpty);
 
         if (n != null) {
             Double finalCost = (double) n.getCost();
@@ -282,7 +285,7 @@ public class AlgorithmAStar {
             iteratorEmptyTrace.next();
             int backTraceSize = 0;
             while (iteratorEmptyTrace.hasNext()) {
-                AbstractNode node = (WeightedNode) iteratorEmptyTrace.next();
+                AbstractNode node = (WeightedNodeMine) iteratorEmptyTrace.next();
                 if (node.action().equals(MODEl) || node.action().equals(INVISIBLE))
                     backTraceSize += delegate.getEpsilon();
             }
@@ -294,58 +297,28 @@ public class AlgorithmAStar {
         return minCostModel;
     }
 
-    private static WeightedNode getOptimalAligment(StateLikeCoBeFra initialState) {
-        SearchProblem<StateMoveCoBeFra, StateLikeCoBeFra, WeightedNode<StateMoveCoBeFra, StateLikeCoBeFra, Double>> p
-                = ProblemBuilder.create()
-                .initialState(initialState)
-                .defineProblemWithExplicitActions()
-                .useActionFunction(af)
-                .useTransitionFunction(atf)
-                .useCostFunction(cf)
-                .useHeuristicFunction(hf)
-                .build();
+    private static AbstractNode getOptimalAligment(StateLikeCoBeFra initialState) {
+        SearchProblem p = new ProblemBuilderMine(hf, cf, BinaryOperation.doubleAdditionOp(), initialState, atf, af).build();
 
-        WeightedNode n = null;
-        double bestScore = 0d;
-        boolean stop = false;
+        AbstractNode n = null;
 
         long time_start = System.currentTimeMillis();
 
-        AStar<StateMoveCoBeFra, StateLikeCoBeFra, Double, WeightedNode<StateMoveCoBeFra, StateLikeCoBeFra, Double>> astar = Hipster.createAStar(p);
+        AStar<StateMoveCoBeFra, StateLikeCoBeFra, Double, WeightedNodeMine<StateMoveCoBeFra, StateLikeCoBeFra, Double>> astar = Hipster.createAStar(p);
         AStar.Iterator it = astar.iterator();
 
         while (it.hasNext()) {
-            WeightedNode n1 = (WeightedNode) it.next();
+            AbstractNode n1 = (WeightedNodeMine) it.next();
             StateLikeCoBeFra state = (StateLikeCoBeFra) n1.state();
 
-            double cost = (double) n1.getCost();
-
-            if (stop) {
-                if (cost > bestScore) {
-                    queuedStateCount = it.getOpen().size();
-                    break;
-                }
-            }
-
             if (state.isFinal(delegate)) {
-                stop = true;
-                if (bestScore == 0) {
-                    bestScore = (double) n1.getCost();
-                    n = n1;
-                } else {
-                    double aux = (double) n1.getCost();
-                    if (aux < bestScore) {
-                        bestScore = aux;
-                        n = n1;
-                    }
-                }
-                //TODO Maybe is not correct. CoBeFra do this.
+                n = n1;
                 queuedStateCount = it.getOpen().size() + stateCount;
                 break;
             }
         }
 
-        if (stop == false) {
+        if (n == null) {
             System.err.print("Error. No se encontró ningún aligment para la traza " + trace.toString());
             System.exit(2);
         }
@@ -548,7 +521,7 @@ public class AlgorithmAStar {
                 mapEvClass2Cost, delta, false, finaMarking);
     }
 
-    protected static SyncReplayResult addReplayResult(WeightedNode node, SortedSet<Integer> tracesIndex, int stateCount, boolean isReliable, long milliseconds,
+    protected static SyncReplayResult addReplayResult(AbstractNode node, SortedSet<Integer> tracesIndex, int stateCount, boolean isReliable, long milliseconds,
                                                       int queuedStates, int traversedArcs, int minCostMoveModel) {
         double mmCost = 0; // total cost of move on model
         double mlCost = 0; // total cost of move on log
@@ -565,7 +538,7 @@ public class AlgorithmAStar {
         //First element is null
         iterator.next();
         while (iterator.hasNext()) {
-            AbstractNode actualNode = (WeightedNode) iterator.next();
+            AbstractNode actualNode = (WeightedNodeMine) iterator.next();
             StateLikeCoBeFra state = (StateLikeCoBeFra) actualNode.state();
 
             if (actualNode.action().equals(SYNC)) {

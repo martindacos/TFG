@@ -1,4 +1,4 @@
-package es.usc.citius.aligments.problem;
+package es.usc.citius.aligments.problem.movs;
 
 public class SyncMove {
     private int modelMove;

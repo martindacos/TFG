@@ -19,6 +19,7 @@ import org.processmining.models.semantics.petrinet.Marking;
 import org.processmining.plugins.astar.petrinet.impl.AbstractPDelegate;
 
 import static nl.tue.astar.AStarThread.NOMOVE;
+import static org.processmining.plugins.astar.petrinet.impl.AbstractPDelegate.INHIBITED;
 
 public final class NStateLikeCoBeFra {
 
@@ -45,6 +46,8 @@ public final class NStateLikeCoBeFra {
         BitMask executed;
 
         private TIntList invisible;
+        private TIntList model;
+        private TIntList syncronous;
 
         protected final StateMoveCoBeFra previousMove;
 
@@ -71,6 +74,9 @@ public final class NStateLikeCoBeFra {
             modelMove = NOMOVE;
             activity = NOMOVE;
             previousMove = null;
+            this.invisible = null;
+            this.model = null;
+            this.syncronous = null;
         }
 
         public StateLikeCoBeFra(ShortShortMultiset marking, ShortShortMultiset parikh, int hashCode, BitMask executed
@@ -83,6 +89,9 @@ public final class NStateLikeCoBeFra {
             this.logMove = logMove;
             this.activity = activity;
             this.previousMove = previousMove;
+            this.invisible = null;
+            this.model = null;
+            this.syncronous = null;
         }
 
         protected ShortShortMultiset cloneAndUpdateMarking(AbstractPDelegate<?> delegate, ShortShortMultiset marking,
@@ -94,13 +103,10 @@ public final class NStateLikeCoBeFra {
 
             for (short place = delegate.numPlaces(); place-- > 0; ) {
                 short needed = in[place];
-                if (needed != AbstractPDelegate.INHIBITED) {
+                if (needed != INHIBITED) {
                     // only adjust the value for non-inhibitor arcs
                     newMarking.adjustValue(place, (short) -needed);
                 }
-            }
-
-            for (short place = delegate.numPlaces(); place-- > 0; ) {
                 short val = newMarking.get(place);
                 short produced = out[place];
                 if (produced < 0) {
@@ -112,6 +118,7 @@ public final class NStateLikeCoBeFra {
                 }
                 newMarking.adjustValue(place, produced);
             }
+
             return newMarking;
         }
 
@@ -122,13 +129,10 @@ public final class NStateLikeCoBeFra {
 
             for (short place = delegate.numPlaces(); place-- > 0; ) {
                 short needed = in[place];
-                if (needed != AbstractPDelegate.INHIBITED) {
+                if (needed != INHIBITED) {
                     // only adjust the value for non-inhibitor arcs
                     marking.adjustValue(place, (short) -needed);
                 }
-            }
-
-            for (short place = delegate.numPlaces(); place-- > 0; ) {
                 short val = marking.get(place);
                 short produced = out[place];
                 if (produced < 0) {
@@ -140,6 +144,7 @@ public final class NStateLikeCoBeFra {
                 }
                 marking.adjustValue(place, produced);
             }
+
             return marking;
         }
 
@@ -171,37 +176,52 @@ public final class NStateLikeCoBeFra {
         }
 
         public TIntList getSynchronousMoves(Delegate<? extends Head, ? extends Tail> d, int activity, ShortShortMultiset marking) {
-            final AbstractPDelegate<?> delegate = (AbstractPDelegate<?>) d;
+            if (this.syncronous == null) {
+                final AbstractPDelegate<?> delegate = (AbstractPDelegate<?>) d;
 
-            // only consider transitions mapped to activity
-            TIntList syncronous = new TIntArrayList();
-            TShortList trans = delegate.getTransitions((short) activity);
-            TShortIterator it = trans.iterator();
-            while (it.hasNext()) {
-                int i = it.next();
-                if (delegate.isEnabled(i, marking)) {
-                    syncronous.add(i);
+                // only consider transitions mapped to activity
+                this.syncronous = new TIntArrayList();
+                TShortList trans = delegate.getTransitions((short) activity);
+                TShortIterator it = trans.iterator();
+                while (it.hasNext()) {
+                    int i = it.next();
+                    if (delegate.isEnabled(i, marking)) {
+                        this.syncronous.add(i);
+                    }
                 }
             }
-
-            return syncronous;
+            return this.syncronous;
         }
 
         public TIntList getModelMoves(Delegate<? extends Head, ? extends Tail> delegate, ShortShortMultiset marking) {
-            AbstractPDelegate<?> d = (AbstractPDelegate<?>) delegate;
-            TIntIterator iterator = d.getEnabledTransitionsChangingMarking(marking).iterator();
-            TIntList model = new TIntArrayList();
-            invisible = new TIntArrayList();
-            while (iterator.hasNext()) {
-                int next = iterator.next();
-                Transition t = d.getTransition((short) next);
-                if (t.isInvisible()) {
-                    invisible.add(next);
-                } else {
-                    model.add(next);
+            if (invisible == null) {
+                AbstractPDelegate<?> d = (AbstractPDelegate<?>) delegate;
+                //TODO Before we call getEnabledTransitionsChangingMarking
+                TIntIterator iterator = getEnabledTransitions(delegate, marking).iterator();
+                model = new TIntArrayList();
+                invisible = new TIntArrayList();
+                while (iterator.hasNext()) {
+                    int next = iterator.next();
+                    Transition t = d.getTransition((short) next);
+                    if (t.isInvisible()) {
+                        invisible.add(next);
+                    } else {
+                        model.add(next);
+                    }
                 }
             }
             return model;
+        }
+
+        public TIntList getEnabledTransitions(Delegate<? extends Head, ? extends Tail> delegate, ShortShortMultiset marking) {
+            AbstractPDelegate<?> d = (AbstractPDelegate<?>) delegate;
+            TIntList list = new TIntArrayList();
+            for (short t = 0; t < d.numTransitions(); t++) {
+                if (d.isEnabled(t, marking)) {
+                    list.add(t);
+                }
+            }
+            return list;
         }
 
         public boolean isFinal(Delegate<? extends Head, ? extends Tail> d) {
