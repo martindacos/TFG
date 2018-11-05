@@ -145,7 +145,7 @@ public class AlgorithmAStar {
 
         timerTotal.stop();
 
-        printTimes();
+        //printTimes();
         return sol;
     }
 

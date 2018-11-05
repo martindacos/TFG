@@ -1,7 +1,5 @@
 package es.usc.citius.aligments.problem.movs;
 
-import es.usc.citius.aligments.problem.movs.LogMove;
-import es.usc.citius.aligments.problem.movs.SyncMove;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
 

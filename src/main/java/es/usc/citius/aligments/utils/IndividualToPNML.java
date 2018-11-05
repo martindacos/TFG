@@ -1,6 +1,5 @@
 package es.usc.citius.aligments.utils;
 
-import es.usc.citius.prodigen.config.NameConstants;
 import es.usc.citius.prodigen.domainLogic.petriNet.*;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMSet;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMTask;
@@ -21,9 +20,11 @@ import java.util.*;
 
 import static es.usc.citius.aligments.utils.PetriNetNamesConstants.*;
 
-public class IndividualToPNML {
+/**
+ * Adaptation of ProDiGen class to Prom PNML format
+ **/
 
-    //TODO NOT WORKING
+public class IndividualToPNML {
 
     private HashMap<String, Set<String>> inputsLeft;
     private HashMap<String, Set<String>> outputsLeft;
@@ -39,8 +40,8 @@ public class IndividualToPNML {
 
     private ArrayList<Set<String>> constraints;
 
-    private int indexPlace = 0;
-    private int indexSilentTask = 0;
+    private int indexPlace;
+    private int indexSilentTask;
 
     private HashMap<String, Integer> connectedPlacesInput;
     private HashMap<String, Integer> connectedPlacesOutput;
@@ -77,17 +78,17 @@ public class IndividualToPNML {
             Document doc = new Document();
             Element root = new Element("pnml");
             Element net = new Element(NET);
-            net.setAttribute(ID, "File");
-            net.setAttribute("type", "PTNet");
-            final int numOftasks = ind.getNumOfTasks();
-            for (int indexTask = 0; indexTask < numOftasks; indexTask++) {
+            net.setAttribute(ID, "net1");
+            net.setAttribute(TYPE, "http://www.pnml.org/version-2009/grammar/pnmlcoremodel");
+            final int numOfTasks = ind.getNumOfTasks();
+            for (int indexTask = 0; indexTask < numOfTasks; indexTask++) {
                 CMTask actualTask = ind.getTask(indexTask);
                 Transition actualTaskTransition = new Transition(actualTask.getTask().getId(), Transition.FINAL);
                 transitions.put(actualTask.getTask().getId(), actualTaskTransition);
                 CMSet outputs = actualTask.getOutputs();
-                generateOutputs(outputs, actualTaskTransition, numOftasks, ind, actualTask.getTask().getId(), indexTask);
+                generateOutputs(outputs, actualTaskTransition, numOfTasks, ind, actualTask.getTask().getId(), indexTask);
                 CMSet inputs = actualTask.getInputs();
-                generateInputs(inputs, actualTaskTransition, numOftasks, ind, actualTask.getTask().getId(), indexTask);
+                generateInputs(inputs, actualTaskTransition, numOfTasks, ind, actualTask.getTask().getId(), indexTask);
             }
 
             connectNew();
@@ -97,16 +98,18 @@ public class IndividualToPNML {
             net.addContent(writeName());
             Element child = new Element("page").setAttribute("id", "n0");
 
-            ///ESCRIBIMOS LAS PLAZAS
-            Collection<Place> placesValues = places.values();
-            for (final Place place : placesValues) {
-                child.addContent(writePlace(place));
-            }
+            child.addContent(new Element("name").addContent(new Element("text")));
 
             // ESCRIBIMOS LAS TRANSICIONES
             Collection<Transition> transitionValues = transitions.values();
             for (final Transition task : transitionValues) {
                 child.addContent(writeTransition(task));
+            }
+
+            ///ESCRIBIMOS LAS PLAZAS
+            Collection<Place> placesValues = places.values();
+            for (final Place place : placesValues) {
+                child.addContent(writePlace(place));
             }
 
             /// ESCRIBIMOS LOS ARCOS
@@ -128,210 +131,250 @@ public class IndividualToPNML {
     private void generateOutputs(CMSet outputs, final Transition task, final int numOfTasks, final CMIndividual ind, final String idTask, int matrixTask) {
         final int outputsSize = outputs.size();
         if (outputsSize != 0) {
-            if (setWithRepetitions(outputs, numOfTasks)) {
-                Place place = new Place(PLACE + " " + indexPlace++, Place.FINAL);
-                String placeName = place.getName();
-                addToHashMap(placeName, from, idTask);
-                addToHashMap(placeName, directInputs, idTask);
-                places.put(place.getName(), place);
-                createArc(task, place);
-                increaseConnection(placeName, connectedPlacesInput, 1);
-                if (outputsSize > 1) {
-                    CMSet combinations = permutator.doPermute(outputs);
-                    final int combSize = combinations.size();
-                    HashMap<String, Place> silentPlaces = new HashMap<>();
-                    for (int indexComb = 0; indexComb < combSize; indexComb++) {
-                        if (isOutputUsed(ind.getCombUsage(), combinations.get(indexComb), matrixTask)) {
-                            if (combinations.get(indexComb).size() > 1) {
-                                String nameSilent = SILENT_TASK + " " + indexSilentTask++;
-                                Transition silentTask = new Transition(nameSilent);
-                                this.silentTransitions.add(nameSilent);
-                                transitions.put(nameSilent, silentTask);
-                                createArc(place, silentTask);
-                                increaseConnection(placeName, connectedPlacesOutput, 1);
-                                HashSet<String> placesConstraint = new HashSet<>();
-                                for (TIntIterator it = combinations.get(indexComb).iterator(); it.hasNext(); ) {
-                                    int elem = it.next();
-                                    String idOtherTask = ind.getTask(elem).getTask().getId();
-                                    Place auxPlace = silentPlaces.get(idOtherTask);
-                                    if (auxPlace == null) {
-                                        auxPlace = new Place(PLACE + " " + indexPlace++, Place.FINAL);
-                                    }
-                                    String placeNameOut = auxPlace.getName();
-                                    addToHashMap(placeName, to, idOtherTask);
-                                    addToHashMap(placeName, directOutputs, nameSilent);
-                                    addToHashMap(placeNameOut, to, idOtherTask);
-                                    addToHashMap(placeNameOut, from, idTask);
-                                    addToHashMap(placeNameOut, directInputs, nameSilent);
-                                    addToHashMap(placeNameOut, outputsLeft, idOtherTask);
-                                    createArc(silentTask, auxPlace);
-                                    increaseConnection(placeNameOut, connectedPlacesInput, 1);
-                                    silentPlaces.put(idOtherTask, auxPlace);
-                                    placesConstraint.add(placeNameOut);
-                                }
-                                constraints.add(new HashSet<>(placesConstraint));
-                            } else {
-                                for (TIntIterator it = combinations.get(indexComb).iterator(); it.hasNext(); ) {
-                                    int elem = it.next();
-                                    String idOtherTask = ind.getTask(elem).getTask().getId();
-                                    addToHashMap(placeName, to, idOtherTask);
-                                    addToHashMap(placeName, outputsLeft, idOtherTask);
-                                }
-                            }
-                        }
-                    }
-                    for (Place placeIterator : silentPlaces.values()) {
-                        places.put(placeIterator.getName(), placeIterator);
-                    }
-                } else {
-                    final TIntHashSet subset = outputs.get(0);
-                    for (TIntIterator it = subset.iterator(); it.hasNext(); ) {
-                        int elem = it.next();
-                        String idOtherTask = ind.getTask(elem).getTask().getId();
-                        addToHashMap(placeName, to, idOtherTask);
-                        addToHashMap(placeName, outputsLeft, idOtherTask);
-                    }
-                }
-            } else {
-                HashSet<String> placesConstraint = new HashSet<>();
-                for (int indexSet = 0; indexSet < outputsSize; indexSet++) {
-                    Place place = new Place(PLACE + indexPlace++, Place.FINAL);
-                    String placeName = place.getName();
-                    addToHashMap(placeName, from, idTask);
-                    addToHashMap(placeName, directInputs, idTask);
-                    createArc(task, place);
-                    increaseConnection(placeName, connectedPlacesInput, 1);
-                    for (TIntIterator it = outputs.get(indexSet).iterator(); it.hasNext(); ) {
-                        int elem = it.next();
-                        String idOtherTask = ind.getTask(elem).getTask().getId();
-                        addToHashMap(placeName, to, idOtherTask);
-                        addToHashMap(placeName, outputsLeft, idOtherTask);
-                    }
-                    places.put(placeName, place);
-                    placesConstraint.add(placeName);
-                }
-                if (outputsSize > 1) {
-                    constraints.add(new HashSet<>(placesConstraint));
-                }
-            }
-        } else if (outputs.isEmpty()) { // Si no tiene inputs
-            Place place = places.get(FINAL_PLACE);
-            if (place == null) {
-                place = new Place(FINAL_PLACE);
-                places.put(place.getName(), place);
-            }
-            String placeName = place.getName();
-            addToHashMap(placeName, from, idTask);
-            addToHashMap(placeName, directInputs, idTask);
-            addToHashMap(placeName, to, "end");
-            this.places.put(place.getName(), place);
-            createArc(task, place);
-            increaseConnection(placeName, connectedPlacesInput, 1);
+            generateNormalOutputs(outputs, task, numOfTasks, ind, idTask, matrixTask, outputsSize);
+        } else if (outputs.isEmpty()) {
+            generateEndOutputs(task, idTask);
         }
+    }
+
+    private void generateEndOutputs(Transition task, String idTask) {
+        Place place = places.get(FINAL_PLACE);
+        if (place == null) {
+            place = new Place(FINAL_PLACE);
+            places.put(place.getName(), place);
+        }
+        String placeName = place.getName();
+        addToHashMap(placeName, from, idTask);
+        addToHashMap(placeName, directInputs, idTask);
+        addToHashMap(placeName, to, "end");
+        this.places.put(place.getName(), place);
+        createArc(task, place);
+        increaseConnection(placeName, connectedPlacesInput, 1);
+    }
+
+    private void generateNormalOutputs(CMSet outputs, Transition task, int numOfTasks, CMIndividual ind, String idTask, int matrixTask, int outputsSize) {
+        Integer newIndexPlace = indexPlace++;
+        if (setWithRepetitions(outputs, numOfTasks)) {
+            outputsSetWithRepetitions(outputs, task, ind, idTask, matrixTask, outputsSize, newIndexPlace);
+        } else {
+            outputsSetWithoutRepetitions(outputs, task, ind, idTask, outputsSize, newIndexPlace);
+        }
+    }
+
+    private void outputsSetWithoutRepetitions(CMSet outputs, Transition task, CMIndividual ind, String idTask, int outputsSize, Integer newIndexPlace) {
+        //ADD silent task
+        Place place = new Place(newIndexPlace.toString(), Place.FINAL);
+        String placeName = place.getName();
+        addToHashMap(placeName, from, idTask);
+        addToHashMap(placeName, directInputs, idTask);
+        createArc(task, place);
+        increaseConnection(placeName, connectedPlacesInput, 1);
+
+        String nameSilent = SILENT_TASK_PROM + " " + indexSilentTask++;
+        Transition silentTask = new Transition(nameSilent);
+        this.silentTransitions.add(nameSilent);
+        transitions.put(nameSilent, silentTask);
+        createArc(place, silentTask);
+        increaseConnection(placeName, connectedPlacesOutput, 1);
+        newIndexPlace = newIndexPlace++;
+
+        ////////////////////
+
+        HashSet<String> placesConstraint = new HashSet<>();
+        for (int indexSet = 0; indexSet < outputsSize; indexSet++) {
+            place = new Place(newIndexPlace.toString(), Place.FINAL);
+            placeName = place.getName();
+            addToHashMap(placeName, from, nameSilent);
+            addToHashMap(placeName, directInputs, nameSilent);
+            createArc(silentTask, place);
+            increaseConnection(placeName, connectedPlacesInput, 1);
+            for (TIntIterator it = outputs.get(indexSet).iterator(); it.hasNext(); ) {
+                int elem = it.next();
+                String idOtherTask = ind.getTask(elem).getTask().getId();
+                addToHashMap(placeName, to, idOtherTask);
+                addToHashMap(placeName, outputsLeft, idOtherTask);
+            }
+            places.put(placeName, place);
+            placesConstraint.add(placeName);
+        }
+        if (outputsSize > 1) {
+            constraints.add(new HashSet<>(placesConstraint));
+        }
+    }
+
+    private void outputsSetWithRepetitions(CMSet outputs, Transition task, CMIndividual ind, String idTask, int matrixTask, int outputsSize, Integer newIndexPlace) {
+        Place place = new Place(newIndexPlace.toString(), Place.FINAL);
+        String placeName = place.getName();
+        addToHashMap(placeName, from, idTask);
+        addToHashMap(placeName, directInputs, idTask);
+        places.put(place.getName(), place);
+        createArc(task, place);
+        increaseConnection(placeName, connectedPlacesInput, 1);
+        if (outputsSize > 1) {
+            moreThanOneOutput(outputs, ind, idTask, matrixTask, newIndexPlace, place, placeName);
+        } else {
+            final TIntHashSet subset = outputs.get(0);
+            for (TIntIterator it = subset.iterator(); it.hasNext(); ) {
+                int elem = it.next();
+                String idOtherTask = ind.getTask(elem).getTask().getId();
+                addToHashMap(placeName, to, idOtherTask);
+                addToHashMap(placeName, outputsLeft, idOtherTask);
+            }
+        }
+    }
+
+    private void moreThanOneOutput(CMSet outputs, CMIndividual ind, String idTask, int matrixTask, Integer newIndexPlace, Place place, String placeName) {
+        CMSet combinations = permutator.doPermute(outputs);
+        final int combSize = combinations.size();
+        HashMap<String, Place> silentPlaces = new HashMap<>();
+        for (int indexComb = 0; indexComb < combSize; indexComb++) {
+            if (isOutputUsed(ind.getCombUsage(), combinations.get(indexComb), matrixTask)) {
+                if (combinations.get(indexComb).size() > 1) {
+                    addSilentTask(ind, idTask, newIndexPlace, place, placeName, combinations, silentPlaces, indexComb, true);
+                } else {
+                    for (TIntIterator it = combinations.get(indexComb).iterator(); it.hasNext(); ) {
+                        int elem = it.next();
+                        String idOtherTask = ind.getTask(elem).getTask().getId();
+                        addToHashMap(placeName, to, idOtherTask);
+                        addToHashMap(placeName, outputsLeft, idOtherTask);
+                    }
+                }
+            }
+        }
+        for (Place placeIterator : silentPlaces.values()) {
+            places.put(placeIterator.getName(), placeIterator);
+        }
+    }
+
+    private void addSilentTask(CMIndividual ind, String idTask, Integer newIndexPlace, Place place, String placeName, CMSet combinations, HashMap<String, Place> silentPlaces, int indexComb, boolean output) {
+        String nameSilent = SILENT_TASK_PROM + " " + indexSilentTask++;
+        Transition silentTask = new Transition(nameSilent);
+        this.silentTransitions.add(nameSilent);
+        transitions.put(nameSilent, silentTask);
+        createArc(place, silentTask);
+        increaseConnection(placeName, connectedPlacesOutput, 1);
+        HashSet<String> placesConstraint = new HashSet<>();
+        for (TIntIterator it = combinations.get(indexComb).iterator(); it.hasNext(); ) {
+            int elem = it.next();
+            String idOtherTask = ind.getTask(elem).getTask().getId();
+            Place auxPlace = silentPlaces.get(idOtherTask);
+            if (auxPlace == null && output) {
+                auxPlace = new Place(newIndexPlace.toString(), Place.FINAL);
+            } else if (auxPlace == null && !output) {
+                auxPlace = new Place(newIndexPlace.toString(), Place.INITIAL);
+            }
+            String placeNameOut = auxPlace.getName();
+            addToHashMap(placeName, to, idOtherTask);
+            addToHashMap(placeName, directOutputs, nameSilent);
+            addToHashMap(placeNameOut, to, idOtherTask);
+            addToHashMap(placeNameOut, from, idTask);
+            addToHashMap(placeNameOut, directInputs, nameSilent);
+            addToHashMap(placeNameOut, outputsLeft, idOtherTask);
+            createArc(silentTask, auxPlace);
+            increaseConnection(placeNameOut, connectedPlacesInput, 1);
+            silentPlaces.put(idOtherTask, auxPlace);
+            placesConstraint.add(placeNameOut);
+        }
+        constraints.add(new HashSet<>(placesConstraint));
     }
 
     private void generateInputs(CMSet inputs, final Transition task, final int numOfTasks, final CMIndividual ind, final String idTask, int matrixTask) {
         final int inputsSize = inputs.size();
         if (inputsSize != 0) {
-            if (setWithRepetitions(inputs, numOfTasks)) {
-                Place place = new Place(PLACE + " " + indexPlace++, Place.INITIAL);
-                String placeName = place.getName();
-                addToHashMap(placeName, to, idTask);
-                addToHashMap(placeName, directOutputs, idTask);
-                places.put(place.getName(), place);
-                createArc(place, task);
-                increaseConnection(placeName, connectedPlacesOutput, 1);
-                if (inputsSize > 1) {
-                    CMSet combinations = permutator.doPermute(inputs);
-                    final int combSize = combinations.size();
-                    HashMap<String, Place> silentPlaces = new HashMap<>();
-                    for (int indexComb = 0; indexComb < combSize; indexComb++) {
-                        if (isInputUsed(ind.getCombUsage(), combinations.get(indexComb), matrixTask)) {
-                            if (combinations.get(indexComb).size() > 1) {
-                                String nameSilent = SILENT_TASK + " " + indexSilentTask++;
-                                Transition silentTask = new Transition(nameSilent);
-                                transitions.put(nameSilent, silentTask);
-                                this.silentTransitions.add(nameSilent);
-                                createArc(silentTask, place);
-                                increaseConnection(placeName, connectedPlacesInput, 1);
-                                HashSet<String> placesConstraint = new HashSet<>();
-                                for (TIntIterator it = combinations.get(indexComb).iterator(); it.hasNext(); ) {
-                                    int elem = it.next();
-                                    String idOtherTask = ind.getTask(elem).getTask().getId();
-                                    Place auxPlace = silentPlaces.get(idOtherTask);
-                                    if (auxPlace == null) {
-                                        auxPlace = new Place(PLACE + " " + indexPlace++, Place.INITIAL);
-                                    }
-                                    String placeNameOut = auxPlace.getName();
-                                    addToHashMap(placeName, from, idOtherTask);
-                                    addToHashMap(placeName, directInputs, nameSilent);
-                                    addToHashMap(placeNameOut, from, idOtherTask);
-                                    addToHashMap(placeNameOut, to, idTask);
-                                    addToHashMap(placeNameOut, directOutputs, nameSilent);
-                                    createArc(auxPlace, silentTask);
-                                    increaseConnection(placeNameOut, connectedPlacesOutput, 1);
-                                    addToHashMap(placeNameOut, inputsLeft, idOtherTask);
-                                    silentPlaces.put(idOtherTask, auxPlace);
-                                    placesConstraint.add(placeNameOut);
-                                }
-                                constraints.add(new HashSet<>(placesConstraint));
-                            } else {
-                                for (TIntIterator it = combinations.get(indexComb).iterator(); it.hasNext(); ) {
-                                    int elem = it.next();
-                                    String idOtherTask = ind.getTask(elem).getTask().getId();
-                                    addToHashMap(placeName, from, idOtherTask);
-                                    addToHashMap(placeName, inputsLeft, idOtherTask);
-                                }
-                            }
-                        }
-                    }
-                    for (Place placeIterator : silentPlaces.values()) {
-                        places.put(placeIterator.getName(), placeIterator);
-                    }
-                } else {
-                    final TIntHashSet subset = inputs.get(0);
-                    for (TIntIterator it = subset.iterator(); it.hasNext(); ) {
-                        int elem = it.next();
-                        String idOtherTask = ind.getTask(elem).getTask().getId();
-                        addToHashMap(placeName, from, idOtherTask);
-                        addToHashMap(placeName, inputsLeft, idOtherTask);
-                    }
-                }
-            } else {
-                HashSet<String> placesConstraint = new HashSet<>();
-                for (int indexSet = 0; indexSet < inputsSize; indexSet++) {
-                    Place place = new Place(PLACE + indexPlace++, Place.INITIAL);
-                    String placeName = place.getName();
-                    addToHashMap(placeName, to, idTask);
-                    addToHashMap(placeName, directOutputs, idTask);
-                    createArc(place, task);
-                    increaseConnection(placeName, connectedPlacesOutput, 1);
-                    for (TIntIterator it = inputs.get(indexSet).iterator(); it.hasNext(); ) {
-                        int elem = it.next();
-                        String idOtherTask = ind.getTask(elem).getTask().getId();
-                        addToHashMap(placeName, from, idOtherTask);
-                        addToHashMap(placeName, inputsLeft, idOtherTask);
-                    }
-                    places.put(place.getName(), place);
-                    placesConstraint.add(placeName);
-                }
-                if (inputsSize > 1) {
-                    constraints.add(new HashSet<>(placesConstraint));
-                }
-            }
-        } else if (inputs.isEmpty()) { // Si no tiene inputs
-            Place place = places.get(INITIAL_PLACE);
-            if (place == null) {
-                place = new Place(INITIAL_PLACE);
-                places.put(place.getName(), place);
-            }
+            generateNormalInputs(inputs, task, numOfTasks, ind, idTask, matrixTask, inputsSize);
+        } else if (inputs.isEmpty()) {
+            generateStartInputs(task, idTask);
+        }
+    }
+
+    private void generateStartInputs(Transition task, String idTask) {
+        Place place = places.get(INITIAL_PLACE);
+        if (place == null) {
+            place = new Place(INITIAL_PLACE);
+            places.put(place.getName(), place);
+        }
+        String placeName = place.getName();
+        addToHashMap(placeName, to, idTask);
+        addToHashMap(placeName, directOutputs, idTask);
+        addToHashMap(placeName, from, "start");
+        this.places.put(place.getName(), place);
+        createArc(place, task);
+        increaseConnection(placeName, connectedPlacesOutput, 1);
+    }
+
+    private void generateNormalInputs(CMSet inputs, Transition task, int numOfTasks, CMIndividual ind, String idTask, int matrixTask, int inputsSize) {
+        Integer newIndexPlace = indexPlace++;
+        if (setWithRepetitions(inputs, numOfTasks)) {
+            inputsSetWithRepetitions(inputs, task, ind, idTask, matrixTask, inputsSize, newIndexPlace);
+        } else {
+            inputsSetWithoutRepetitions(inputs, task, ind, idTask, inputsSize, newIndexPlace);
+        }
+    }
+
+    private void inputsSetWithoutRepetitions(CMSet inputs, Transition task, CMIndividual ind, String idTask, int inputsSize, Integer newIndexPlace) {
+        HashSet<String> placesConstraint = new HashSet<>();
+        for (int indexSet = 0; indexSet < inputsSize; indexSet++) {
+            Place place = new Place(newIndexPlace.toString(), Place.INITIAL);
             String placeName = place.getName();
             addToHashMap(placeName, to, idTask);
             addToHashMap(placeName, directOutputs, idTask);
-            addToHashMap(placeName, from, "start");
-            this.places.put(place.getName(), place);
             createArc(place, task);
             increaseConnection(placeName, connectedPlacesOutput, 1);
+            for (TIntIterator it = inputs.get(indexSet).iterator(); it.hasNext(); ) {
+                int elem = it.next();
+                String idOtherTask = ind.getTask(elem).getTask().getId();
+                addToHashMap(placeName, from, idOtherTask);
+                addToHashMap(placeName, inputsLeft, idOtherTask);
+            }
+            places.put(place.getName(), place);
+            placesConstraint.add(placeName);
+        }
+        if (inputsSize > 1) {
+            constraints.add(new HashSet<>(placesConstraint));
+        }
+    }
+
+    private void inputsSetWithRepetitions(CMSet inputs, Transition task, CMIndividual ind, String idTask, int matrixTask, int inputsSize, Integer newIndexPlace) {
+        Place place = new Place(newIndexPlace.toString(), Place.INITIAL);
+        String placeName = place.getName();
+        addToHashMap(placeName, to, idTask);
+        addToHashMap(placeName, directOutputs, idTask);
+        places.put(place.getName(), place);
+        createArc(place, task);
+        increaseConnection(placeName, connectedPlacesOutput, 1);
+        if (inputsSize > 1) {
+            moreThanOneInput(inputs, ind, idTask, matrixTask, newIndexPlace, place, placeName);
+        } else {
+            final TIntHashSet subset = inputs.get(0);
+            for (TIntIterator it = subset.iterator(); it.hasNext(); ) {
+                int elem = it.next();
+                String idOtherTask = ind.getTask(elem).getTask().getId();
+                addToHashMap(placeName, from, idOtherTask);
+                addToHashMap(placeName, inputsLeft, idOtherTask);
+            }
+        }
+    }
+
+    private void moreThanOneInput(CMSet inputs, CMIndividual ind, String idTask, int matrixTask, Integer newIndexPlace, Place place, String placeName) {
+        CMSet combinations = permutator.doPermute(inputs);
+        final int combSize = combinations.size();
+        HashMap<String, Place> silentPlaces = new HashMap<>();
+        for (int indexComb = 0; indexComb < combSize; indexComb++) {
+            if (isInputUsed(ind.getCombUsage(), combinations.get(indexComb), matrixTask)) {
+                if (combinations.get(indexComb).size() > 1) {
+                    addSilentTask(ind, idTask, newIndexPlace, place, placeName, combinations, silentPlaces, indexComb, false);
+                } else {
+                    for (TIntIterator it = combinations.get(indexComb).iterator(); it.hasNext(); ) {
+                        int elem = it.next();
+                        String idOtherTask = ind.getTask(elem).getTask().getId();
+                        addToHashMap(placeName, from, idOtherTask);
+                        addToHashMap(placeName, inputsLeft, idOtherTask);
+                    }
+                }
+            }
+        }
+        for (Place placeIterator : silentPlaces.values()) {
+            places.put(placeIterator.getName(), placeIterator);
         }
     }
 
@@ -587,7 +630,7 @@ public class IndividualToPNML {
                             && numConectionsFrom < placeBFrom.size()
                             && getSharedElements(inputsLeft.get(namePB), placeAFrom).size() > 0
                             && getSharedElements(outputsLeft.get(namePA), placeBTo).size() > 0) {
-                        String nameSilent = SILENT_TASK + " " + indexSilentTask++;
+                        String nameSilent = SILENT_TASK_PROM + " " + indexSilentTask++;
                         Transition silentTask = new Transition(nameSilent);
                         transitions.put(nameSilent, silentTask);
                         this.silentTransitions.add(nameSilent);
@@ -611,10 +654,10 @@ public class IndividualToPNML {
         for (Arc actualArc : arcs.values()) {
             String nameA = actualArc.getA().getName();
             String nameB = actualArc.getB().getName();
-            if (nameA.contains(SILENT_TASK)) {
+            if (nameA.contains(SILENT_TASK_PROM)) {
                 addToHashMap(nameA, silentTaskOutputs, nameB);
             }
-            if (nameB.contains(SILENT_TASK)) {
+            if (nameB.contains(SILENT_TASK_PROM)) {
                 addToHashMap(nameB, silentTaskInputs, nameA);
             }
         }
@@ -647,7 +690,6 @@ public class IndividualToPNML {
             }
         }
     }
-
 
     private void deleteRelatedArcs(String nameNode) {
         Iterator it = arcs.entrySet().iterator();
@@ -749,24 +791,21 @@ public class IndividualToPNML {
         String taskName = task.getName();
         Element transition = new Element(TRANSITION);
         transition.setAttribute(ID, taskName);
-        transition.addContent(new Element("name").addContent(new Element("value").setText(taskName)));
+        transition.addContent(new Element("name").addContent(new Element("text").setText(taskName)));
         // identificamos si es una silentTask o no
-        if (taskName.contains(SILENT_TASK)) {
-            transition.addContent(writeInfoSilentTask(Transition.SILENT));
-        } else if (taskName.contains(NameConstants.START_DUMMY_TASK)) {
-            transition.addContent(writeInfoSilentTask(Transition.INITIAL));
-        } else if (taskName.contains(NameConstants.END_DUMMY_TASK)) {
-            transition.addContent(writeInfoSilentTask(Transition.FINAL));
+        if (taskName.contains(SILENT_TASK_PROM)) {
+            transition.addContent(writeInfoSilentTask(SILENT_TASK_PROM));
         } else {
-            transition.addContent(writeInfoSilentTask(Transition.OTHER));
+            transition.addContent(writeInfoSilentTask(taskName));
         }
         return transition;
     }
 
-    private Element writeInfoSilentTask(int type) {
+    private Element writeInfoSilentTask(String activityName) {
         Element silentTaskInfo = new Element(TOOL_SPECIFIC);
         silentTaskInfo.setAttribute("tool", TOOL_SPECIFIC_NAME);
-        silentTaskInfo.addContent(new Element(TASK_TYPE).setAttribute(TYPE, type + ""));
+        silentTaskInfo.setAttribute("version", "6.4");
+        silentTaskInfo.setAttribute("activity", activityName);
         return silentTaskInfo;
     }
 
@@ -774,9 +813,9 @@ public class IndividualToPNML {
         String idPlace = place.getName();
         Element placeElement = new Element(PLACE);
         placeElement.setAttribute(ID, idPlace);
-        placeElement.addContent(new Element("name").addContent(new Element("value").setText(idPlace)));
+        placeElement.addContent(new Element("name").addContent(new Element("text").setText(idPlace)));
         if (INITIAL_PLACE.equals(idPlace)) {
-            placeElement.addContent(new Element("initialMarking").addContent(new Element("value").setText("1")));
+            placeElement.addContent(new Element("initialMarking").addContent(new Element("text").setText("1")));
         }
         return placeElement;
     }
@@ -786,6 +825,8 @@ public class IndividualToPNML {
         arcElement.setAttribute(ID, arc.getName());
         arcElement.setAttribute(SOURCE, arc.getA().getName());
         arcElement.setAttribute(TARGET, arc.getB().getName());
+        arcElement.addContent(new Element("name").addContent(new Element("text").setText("1")));
+        arcElement.addContent(new Element("arctype").addContent(new Element("text").setText("normal")));
         return arcElement;
     }
 

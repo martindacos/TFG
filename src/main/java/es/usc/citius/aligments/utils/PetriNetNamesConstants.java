@@ -1,13 +1,5 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package es.usc.citius.aligments.utils;
 
-/**
- *
- * @author qnoxo
- */
 public interface PetriNetNamesConstants {
     
     public static final String PLACE = "place";
@@ -23,10 +15,8 @@ public interface PetriNetNamesConstants {
     public static final String SOURCE = "source";
     public static final String TARGET = "target";
     public static final String TYPE = "type";
-    public static final String TASK_TYPE = "taskType";
     public static final String TOOL_SPECIFIC = "toolspecific";
-    public static final String TOOL_SPECIFIC_NAME = "GMASoftLearn";
+    public static final String TOOL_SPECIFIC_NAME = "ProM";
 
-    public static final String SILENT_TASK = "silentTask";
-    
+    public static final String SILENT_TASK_PROM = "$invisible$";
 }
