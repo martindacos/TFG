@@ -62,12 +62,9 @@ public class AlignmentBasedPrecision {
         algorithm.setChosenAlgorithm(new PetrinetReplayerWithoutILP());
         algorithm.setCreateInitialMarking(true);
         algorithm.setCreateFinalMarking(true);
-//        algorithm.setTraceGrouped(true);
         algorithm.load(mapping);
         algorithm.calculate();
         timer.stop();
-        System.out.println("Tiempo total aryaPrecision : " + timer.getReadableElapsedTime());
-        System.out.println("Result : " + algorithm.getResult());
 
         return algorithm;
     }

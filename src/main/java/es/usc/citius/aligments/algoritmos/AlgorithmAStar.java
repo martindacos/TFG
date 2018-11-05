@@ -7,6 +7,7 @@ import es.usc.citius.aligments.hipster.WeightedNodeMine;
 import es.usc.citius.aligments.problem.movs.LogMove;
 import es.usc.citius.aligments.problem.movs.PossibleMovements;
 import es.usc.citius.aligments.problem.movs.SyncMove;
+import es.usc.citius.aligments.utils.Timer;
 import es.usc.citius.hipster.algorithm.AStar;
 import es.usc.citius.hipster.algorithm.Hipster;
 import es.usc.citius.hipster.model.AbstractNode;
@@ -51,6 +52,8 @@ import org.processmining.plugins.petrinet.replayer.algorithms.costbasedcomplete.
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.petrinet.replayresult.PNRepResultImpl;
 import org.processmining.plugins.petrinet.replayresult.StepTypes;
+import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGen;
+import org.processmining.plugins.pnalignanalysis.conformance.AlignmentPrecGenRes;
 import org.processmining.plugins.replayer.replayresult.SyncReplayResult;
 
 import javax.swing.*;
@@ -66,7 +69,8 @@ public class AlgorithmAStar {
     private static es.usc.citius.aligments.utils.Timer timerAct;
     private static es.usc.citius.aligments.utils.Timer timerMovs;
     private static es.usc.citius.aligments.utils.Timer timerHeuristic;
-    private static es.usc.citius.aligments.utils.Timer timerTotal = new es.usc.citius.aligments.utils.Timer();
+    private static es.usc.citius.aligments.utils.Timer timerTotal = new Timer();
+    private static es.usc.citius.aligments.utils.Timer timerPrecision;
     private static int stateCount;
     private static int queuedStateCount;
     private static int traversedArcCount;
@@ -77,6 +81,8 @@ public class AlgorithmAStar {
     private static AbstractPDelegate<?> delegate;
     private static XLog log;
     private static Marking initMarking;
+    private static Petrinet petrinet;
+    private static TransEvClassMapping transEvClassMapping;
     private static PossibleMovements possibleMovements;
 
     //A* Functions
@@ -84,6 +90,9 @@ public class AlgorithmAStar {
     private static ActionStateTransitionFunction<StateMoveCoBeFra, StateLikeCoBeFra> atf;
     private static CostFunction<StateMoveCoBeFra, StateLikeCoBeFra, Double> cf;
     private static HeuristicFunction<StateLikeCoBeFra, Double> hf;
+
+    private static double precision;
+    private static double generalization;
 
     public static PNRepResultImpl problem(String logFile, String netFile) {
         timerAct = new es.usc.citius.aligments.utils.Timer();
@@ -143,8 +152,17 @@ public class AlgorithmAStar {
         PNRepResultImpl syncReplayResults = new PNRepResultImpl(solutions);
         PNRepResultImpl sol = new PNRepResultImpl(syncReplayResults);
 
+        //Precision
+        timerPrecision = new Timer();
+        timerPrecision.start();
+        AlignmentPrecGen aPrecGen = new AlignmentPrecGen();
+        AlignmentPrecGenRes measureConformanceAssumingCorrectAlignment = aPrecGen.measureConformanceAssumingCorrectAlignment(new FakePluginContext(), transEvClassMapping, sol, petrinet, initMarking, false);
+        precision = measureConformanceAssumingCorrectAlignment.getPrecision();
+        generalization = measureConformanceAssumingCorrectAlignment.getGeneralization();
+        timerPrecision.stop();
         timerTotal.stop();
 
+        System.out.println(timerPrecision.getReadableElapsedTime());
         //printTimes();
         return sol;
     }
@@ -495,12 +513,12 @@ public class AlgorithmAStar {
         mapping.assignUnmappedToInvisible();
         Object[] petrinetWithMarking = mapping.getPetrinetWithMarking();
 
-        Petrinet petrinet = (Petrinet) petrinetWithMarking[0];
+        petrinet = (Petrinet) petrinetWithMarking[0];
         //Marking marking = (Marking) petrinetWithMarking[1];
 
         log = mapping.getLog();
         MappingUtils.setInvisiblesInPetrinet(mapping, petrinet);
-        TransEvClassMapping transEvClassMapping = MappingUtils.getTransEvClassMapping(mapping, petrinet, log);
+        transEvClassMapping = MappingUtils.getTransEvClassMapping(mapping, petrinet, log);
         XEventClassifier classifier = transEvClassMapping.getEventClassifier();
         XLogInfo summary = XLogInfoFactory.createLogInfo(log, classifier);
         XEventClasses classes = summary.getEventClasses();
@@ -600,5 +618,13 @@ public class AlgorithmAStar {
         info.put(PNRepResult.ORIGTRACELENGTH, (double) eventInTrace);
         res.setInfo(info);
         return res;
+    }
+
+    public static double getPrecision() {
+        return precision;
+    }
+
+    public static double getGeneralization() {
+        return generalization;
     }
 }

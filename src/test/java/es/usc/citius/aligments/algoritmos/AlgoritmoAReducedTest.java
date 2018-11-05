@@ -1,24 +1,21 @@
 package es.usc.citius.aligments.algoritmos;
 
+import be.kuleuven.econ.cbf.metrics.precision.AryaPrecision;
 import be.kuleuven.econ.cbf.metrics.recall.AryaFitness;
 import es.usc.citius.aligments.config.Parametros;
 import es.usc.citius.aligments.config.ParametrosImpl;
 import es.usc.citius.aligments.estadisticas.InterfazEstadisticas;
-import es.usc.citius.aligments.mains.AligmentsWithCoBeFraMarking;
+import es.usc.citius.aligments.mains.AligmentsWithPromMarking;
 import es.usc.citius.aligments.problem.InterfazTraza;
 import es.usc.citius.aligments.problem.Readers;
 import es.usc.citius.aligments.problem.Traza;
 import es.usc.citius.aligments.salida.InterfazSalida;
 import es.usc.citius.aligments.salida.SalidaTerminalImpl;
-import es.usc.citius.aligments.utils.IndividualToPNML;
 import es.usc.citius.aligments.utils.Timer;
-import es.usc.citius.prodigen.domainLogic.exceptions.*;
 import es.usc.citius.prodigen.domainLogic.workflow.Task.Task;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMSet;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.CMTask.CMTask;
 import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.CMIndividual;
-import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.writer.IndividualWriterInterface;
-import es.usc.citius.prodigen.domainLogic.workflow.algorithms.geneticMining.individual.writer.IndividualWriterPNMLNew;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TIntHashSet;
 import org.junit.Assert;
@@ -26,9 +23,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.processmining.cobefra.AligmentBasedFitness;
 import org.processmining.cobefra.AlignmentBasedPrecision;
-import org.processmining.plugins.astar.petrinet.AbstractPetrinetReplayer;
-import org.processmining.plugins.astar.petrinet.PetrinetReplayerWithoutILP;
-import org.processmining.plugins.petrinet.replayer.algorithms.IPNReplayAlgorithm;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.petrinet.replayresult.PNRepResultImpl;
 import org.processmining.plugins.petrinet.replayresult.StepTypes;
@@ -439,12 +433,12 @@ public class AlgoritmoAReducedTest {
     public void testPLG() throws Exception {
         List<String> logsPaths = new ArrayList<>();
         List<String> modelsPaths = new ArrayList<>();
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/test/log.xes");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/test/test");
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/test/diagram.xes");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/test/diagram");
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/5.xes");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/Individual");
+//        logsPaths.add("/home/martin/Descargas/PLG_Logs/test/log.xes");
+//        modelsPaths.add("/home/martin/Descargas/PLG_Logs/test/test");
+//        logsPaths.add("/home/martin/Descargas/PLG_Logs/test/diagram.xes");
+//        modelsPaths.add("/home/martin/Descargas/PLG_Logs/test/diagram");
+//        logsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/5.xes");
+//        modelsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/Individual");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_N.xes");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000.xes");
@@ -466,10 +460,10 @@ public class AlgoritmoAReducedTest {
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/123_Actividades/5000BN.xes");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/123_Actividades/Individual");
-        runAligments(logsPaths, modelsPaths);
+        runAligmentsPrecision(logsPaths, modelsPaths);
     }
 
-    private void runAligments(List<String> logsPaths, List<String> modelsPaths) throws Exception {
+    private void runAligmentsFitness(List<String> logsPaths, List<String> modelsPaths) throws Exception {
         InterfazSalida salida = new SalidaTerminalImpl(false);
         PrintWriter pw = new PrintWriter(new File("/home/martin/Descargas/PLG_Logs/results.csv"));
         StringBuilder sb = new StringBuilder();
@@ -504,16 +498,16 @@ public class AlgoritmoAReducedTest {
                 total.stop();
                 times.add(total.getElapsedTime());
 
-                //AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
+                AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
 
                 total.start();
-                //cobefra = AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
-                AlignmentBasedPrecision.aryaPrecision(logPath, modelPath + ".pnml");
+                cobefra = AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
                 total.stop();
                 times_cobefra.add(total.getElapsedTime());
 
                 total.start();
-//                aligmentsWithCobefraMarking = AligmentsWithCoBeFraMarking.calculate(logPath, modelPath + ".pnml");
+                AligmentsWithPromMarking aligmentsWithPromMarking = new AligmentsWithPromMarking();
+                aligmentsWithCobefraMarking = aligmentsWithPromMarking.calculate(logPath, modelPath + ".pnml");
                 total.stop();
                 times_mine.add(total.getElapsedTime());
             }
@@ -524,14 +518,78 @@ public class AlgoritmoAReducedTest {
             //String printComparation2 = salida.compareResults(cobefra.getPNRepResult(), miReader);
 
             //Info With All Metrics
-//            Map<String, Object> info = aligmentsWithCobefraMarking.getInfo();
-//            String printComparation = compareResults(cobefra.getPNRepResult(), aligmentsWithCobefraMarking);
+            Map<String, Object> info = aligmentsWithCobefraMarking.getInfo();
+            String printComparation = compareResults(cobefra.getPNRepResult(), aligmentsWithCobefraMarking);
             //String printComparation = salida.compareResults(aligmentsWithCobefraMarking, miReader);
             long average = averageLongs(times);
             long averageCobefra = averageLongs(times_cobefra);
             long averageMine = averageLongs(times_mine);
-//            System.out.println(total.toSeconds(averageCobefra) + "," + total.toSeconds(average) + " ," + total.toSeconds(averageMine));
-//            System.out.print(printComparation + "," + cobefra.getResult() + "," + info.get("Trace Fitness"));
+            System.out.println(total.toSeconds(averageCobefra) + "," + total.toSeconds(average) + " ," + total.toSeconds(averageMine));
+            System.out.print(printComparation + "," + cobefra.getResult() + "," + info.get("Trace Fitness"));
+            /*System.out.print(printComparation + "," + problem.getDiferentStates() + "," + problem.getVisitedStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
+                    total.toSeconds(average));
+            sb.append(printComparation + "," + problem.getDiferentStates() + "," + problem.getVisitedStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
+                    total.toSeconds(average) + "\n");*/
+            System.out.println();
+            System.out.println();
+        }
+
+        pw.write(sb.toString());
+        pw.close();
+    }
+
+    private void runAligmentsPrecision(List<String> logsPaths, List<String> modelsPaths) throws Exception {
+        InterfazSalida salida = new SalidaTerminalImpl(false);
+        PrintWriter pw = new PrintWriter(new File("/home/martin/Descargas/PLG_Logs/results.csv"));
+        StringBuilder sb = new StringBuilder();
+        String HEAD = "Aligments Distintos,Trazas Distintas,Estados Co,Estados Visitados Co,Estados,Estados Visitados," +
+                "Fitness Co,Fitness,Time Co,Time\n";
+        sb.append(HEAD);
+        System.out.print(HEAD);
+
+        for (int i = 0; i < logsPaths.size(); i++) {
+            String logPath = logsPaths.get(i);
+            String modelPath = modelsPaths.get(i);
+
+            System.out.println(logPath);
+
+            //Execute 5 times to get the average
+            Timer total = new Timer();
+            List<Long> times_cobefra = new ArrayList<>();
+            List<Long> times_mine = new ArrayList<>();
+            AryaPrecision aryaPrecision = null;
+            PNRepResultImpl results = null;
+            AligmentsWithPromMarking aligmentsWithPromMarking = null;
+            for (int j = 0; j < 1; j++) {
+                resetReader();
+                //AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
+
+                total.start();
+                aryaPrecision = AlignmentBasedPrecision.aryaPrecision(logPath, modelPath + ".pnml");
+                total.stop();
+                times_cobefra.add(total.getElapsedTime());
+
+                total.start();
+                aligmentsWithPromMarking = new AligmentsWithPromMarking();
+                results = aligmentsWithPromMarking.calculate(logPath, modelPath + ".pnml");
+                total.stop();
+                times_mine.add(total.getElapsedTime());
+            }
+
+            //salida.printCobefra(cobefra.getPNRepResult());
+            //System.out.println("*******************");
+            //salida.printCobefra(results);
+            //String printComparation2 = salida.compareResults(cobefra.getPNRepResult(), miReader);
+
+            //Info With All Metrics
+            Map<String, Object> info = results.getInfo();
+            String printComparation = compareResults(aryaPrecision.getPNRepResult(), results);
+            //String printComparation = salida.compareResults(results, miReader);
+            long averageProm = averageLongs(times_cobefra);
+            long averageMine = averageLongs(times_mine);
+            System.out.println(total.toSeconds(averageProm) + "," + total.toSeconds(averageMine));
+            System.out.println(aligmentsWithPromMarking.getFitness() + "," +  aligmentsWithPromMarking.getPrecision() + "," +  aligmentsWithPromMarking.getGeneralization());
+//            System.out.print(printComparation + "," + aryaPrecision.getResult() + "," + aligmentsWithPromMarking.getPrecision());
             /*System.out.print(printComparation + "," + problem.getDiferentStates() + "," + problem.getVisitedStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
                     total.toSeconds(average));
             sb.append(printComparation + "," + problem.getDiferentStates() + "," + problem.getVisitedStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
