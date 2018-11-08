@@ -91,10 +91,10 @@ public class AlgorithmAStar {
     private static CostFunction<StateMoveCoBeFra, StateLikeCoBeFra, Double> cf;
     private static HeuristicFunction<StateLikeCoBeFra, Double> hf;
 
-    private static double precision;
-    private static double generalization;
+    private static double precision = 0d;
+    private static double generalization = 0d;
 
-    public static PNRepResultImpl problem(String logFile, String netFile) {
+    public static PNRepResultImpl problem(String logFile, String netFile, boolean calcPrecision) {
         timerAct = new es.usc.citius.aligments.utils.Timer();
         timerMovs = new es.usc.citius.aligments.utils.Timer();
         timerHeuristic = new es.usc.citius.aligments.utils.Timer();
@@ -132,6 +132,7 @@ public class AlgorithmAStar {
         AbstractNode n;
         int minCostModel = getMinCostModel();
 
+        int i = 0;
         for (Map.Entry<Trace, SortedSet<Integer>> entry : xTraces.entrySet()) {
             SortedSet<Integer> repetitionsIndex = entry.getValue();
             XTrace xTrace = log.get(repetitionsIndex.first());
@@ -153,16 +154,18 @@ public class AlgorithmAStar {
         PNRepResultImpl sol = new PNRepResultImpl(syncReplayResults);
 
         //Precision
-        timerPrecision = new Timer();
-        timerPrecision.start();
-        AlignmentPrecGen aPrecGen = new AlignmentPrecGen();
-        AlignmentPrecGenRes measureConformanceAssumingCorrectAlignment = aPrecGen.measureConformanceAssumingCorrectAlignment(new FakePluginContext(), transEvClassMapping, sol, petrinet, initMarking, false);
-        precision = measureConformanceAssumingCorrectAlignment.getPrecision();
-        generalization = measureConformanceAssumingCorrectAlignment.getGeneralization();
-        timerPrecision.stop();
+        if (calcPrecision) {
+            timerPrecision = new Timer();
+            timerPrecision.start();
+            AlignmentPrecGen aPrecGen = new AlignmentPrecGen();
+            AlignmentPrecGenRes measureConformanceAssumingCorrectAlignment = aPrecGen.measureConformanceAssumingCorrectAlignment(new FakePluginContext(), transEvClassMapping, sol, petrinet, initMarking, false);
+            precision = measureConformanceAssumingCorrectAlignment.getPrecision();
+            generalization = measureConformanceAssumingCorrectAlignment.getGeneralization();
+            timerPrecision.stop();
+            System.out.println(timerPrecision.getReadableElapsedTime());
+        }
         timerTotal.stop();
 
-        System.out.println(timerPrecision.getReadableElapsedTime());
         //printTimes();
         return sol;
     }

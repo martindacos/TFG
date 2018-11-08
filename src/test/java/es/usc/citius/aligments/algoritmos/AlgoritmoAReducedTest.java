@@ -439,7 +439,7 @@ public class AlgoritmoAReducedTest {
 //        modelsPaths.add("/home/martin/Descargas/PLG_Logs/test/diagram");
 //        logsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/5.xes");
 //        modelsPaths.add("/home/martin/Descargas/PLG_Logs/4_Actividades/Individual");
-        logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
+        /*logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000.xes");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/1000_N.xes");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000.xes");
         logsPaths.add("/home/martin/Descargas/PLG_Logs/28_Actividades/5000_N.xes");
@@ -457,10 +457,22 @@ public class AlgoritmoAReducedTest {
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
-        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");
+        modelsPaths.add("/home/martin/Descargas/PLG_Logs/49_Actividades/Individual");*/
         logsPaths.add("/home/martin/Descargas/PLG_Logs/123_Actividades/5000BN.xes");
         modelsPaths.add("/home/martin/Descargas/PLG_Logs/123_Actividades/Individual");
-        runAligmentsPrecision(logsPaths, modelsPaths);
+        runAligmentsFitness(logsPaths, modelsPaths);
+    }
+
+    //
+    @Test
+    public void testDatasets() throws Exception {
+        List<String> logsPaths = new ArrayList<>();
+        List<String> modelsPaths = new ArrayList<>();
+        //logsPaths.add("/home/martin/Descargas/PLG_Logs/123_Actividades/5000BN.xes");
+        //modelsPaths.add("/home/martin/Descargas/PLG_Logs/123_Actividades/Individual");
+        logsPaths.add("/home/martin/Descargas/Datasets/prAm6.xes");
+        modelsPaths.add("/home/martin/Descargas/Datasets/prAm6");
+        runAligmentsFitness(logsPaths, modelsPaths);
     }
 
     private void runAligmentsFitness(List<String> logsPaths, List<String> modelsPaths) throws Exception {
@@ -485,7 +497,8 @@ public class AlgoritmoAReducedTest {
             List<Long> times_mine = new ArrayList<>();
             InterfazEstadisticas problem = null;
             AryaFitness cobefra = null;
-            PNRepResultImpl aligmentsWithCobefraMarking = null;
+            AligmentsWithPromMarking aligments = new AligmentsWithPromMarking();
+            PNRepResultImpl results = null;
             Readers miReader;
             for (int j = 0; j < 1; j++) {
                 resetReader();
@@ -493,21 +506,22 @@ public class AlgoritmoAReducedTest {
                 //miReader = Readers.getReader(logPath, modelPath + ".hn");
                 //IndividualToPNML writer = new IndividualToPNML();
                 //writer.write("/home/martin/Descargas/PLG_Logs/test/testpnml.pnml", miReader.getInd());
-                ParametrosImpl.setHEURISTIC(Parametros.HEURISTIC_MODEL);
+                //ParametrosImpl.setHEURISTIC(Parametros.HEURISTIC_MODEL);
                 //problem = AlgoritmoAReduced.problem(miReader, false);
                 total.stop();
                 times.add(total.getElapsedTime());
 
-                AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
+                //AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
 
                 total.start();
-                cobefra = AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
+                //cobefra = AligmentBasedFitness.calculate(logPath, modelPath + ".pnml");
                 total.stop();
                 times_cobefra.add(total.getElapsedTime());
 
                 total.start();
-                AligmentsWithPromMarking aligmentsWithPromMarking = new AligmentsWithPromMarking();
-                aligmentsWithCobefraMarking = aligmentsWithPromMarking.calculate(logPath, modelPath + ".pnml");
+                aligments = new AligmentsWithPromMarking();
+                results = AligmentBasedFitness.calculatePromSplit(logPath, modelPath + ".pnml");
+                //results = aligments.calculate(logPath, modelPath + ".pnml", false);
                 total.stop();
                 times_mine.add(total.getElapsedTime());
             }
@@ -518,14 +532,16 @@ public class AlgoritmoAReducedTest {
             //String printComparation2 = salida.compareResults(cobefra.getPNRepResult(), miReader);
 
             //Info With All Metrics
-            Map<String, Object> info = aligmentsWithCobefraMarking.getInfo();
-            String printComparation = compareResults(cobefra.getPNRepResult(), aligmentsWithCobefraMarking);
+            Map<String, Object> info = results.getInfo();
+            //String printComparation = compareResults(cobefra.getPNRepResult(), aligmentsWithCobefraMarking);
             //String printComparation = salida.compareResults(aligmentsWithCobefraMarking, miReader);
             long average = averageLongs(times);
             long averageCobefra = averageLongs(times_cobefra);
             long averageMine = averageLongs(times_mine);
             System.out.println(total.toSeconds(averageCobefra) + "," + total.toSeconds(average) + " ," + total.toSeconds(averageMine));
-            System.out.print(printComparation + "," + cobefra.getResult() + "," + info.get("Trace Fitness"));
+            System.out.println(info.get("Trace Fitness"));
+            System.out.println(aligments.getFitness());
+            //System.out.print(printComparation + "," + cobefra.getResult() + "," + info.get("Trace Fitness"));
             /*System.out.print(printComparation + "," + problem.getDiferentStates() + "," + problem.getVisitedStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
                     total.toSeconds(average));
             sb.append(printComparation + "," + problem.getDiferentStates() + "," + problem.getVisitedStates() + "," + cobefra.getResult() + "," + problem.getFitness() + "," + total.toSeconds(averageCobefra) + "," +
@@ -571,7 +587,7 @@ public class AlgoritmoAReducedTest {
 
                 total.start();
                 aligmentsWithPromMarking = new AligmentsWithPromMarking();
-                results = aligmentsWithPromMarking.calculate(logPath, modelPath + ".pnml");
+                results = aligmentsWithPromMarking.calculate(logPath, modelPath + ".pnml", true);
                 total.stop();
                 times_mine.add(total.getElapsedTime());
             }

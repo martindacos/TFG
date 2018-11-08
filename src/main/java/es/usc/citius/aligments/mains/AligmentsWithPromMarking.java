@@ -9,8 +9,8 @@ public class AligmentsWithPromMarking {
     private double precision;
     private double generalization;
 
-    public PNRepResultImpl calculate(String logfile, String netfile) {
-        PNRepResultImpl results = AlgorithmAStar.problem(logfile, netfile);
+    public PNRepResultImpl calculate(String logfile, String netfile, boolean calcPrecision) {
+        PNRepResultImpl results = AlgorithmAStar.problem(logfile, netfile, calcPrecision);
         fitness = (double) results.getInfo().get("Trace Fitness");
         precision = AlgorithmAStar.getPrecision();
         generalization = AlgorithmAStar.getGeneralization();
