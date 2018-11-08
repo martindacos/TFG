@@ -29,6 +29,9 @@ import org.processmining.plugins.replayer.replayresult.SyncReplayResult;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static es.usc.citius.aligments.config.Parametros.LOG_COST;
 import static es.usc.citius.aligments.config.Parametros.MODEL_COST;
@@ -96,8 +99,6 @@ public class AligmentBasedFitness {
         int toms = 10 * 1000;
         // preprocessing time to be added to the statistics if necessary
         long preProcessTimeNanoseconds = 0;
-        List<SyncReplayResult> solutions = new ArrayList<>();
-
         int minCostModel = 0;
         XFactory factory = XFactoryRegistry.instance().currentDefault();
         XTrace emptyTrace = factory.createTrace();
@@ -110,12 +111,24 @@ public class AligmentBasedFitness {
             e.printStackTrace();
         }
 
+        // Setup a threadpool for the multithreaded execution
+        ExecutorService service = Executors.newFixedThreadPool(parameters.nThreads);
+        // Setup an array to store the results
+        Future<TraceReplayTask>[] futures = new Future[log.size()];
         for (int i = 0; i < log.size(); i++) {
             // Setup the trace replay task
             TraceReplayTask task = new TraceReplayTask(replayer, parameters, log.get(i), i, toms,
                     parameters.maximumNumberOfStates, preProcessTimeNanoseconds);
+            // submit for execution
+            futures[i] = service.submit(task);
+        }
+        // initiate shutdown and wait for termination of all submitted tasks and obtain results.
+        service.shutdown();
+        List<SyncReplayResult> solutions = new ArrayList<>();
+
+        for (int i = 0; i < log.size(); i++) {
             try {
-                TraceReplayTask result = task.call();
+                TraceReplayTask result = futures[i].get();
                 switch (result.getResult()) {
                     case DUPLICATE:
                         assert false; // cannot happen in this setting
